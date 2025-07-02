@@ -271,8 +271,8 @@ document.addEventListener("DOMContentLoaded", () => {
     downloadButton.addEventListener("click", () => {
       // Try to download the actual resume file first
       const link = document.createElement("a");
-      link.href = "/assets/resume/Sunny_Pasumarthi_Resume.docx"; // Adjust the path as needed
-      link.download = "assets/resume/Sunny_Pasumarthi_Resume.docx";
+      link.href = "portfolio/assets/resume/Sunny_Pasumarthi_Resume.docx"; // Adjust the path as needed
+      link.download = "portfolio/assets/resume/Sunny_Pasumarthi_Resume.docx";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
