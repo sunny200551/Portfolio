@@ -164,7 +164,7 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
           </button>
           
           <a
-            href="/resume.txt"
+            href="resume.txt"
             download="Sunny_Pasumarthi_Resume.txt"
             className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3.5 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-xl cursor-pointer border border-white/8 transition-all hover:scale-103 font-semibold text-sm backdrop-blur-md"
           >

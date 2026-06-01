@@ -73,18 +73,18 @@ function App() {
           }}
           className="text-sm font-bold bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent font-mono flex items-center gap-1.5 hover:scale-102 transition-transform cursor-pointer"
         >
-          <span className="text-zinc-500 font-normal">[</span>
+          <span className="text-zinc-500 dark:text-zinc-400 font-normal">[</span>
           sunny.dev
-          <span className="text-zinc-500 font-normal">]</span>
+          <span className="text-zinc-500 dark:text-zinc-400 font-normal">]</span>
         </a>
 
         {/* Navigation Items (Desktop only) */}
-        <nav className="hidden md:flex items-center gap-6 text-xs font-mono font-medium tracking-wide text-zinc-400">
-          <a href="#about" onClick={(e) => { e.preventDefault(); document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-zinc-100 transition-colors">ABOUT</a>
-          <a href="#skills" onClick={(e) => { e.preventDefault(); document.getElementById('skills')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-zinc-100 transition-colors">SKILLS</a>
-          <a href="#projects" onClick={(e) => { e.preventDefault(); document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-zinc-100 transition-colors">PROJECTS</a>
-          <a href="#journey" onClick={(e) => { e.preventDefault(); document.getElementById('journey')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-zinc-100 transition-colors">JOURNEY</a>
-          <a href="#contact" onClick={(e) => { e.preventDefault(); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-zinc-100 transition-colors">CONTACT</a>
+        <nav className="hidden md:flex items-center gap-6 text-xs font-mono font-semibold tracking-wide">
+          <a href="#about" onClick={(e) => { e.preventDefault(); document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">ABOUT</a>
+          <a href="#skills" onClick={(e) => { e.preventDefault(); document.getElementById('skills')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">SKILLS</a>
+          <a href="#projects" onClick={(e) => { e.preventDefault(); document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">PROJECTS</a>
+          <a href="#journey" onClick={(e) => { e.preventDefault(); document.getElementById('journey')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">JOURNEY</a>
+          <a href="#contact" onClick={(e) => { e.preventDefault(); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">CONTACT</a>
         </nav>
 
         {/* Header Controls */}
@@ -92,7 +92,7 @@ function App() {
           {/* Light/Dark Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 hover:bg-white/5 rounded-lg text-zinc-400 hover:text-zinc-100 transition-all cursor-pointer hover:scale-105 active:scale-95"
+            className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-all cursor-pointer hover:scale-105 active:scale-95"
             title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
             {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
