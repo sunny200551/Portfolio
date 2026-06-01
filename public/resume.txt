@@ -1,0 +1,26 @@
+SUNNY PASUMARTHI
+Web Developer | Student | Tech Enthusiast
+
+Contact Information:
+Email: sunnypasumarthi9@gmail.com
+Phone: +91 9346063816
+LinkedIn: https://www.linkedin.com/in/sunny-pasumarthi-357615333
+GitHub: https://github.com/sunny200551
+Twitter: https://x.com/SunnyP5002
+Location: Nellore, Andhra Pradesh, India
+
+EDUCATION:
+Bachelor of Technology in Computer Science and Engineering
+NBKR Institute Of Science And Technology, Vidyanagar , Tirupati , AndhraPradesh ,India
+2023 - 2027 (Expected)
+
+SKILLS:
+- HTML5 & CSS3
+- JavaScript
+- React
+- Web Development
+- Problem Solving
+- Git & Version Control
+
+CERTIFICATIONS:
+- Web Development Certificate (Platform Name, 2024)

@@ -1,0 +1,212 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 258 90% 66%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 217 91% 60%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 258 90% 66%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+    --radius: 0.75rem;
+
+    --glow-blue: rgba(59, 130, 246, 0.15);
+    --glow-purple: rgba(168, 85, 247, 0.15);
+    
+    --font-outfit: 'Outfit', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  .light {
+    --background: 0 0% 97%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 258 90% 66%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 91% 60%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 258 90% 66%;
+    --accent-foreground: 240 10% 3.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5% 64.9%;
+
+    --glow-blue: rgba(59, 130, 246, 0.08);
+    --glow-purple: rgba(168, 85, 247, 0.08);
+
+    /* Invert zinc colors in light mode to make text and components fully readable */
+    --color-zinc-50: #18181b;     /* dark text for gradients */
+    --color-zinc-100: #18181b;    /* headings are dark zinc-900 */
+    --color-zinc-200: #27272a;    /* subheadings are dark zinc-800 */
+    --color-zinc-300: #3f3f46;    /* titles/details are dark zinc-700 */
+    --color-zinc-400: #52525b;    /* body text is zinc-600 */
+    --color-zinc-500: #71717a;    /* small text stays zinc-500 */
+    --color-zinc-600: #a1a1aa;    /* inverted: light gray */
+    --color-zinc-700: #d4d4d8;    /* inverted: light gray */
+    --color-zinc-800: #e4e4e7;    /* borders in light mode */
+    --color-zinc-900: #ffffff;    /* bg-zinc-900 becomes white */
+    --color-zinc-950: #fafafa;    /* bg-zinc-950 becomes off-white */
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-outfit);
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    transition: background-color 0.5s ease, color 0.5s ease;
+  }
+}
+
+@layer utilities {
+  .glassmorphism {
+    background: rgba(10, 10, 15, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .light .glassmorphism {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .glassmorphism-interactive {
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  
+  .glassmorphism-interactive:hover {
+    background: rgba(20, 20, 30, 0.85);
+    border-color: rgba(139, 92, 246, 0.3);
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .light .glassmorphism-interactive:hover {
+    background: rgba(245, 245, 250, 0.85);
+    border-color: rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .text-glow-blue {
+    text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+  }
+
+  .text-glow-purple {
+    text-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+  }
+}
+
+/* Custom Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes orbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.05);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s ease-in-out infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.4);
+}
+
+/* Radar Chart Custom Styling */
+.radar-grid-line {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1px;
+}
+.light .radar-grid-line {
+  stroke: rgba(0, 0, 0, 0.08);
+}
+.radar-axis-line {
+  stroke: rgba(255, 255, 255, 0.15);
+  stroke-dasharray: 4 4;
+}
+.light .radar-axis-line {
+  stroke: rgba(0, 0, 0, 0.15);
+}
+
+/* General Layout helpers */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .bento-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .bento-grid {
+    grid-template-columns: 1fr;
+  }
+}
