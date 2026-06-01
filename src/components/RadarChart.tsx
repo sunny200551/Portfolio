@@ -136,7 +136,7 @@ export const RadarChart: React.FC = () => {
                 x={p.x}
                 y={p.y}
                 textAnchor={textAnchor}
-                className="text-[10px] sm:text-[11px] font-semibold fill-zinc-400 light:fill-zinc-700 font-mono uppercase tracking-wider"
+                className="text-[10px] sm:text-[11px] font-semibold fill-zinc-400 font-mono uppercase tracking-wider"
               >
                 {p.subject}
               </text>
@@ -144,7 +144,7 @@ export const RadarChart: React.FC = () => {
                 x={p.x}
                 y={p.y + 11}
                 textAnchor={textAnchor}
-                className="text-[9px] font-mono fill-violet-400/80 light:fill-violet-600/80 font-bold"
+                className="text-[9px] font-mono fill-violet-400/80 font-bold"
               >
                 {p.val}%
               </text>

@@ -30,66 +30,7 @@
     --font-mono: 'JetBrains Mono', monospace;
   }
 
-  .light {
-    --background: 240 18% 97.5%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 258 90% 66%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 217 91% 60%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 258 90% 66%;
-    --accent-foreground: 240 10% 3.9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5% 64.9%;
 
-    --glow-blue: rgba(59, 130, 246, 0.04);
-    --glow-purple: rgba(168, 85, 247, 0.04);
-
-    /* Invert zinc colors in light mode using high-contrast slate colors */
-    --color-zinc-50: #0f172a;     /* dark text slate-900 */
-    --color-zinc-100: #0f172a;    /* dark text slate-900 */
-    --color-zinc-200: #1e293b;    /* dark text slate-800 */
-    --color-zinc-300: #334155;    /* dark text slate-700 */
-    --color-zinc-400: #475569;    /* body copy slate-600 */
-    --color-zinc-500: #64748b;    /* muted text slate-500 */
-    --color-zinc-600: #cbd5e1;    /* light gray borders slate-300 */
-    --color-zinc-700: #e2e8f0;    /* light gray borders slate-200 */
-    --color-zinc-800: #f1f5f9;    /* card backgrounds slate-100 */
-    --color-zinc-900: #f8fafc;    /* body background slate-50 */
-    --color-zinc-950: #ffffff;    /* pure white */
-  }
-
-  /* Swaps dark-theme white transparents to light-theme dark transparents */
-  .light [class*="bg-white/3"] {
-    background-color: rgba(0, 0, 0, 0.03) !important;
-  }
-  .light [class*="bg-white/10"] {
-    background-color: rgba(0, 0, 0, 0.06) !important;
-  }
-  .light [class*="border-white/5"] {
-    border-color: rgba(0, 0, 0, 0.06) !important;
-  }
-  .light [class*="border-white/8"] {
-    border-color: rgba(0, 0, 0, 0.08) !important;
-  }
-  .light [class*="border-white/10"] {
-    border-color: rgba(0, 0, 0, 0.1) !important;
-  }
-  .light [class*="border-white/15"] {
-    border-color: rgba(0, 0, 0, 0.12) !important;
-  }
-  .light [class*="hover:bg-white/5"]:hover {
-    background-color: rgba(0, 0, 0, 0.04) !important;
-  }
 
   body {
     background-color: hsl(var(--background));
@@ -109,13 +50,6 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  .light .glassmorphism {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-  }
-
   .glassmorphism-interactive {
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
@@ -124,13 +58,6 @@
     background: rgba(20, 20, 30, 0.85);
     border-color: rgba(139, 92, 246, 0.3);
     box-shadow: 0 0 30px rgba(139, 92, 246, 0.15);
-    transform: translateY(-2px);
-  }
-
-  .light .glassmorphism-interactive:hover {
-    background: rgba(245, 245, 250, 0.85);
-    border-color: rgba(59, 130, 246, 0.3);
-    box-shadow: 0 0 30px rgba(59, 130, 246, 0.1);
     transform: translateY(-2px);
   }
 
@@ -204,15 +131,9 @@
   stroke: rgba(255, 255, 255, 0.08);
   stroke-width: 1px;
 }
-.light .radar-grid-line {
-  stroke: rgba(0, 0, 0, 0.08);
-}
 .radar-axis-line {
   stroke: rgba(255, 255, 255, 0.15);
   stroke-dasharray: 4 4;
-}
-.light .radar-axis-line {
-  stroke: rgba(0, 0, 0, 0.15);
 }
 
 /* General Layout helpers */

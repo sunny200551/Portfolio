@@ -30,7 +30,7 @@ export const SpotlightCard: React.FC<SpotlightCardProps> = ({
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsFocused(true)}
       onMouseLeave={() => setIsFocused(false)}
-      className={`relative overflow-hidden glassmorphism rounded-2xl border border-white/8 light:border-black/8 p-6 transition-all duration-300 ${className}`}
+      className={`relative overflow-hidden glassmorphism rounded-2xl border border-white/8 p-6 transition-all duration-300 ${className}`}
       {...props}
     >
       {/* Background Spotlight Glow */}

@@ -3,6 +3,7 @@ import { SpotlightCard } from '../components/SpotlightCard';
 import { RadarChart } from '../components/RadarChart';
 import { OrbitSystem } from '../components/OrbitSystem';
 import { Cpu, Layout, Server, Database, Shield, Wrench } from 'lucide-react';
+import { Web3Simulator } from '../components/Web3Simulator';
 
 interface SkillCategory {
   title: string;
@@ -131,6 +132,15 @@ export const Skills: React.FC = () => {
             </SpotlightCard>
           );
         })}
+
+        {/* Web3 Smart Contract Simulator Playground */}
+        <SpotlightCard className="col-span-12 p-6 md:p-8 flex flex-col items-stretch gap-6 min-h-[400px]">
+          <div className="w-full border-b border-white/5 pb-4">
+            <h3 className="text-lg font-bold text-zinc-200">Web3 Smart Contract Playground</h3>
+            <p className="text-xs text-zinc-500 font-mono">Interactive Ethereum Simulator</p>
+          </div>
+          <Web3Simulator />
+        </SpotlightCard>
       </div>
     </section>
   );

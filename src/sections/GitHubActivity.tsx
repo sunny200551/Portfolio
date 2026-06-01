@@ -74,7 +74,7 @@ export const GitHubActivity: React.FC<GitHubActivityProps> = ({ profile, repos }
 
   const calendarGrid = generateContributionCalendar();
   const levelColors = [
-    'bg-zinc-900/50 light:bg-zinc-200/50 border-white/5',
+    'bg-zinc-900/50 border-white/5',
     'bg-emerald-950/40 text-emerald-800 dark:bg-emerald-900/30 border-emerald-500/10',
     'bg-emerald-800/40 text-emerald-600 dark:bg-emerald-800/50 border-emerald-400/20',
     'bg-emerald-600/60 text-emerald-400 dark:bg-emerald-600/70 border-emerald-400/30',

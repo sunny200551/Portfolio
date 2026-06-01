@@ -1,13 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Compass, Terminal, Moon, Sun, CornerDownLeft, FileText, Sparkles } from 'lucide-react';
+import { Search, Compass, Terminal, CornerDownLeft, FileText, Sparkles } from 'lucide-react';
 
-interface CommandPaletteProps {
-  onThemeToggle: () => void;
-  isDarkMode: boolean;
-}
-
-export const CommandPalette: React.FC<CommandPaletteProps> = ({ onThemeToggle, isDarkMode }) => {
+export const CommandPalette: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -23,16 +18,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ onThemeToggle, i
     { id: 'focus', name: 'Go to Current Focus', category: 'Navigation', icon: Compass, action: () => scrollToSection('focus') },
     { id: 'github', name: 'Go to GitHub Activity', category: 'Navigation', icon: Compass, action: () => scrollToSection('github') },
     { id: 'contact', name: 'Go to Contact Form', category: 'Navigation', icon: Compass, action: () => scrollToSection('contact') },
-    { 
-      id: 'theme', 
-      name: `Switch to ${isDarkMode ? 'Light' : 'Dark'} Mode`, 
-      category: 'Preferences', 
-      icon: isDarkMode ? Sun : Moon, 
-      action: () => {
-        onThemeToggle();
-        setIsOpen(false);
-      } 
-    },
     { 
       id: 'resume', 
       name: 'Download Resume (PDF)', 
@@ -127,10 +112,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ onThemeToggle, i
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
               transition={{ duration: 0.2 }}
-              className="relative w-full max-w-xl glassmorphism rounded-2xl shadow-2xl border border-white/12 light:border-black/12 overflow-hidden flex flex-col"
+              className="relative w-full max-w-xl glassmorphism rounded-2xl shadow-2xl border border-white/12 overflow-hidden flex flex-col"
             >
               {/* Search input */}
-              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/8 light:border-black/8">
+              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/8">
                 <Search size={18} className="text-zinc-400" />
                 <input
                   ref={inputRef}
@@ -142,7 +127,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ onThemeToggle, i
                     setSelectedIndex(0);
                   }}
                   onKeyDown={handleKeyDown}
-                  className="w-full bg-transparent border-none outline-none text-zinc-100 light:text-zinc-900 placeholder-zinc-500 text-base"
+                  className="w-full bg-transparent border-none outline-none text-zinc-100 placeholder-zinc-500 text-base"
                 />
                 <div className="flex items-center gap-1 text-[10px] bg-white/10 dark:bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded border border-white/5">
                   ESC
@@ -163,7 +148,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ onThemeToggle, i
                         className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 ${
                           isSelected 
                             ? 'bg-violet-600/20 text-violet-300 border-l-2 border-violet-500 pl-4.5' 
-                            : 'text-zinc-300 light:text-zinc-700 hover:bg-white/5'
+                            : 'text-zinc-300 hover:bg-white/5'
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -191,7 +176,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ onThemeToggle, i
               </div>
 
               {/* Footer */}
-              <div className="px-4 py-2 bg-black/40 light:bg-white/40 border-t border-white/5 light:border-black/5 flex items-center justify-between text-[11px] text-zinc-500">
+              <div className="px-4 py-2 bg-black/40 border-t border-white/5 flex items-center justify-between text-[11px] text-zinc-500">
                 <div className="flex items-center gap-2">
                   <span>↑↓ Navigate</span>
                   <span className="mx-1">•</span>

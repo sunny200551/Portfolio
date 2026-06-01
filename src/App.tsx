@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Hero } from './sections/Hero';
 import { About } from './sections/About';
 import { Skills } from './sections/Skills';
@@ -11,41 +11,17 @@ import { Footer } from './sections/Footer';
 import { CommandPalette } from './components/CommandPalette';
 import { ParticleBackground } from './components/ParticleBackground';
 import { CursorSpotlight } from './components/CursorSpotlight';
-import { Moon, Sun } from 'lucide-react';
 import { useGitHubData } from './hooks/useGitHubData';
 
 function App() {
-  const [isDarkMode, setIsDarkMode] = useState(true);
   const { profile, repos, loading } = useGitHubData();
 
   // Set default theme and load configurations
   useEffect(() => {
-    const isLight = localStorage.getItem('theme') === 'light';
-    setIsDarkMode(!isLight);
-    if (isLight) {
-      document.documentElement.classList.add('light');
-      document.documentElement.classList.remove('dark');
-    } else {
-      document.documentElement.classList.remove('light');
-      document.documentElement.classList.add('dark');
-    }
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
   }, []);
-
-  const toggleTheme = () => {
-    setIsDarkMode((prev) => {
-      const newVal = !prev;
-      if (newVal) {
-        document.documentElement.classList.remove('light');
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-      } else {
-        document.documentElement.classList.add('light');
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-      }
-      return newVal;
-    });
-  };
 
   const handleContactScroll = () => {
     const el = document.getElementById('contact');
@@ -63,7 +39,7 @@ function App() {
       <ParticleBackground />
 
       {/* Futuristic Floating Header */}
-      <header className="fixed top-4 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-4xl px-6 py-3.5 glassmorphism rounded-2xl shadow-xl flex items-center justify-between border border-white/8 light:border-black/8">
+      <header className="fixed top-4 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-4xl px-6 py-3.5 glassmorphism rounded-2xl shadow-xl flex items-center justify-between border border-white/8">
         {/* Logo Branding */}
         <a 
           href="#hero" 
@@ -86,18 +62,6 @@ function App() {
           <a href="#journey" onClick={(e) => { e.preventDefault(); document.getElementById('journey')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">JOURNEY</a>
           <a href="#contact" onClick={(e) => { e.preventDefault(); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">CONTACT</a>
         </nav>
-
-        {/* Header Controls */}
-        <div className="flex items-center gap-3">
-          {/* Light/Dark Toggle */}
-          <button
-            onClick={toggleTheme}
-            className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-all cursor-pointer hover:scale-105 active:scale-95"
-            title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          >
-            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-        </div>
       </header>
 
       {/* Main Container */}
@@ -144,7 +108,7 @@ function App() {
       </main>
 
       {/* Interactive Command Palette Trigger (Fixed lower right) */}
-      <CommandPalette onThemeToggle={toggleTheme} isDarkMode={isDarkMode} />
+      <CommandPalette />
     </>
   );
 }
