@@ -3,7 +3,7 @@ import { Mail, Phone, MapPin, Send, Loader2, CheckCircle2, AlertCircle } from 'l
 import { saveContactMessage } from '../firebase';
 import confetti from 'canvas-confetti';
 import { SpotlightCard } from '../components/SpotlightCard';
-import { GitHubProfile } from '../hooks/useGitHubData';
+import type { GitHubProfile } from '../hooks/useGitHubData';
 
 interface ContactProps {
   profile: GitHubProfile | null;

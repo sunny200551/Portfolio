@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ExternalLink, Maximize2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GitHubRepo } from '../hooks/useGitHubData';
+import type { GitHubRepo } from '../hooks/useGitHubData';
 
 interface Project {
   title: string;

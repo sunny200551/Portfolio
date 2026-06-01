@@ -56,7 +56,7 @@ const StatCounter: React.FC<{ value: number; suffix?: string; label: string; dur
   );
 };
 
-import { GitHubProfile } from '../hooks/useGitHubData';
+import type { GitHubProfile } from '../hooks/useGitHubData';
 
 interface AboutProps {
   profile: GitHubProfile | null;

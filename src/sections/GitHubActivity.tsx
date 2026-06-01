@@ -1,7 +1,7 @@
 import React from 'react';
 import { SpotlightCard } from '../components/SpotlightCard';
 import { GitBranch, Star, BookOpen, GitCommit, GitPullRequest } from 'lucide-react';
-import { GitHubProfile, GitHubRepo } from '../hooks/useGitHubData';
+import type { GitHubProfile, GitHubRepo } from '../hooks/useGitHubData';
 
 interface RepoStat {
   name: string;
