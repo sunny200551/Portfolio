@@ -106,37 +106,37 @@ function App() {
         <Hero onContactClick={handleContactScroll} profile={profile} />
         
         {/* Divider */}
-        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-white/5 to-transparent light:via-black/5" /></div>
+        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
 
         <About profile={profile} />
 
         {/* Divider */}
-        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-white/5 to-transparent light:via-black/5" /></div>
+        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
         
         <Skills />
 
         {/* Divider */}
-        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-white/5 to-transparent light:via-black/5" /></div>
+        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
 
         <Projects repos={repos} loading={loading} />
 
         {/* Divider */}
-        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-white/5 to-transparent light:via-black/5" /></div>
+        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
 
         <Journey />
 
         {/* Divider */}
-        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-white/5 to-transparent light:via-black/5" /></div>
+        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
 
         <CurrentFocus />
 
         {/* Divider */}
-        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-white/5 to-transparent light:via-black/5" /></div>
+        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
 
         <GitHubActivity profile={profile} repos={repos} />
 
         {/* Divider */}
-        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-white/5 to-transparent light:via-black/5" /></div>
+        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
 
         <Contact profile={profile} />
 

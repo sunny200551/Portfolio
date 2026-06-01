@@ -31,7 +31,7 @@
   }
 
   .light {
-    --background: 0 0% 97%;
+    --background: 240 18% 97.5%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
@@ -51,21 +51,44 @@
     --input: 240 5.9% 90%;
     --ring: 240 5% 64.9%;
 
-    --glow-blue: rgba(59, 130, 246, 0.08);
-    --glow-purple: rgba(168, 85, 247, 0.08);
+    --glow-blue: rgba(59, 130, 246, 0.04);
+    --glow-purple: rgba(168, 85, 247, 0.04);
 
-    /* Invert zinc colors in light mode to make text and components fully readable */
-    --color-zinc-50: #18181b;     /* dark text for gradients */
-    --color-zinc-100: #18181b;    /* headings are dark zinc-900 */
-    --color-zinc-200: #27272a;    /* subheadings are dark zinc-800 */
-    --color-zinc-300: #3f3f46;    /* titles/details are dark zinc-700 */
-    --color-zinc-400: #52525b;    /* body text is zinc-600 */
-    --color-zinc-500: #71717a;    /* small text stays zinc-500 */
-    --color-zinc-600: #a1a1aa;    /* inverted: light gray */
-    --color-zinc-700: #d4d4d8;    /* inverted: light gray */
-    --color-zinc-800: #e4e4e7;    /* borders in light mode */
-    --color-zinc-900: #ffffff;    /* bg-zinc-900 becomes white */
-    --color-zinc-950: #fafafa;    /* bg-zinc-950 becomes off-white */
+    /* Invert zinc colors in light mode using high-contrast slate colors */
+    --color-zinc-50: #0f172a;     /* dark text slate-900 */
+    --color-zinc-100: #0f172a;    /* dark text slate-900 */
+    --color-zinc-200: #1e293b;    /* dark text slate-800 */
+    --color-zinc-300: #334155;    /* dark text slate-700 */
+    --color-zinc-400: #475569;    /* body copy slate-600 */
+    --color-zinc-500: #64748b;    /* muted text slate-500 */
+    --color-zinc-600: #cbd5e1;    /* light gray borders slate-300 */
+    --color-zinc-700: #e2e8f0;    /* light gray borders slate-200 */
+    --color-zinc-800: #f1f5f9;    /* card backgrounds slate-100 */
+    --color-zinc-900: #f8fafc;    /* body background slate-50 */
+    --color-zinc-950: #ffffff;    /* pure white */
+  }
+
+  /* Swaps dark-theme white transparents to light-theme dark transparents */
+  .light [class*="bg-white/3"] {
+    background-color: rgba(0, 0, 0, 0.03) !important;
+  }
+  .light [class*="bg-white/10"] {
+    background-color: rgba(0, 0, 0, 0.06) !important;
+  }
+  .light [class*="border-white/5"] {
+    border-color: rgba(0, 0, 0, 0.06) !important;
+  }
+  .light [class*="border-white/8"] {
+    border-color: rgba(0, 0, 0, 0.08) !important;
+  }
+  .light [class*="border-white/10"] {
+    border-color: rgba(0, 0, 0, 0.1) !important;
+  }
+  .light [class*="border-white/15"] {
+    border-color: rgba(0, 0, 0, 0.12) !important;
+  }
+  .light [class*="hover:bg-white/5"]:hover {
+    background-color: rgba(0, 0, 0, 0.04) !important;
   }
 
   body {
