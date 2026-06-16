@@ -1,73 +1,69 @@
-# React + TypeScript + Vite
+# 🌌 Sunny Pasumarthi - Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An interactive, responsive, and modern developer portfolio built using **React**, **TypeScript**, **Tailwind CSS**, and **Vite**, integrated with **Firebase Firestore** for contact form submissions.
 
-Currently, two official plugins are available:
+## ✨ Core Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+*   **Custom Dark/Light Theme & Glassmorphism**: Premium styling featuring vibrant glow effects, bento grid layouts, and smooth animations using Framer Motion.
+*   **Interactive Tech Orbit**: A dynamic orbit display showcasing core engineering layers (HTML/CSS, Node.js, Blockchain, Firebase, and Git tools).
+*   **Skill Proficiencies Radar Chart**: A custom interactive radar plot mapping technical competence.
+*   **Real-time GitHub Statistics**: Live tracking of repository information and GitHub contributions.
+*   **Learning Journey Timeline**: A chronological timeline highlighting academic milestones and project releases.
+*   **Interactive Contact Form**: A client form styled with micro-animations that writes directly to a Firebase Firestore database (with a seamless local storage fallback).
+*   **Instant Resume Access**: Fast download/view access for the official `Resume.pdf`.
+*   **Command Palette (Ctrl + K)**: Universal navigation search modal enabling users to jump to sections or download the resume quickly.
 
-## React Compiler
+## 🛠️ Technology Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+*   **Framework**: [React](https://react.dev/) with [Vite](https://vite.dev/)
+*   **Language**: [TypeScript](https://www.typescriptlang.org/)
+*   **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+*   **Icons**: [Lucide React](https://lucide.dev/)
+*   **Animations**: [Framer Motion](https://www.framer.com/motion/) & [Canvas Confetti](https://www.npmjs.com/package/canvas-confetti)
+*   **Database**: [Firebase Firestore](https://firebase.google.com/docs/firestore)
 
-## Expanding the ESLint configuration
+## 📦 Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Prerequisites
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+*   Node.js (v18+)
+*   npm (v9+)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Installation
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/sunny200551/Portfolio.git
+   cd Portfolio
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Create a `.env` file in the root directory and add your Firebase configuration:
+   ```env
+   VITE_FIREBASE_API_KEY=your_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+   VITE_FIREBASE_PROJECT_ID=your_project_id
+   VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+   VITE_FIREBASE_APP_ID=your_app_id
+   ```
+   *Note: If no `.env` credentials are provided, the site will automatically fall back to storing contact messages inside the browser's `localStorage`.*
+
+### Running Locally
+
+To start the development server:
+```bash
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Production Build
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+To build the static files:
+```bash
+npm run build
 ```
+The output will be generated in the `dist/` directory.
