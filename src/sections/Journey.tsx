@@ -31,14 +31,14 @@ const timelineData: TimelineItem[] = [
     title: 'Web Development Projects',
     icon: Code,
     description: 'Engineered operational web applications. Integrated live data via RESTful web APIs and designed collaborative structures.',
-    skills: ['React', 'Next.js', 'TailwindCSS', 'Weather Applications', 'Academic Platform Design']
+    skills: ['Weather Applications', 'Academic Platform Design']
   },
   {
     year: '2026',
     title: 'Full Stack & Blockchain Exploration',
     icon: Shield,
     description: 'Currently expanding technical stack into backend service layers, server configurations, distributed databases, smart contract languages, and decentralized architectures.',
-    skills: ['Node.js & Express.js', 'Firebase / Firestore', 'Smart Contracts', 'Web3 Concepts']
+    skills: ['Node.js', 'Firebase / Firestore', 'Smart Contracts', 'Web3 Concepts']
   }
 ];
 

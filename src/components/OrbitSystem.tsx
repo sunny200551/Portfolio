@@ -14,15 +14,15 @@ export const OrbitSystem: React.FC = () => {
           animation: 'orbit 25s linear infinite',
         }}
       >
-        {/* Node 1: React */}
+        {/* Node 1: HTML / CSS */}
         <div 
           className="absolute -top-3 w-8 h-8 rounded-full bg-slate-900/90 border border-cyan-400/40 flex items-center justify-center shadow-lg group cursor-pointer hover:border-cyan-400 hover:scale-110 transition-all"
           style={{ transform: 'rotate(0deg)' }}
-          title="React / Next.js"
+          title="HTML / CSS"
         >
           <Globe className="w-4 h-4 text-cyan-400" />
           <span className="absolute left-10 scale-0 group-hover:scale-100 bg-black/80 text-white text-[10px] py-1 px-2 rounded border border-white/10 font-mono transition-all z-20 whitespace-nowrap">
-            Frontend: React
+            Frontend: HTML & CSS
           </span>
         </div>
 
@@ -38,7 +38,7 @@ export const OrbitSystem: React.FC = () => {
           </span>
         </div>
 
-        {/* Node 3: Express/Node */}
+        {/* Node 3: Node.js */}
         <div 
           className="absolute -left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-900/90 border border-green-500/40 flex items-center justify-center shadow-lg group cursor-pointer hover:border-green-500 hover:scale-110 transition-all"
           style={{ transform: 'rotate(240deg)' }}

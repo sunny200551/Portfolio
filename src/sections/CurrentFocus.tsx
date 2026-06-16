@@ -16,7 +16,7 @@ const focusItems: FocusItem[] = [
     title: 'Full Stack Development',
     icon: Server,
     description: 'Constructing performant web app cycles, handling both client states and robust database/api server networks.',
-    subItems: ['Vite + React + TS', 'Node / Express APIs', 'Realtime Sync (Firestore)'],
+    subItems: ['Vite + TS', 'Node.js APIs', 'Realtime Sync (Firestore)'],
     color: 'border-cyan-500/20 text-cyan-400'
   },
   {

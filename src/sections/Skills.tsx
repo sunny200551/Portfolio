@@ -23,14 +23,14 @@ const skillCategories: SkillCategory[] = [
   {
     title: 'Frontend',
     icon: Layout,
-    skills: ['HTML', 'CSS', 'React', 'Next.js', 'TailwindCSS'],
+    skills: ['HTML', 'CSS'],
     color: 'text-cyan-400 border-cyan-500/20',
     glow: 'rgba(59, 130, 246, 0.15)'
   },
   {
     title: 'Backend',
     icon: Server,
-    skills: ['Node.js', 'Express.js', 'Firebase'],
+    skills: ['Node.js', 'Firebase'],
     color: 'text-emerald-400 border-emerald-500/20',
     glow: 'rgba(52, 211, 153, 0.15)'
   },
@@ -51,7 +51,7 @@ const skillCategories: SkillCategory[] = [
   {
     title: 'Tools',
     icon: Wrench,
-    skills: ['Git', 'GitHub', 'VS Code', 'Postman', 'Figma'],
+    skills: ['Git', 'GitHub', 'VS Code'],
     color: 'text-rose-400 border-rose-500/20',
     glow: 'rgba(244, 63, 94, 0.15)'
   }
