@@ -24,7 +24,7 @@ export const CommandPalette: React.FC = () => {
       category: 'Actions', 
       icon: FileText, 
       action: () => {
-        window.open('#resume', '_blank');
+        window.open('Resume.pdf', '_blank');
         setIsOpen(false);
       } 
     }
