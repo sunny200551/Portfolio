@@ -12,6 +12,7 @@ export const OrbitSystem: React.FC = () => {
         className="absolute w-[180px] h-[180px] rounded-full border border-dashed border-violet-500/30 flex items-center justify-center"
         style={{
           animation: 'orbit 25s linear infinite',
+          willChange: 'transform',
         }}
       >
         {/* Node 1: HTML / CSS */}
@@ -56,6 +57,7 @@ export const OrbitSystem: React.FC = () => {
         className="absolute w-[260px] h-[260px] rounded-full border border-dashed border-cyan-500/20 flex items-center justify-center"
         style={{
           animation: 'orbit 40s linear infinite reverse',
+          willChange: 'transform',
         }}
       >
         {/* Node 1: Blockchain smart contracts */}

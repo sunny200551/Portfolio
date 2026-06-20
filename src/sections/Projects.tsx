@@ -55,17 +55,30 @@ const ProjectCard: React.FC<{ project: Project; onPreviewClick: (project: Projec
   onPreviewClick 
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => 
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 768px)').matches : false
+  );
+
+  React.useEffect(() => {
+    const media = window.matchMedia('(max-width: 768px)');
+    const listener = () => setIsMobile(media.matches);
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, []);
 
   return (
     <motion.div
-      onMouseEnter={() => setIsFocused(true)}
-      onMouseLeave={() => setIsFocused(false)}
-      whileHover={{ y: -6, scale: 1.01 }}
+      onMouseEnter={isMobile ? undefined : () => setIsFocused(true)}
+      onMouseLeave={isMobile ? undefined : () => setIsFocused(false)}
+      whileHover={isMobile ? undefined : { y: -6, scale: 1.01 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className="relative col-span-12 md:col-span-6 flex flex-col justify-between overflow-hidden glassmorphism rounded-2xl border border-zinc-800 dark:border-zinc-800 p-0 group cursor-pointer"
     >
       {/* Cover Image */}
-      <div className="relative h-48 w-full overflow-hidden border-b border-white/5">
+      <div 
+        onClick={isMobile ? () => onPreviewClick(project) : undefined}
+        className="relative h-48 w-full overflow-hidden border-b border-white/5"
+      >
         <img
           src={project.image}
           alt={project.title}
@@ -74,19 +87,21 @@ const ProjectCard: React.FC<{ project: Project; onPreviewClick: (project: Projec
         {/* Glow Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         
-        {/* Action Trigger Overlay */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-xs">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onPreviewClick(project);
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg shadow-lg font-mono text-xs uppercase tracking-wider transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
-          >
-            <Maximize2 size={14} />
-            Live Preview
-          </button>
-        </div>
+        {/* Action Trigger Overlay (Desktop only) */}
+        {!isMobile && (
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-xs">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onPreviewClick(project);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg shadow-lg font-mono text-xs uppercase tracking-wider transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
+            >
+              <Maximize2 size={14} />
+              Live Preview
+            </button>
+          </div>
+        )}
 
         {/* Floating title badge */}
         <span className="absolute top-4 left-4 text-[10px] font-mono py-1 px-2.5 rounded-full border border-violet-500/30 bg-black/60 text-violet-300 uppercase tracking-widest backdrop-blur-md">
@@ -95,7 +110,7 @@ const ProjectCard: React.FC<{ project: Project; onPreviewClick: (project: Projec
       </div>
 
       {/* Details */}
-      <div className="p-6 flex flex-col justify-between flex-grow gap-4">
+      <div className="p-4 sm:p-6 flex flex-col justify-between flex-grow gap-4">
         <div className="flex flex-col gap-2">
           <h3 className="text-xl font-bold text-zinc-100 dark:text-zinc-100">{project.title}</h3>
           <p className="text-sm text-zinc-400 dark:text-zinc-400 leading-relaxed min-h-[72px]">
@@ -156,20 +171,22 @@ const ProjectCard: React.FC<{ project: Project; onPreviewClick: (project: Projec
       </div>
 
       {/* Inner Card Glow Highlight */}
-      <div
-        className="absolute inset-0 pointer-events-none rounded-2xl transition-opacity duration-300"
-        style={{
-          border: '1px solid transparent',
-          backgroundImage: isFocused 
-            ? `radial-gradient(circle 180px at 50% 50%, rgba(139, 92, 246, 0.25), transparent 80%)` 
-            : 'none',
-          backgroundClip: 'border-box',
-          WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
-          WebkitMaskComposite: 'xor',
-          maskComposite: 'exclude',
-          opacity: isFocused ? 1 : 0,
-        }}
-      />
+      {!isMobile && (
+        <div
+          className="absolute inset-0 pointer-events-none rounded-2xl transition-opacity duration-300"
+          style={{
+            border: '1px solid transparent',
+            backgroundImage: isFocused 
+              ? `radial-gradient(circle 180px at 50% 50%, rgba(139, 92, 246, 0.25), transparent 80%)` 
+              : 'none',
+            backgroundClip: 'border-box',
+            WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
+            WebkitMaskComposite: 'xor',
+            maskComposite: 'exclude',
+            opacity: isFocused ? 1 : 0,
+          }}
+        />
+      )}
     </motion.div>
   );
 };
@@ -224,7 +241,7 @@ export const Projects: React.FC<ProjectsProps> = ({ repos, loading }) => {
   return (
     <section id="projects" className="py-24 px-4 max-w-6xl mx-auto z-10 relative">
       <div className="text-center mb-16">
-        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-b from-zinc-50 to-zinc-300 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-b from-zinc-50 to-zinc-300 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent">
           Project Showcases
         </h2>
         <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest mt-2">

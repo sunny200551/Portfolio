@@ -25,6 +25,8 @@ export const ParticleBackground: React.FC = () => {
       radius: 120
     };
 
+    const isMobile = window.innerWidth < 768;
+
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -33,7 +35,8 @@ export const ParticleBackground: React.FC = () => {
 
     const initParticles = () => {
       particles = [];
-      const particleCount = Math.min(Math.floor((canvas.width * canvas.height) / 12000), 100);
+      const maxCount = isMobile ? 25 : 100;
+      const particleCount = Math.min(Math.floor((canvas.width * canvas.height) / 12000), maxCount);
       
       for (let i = 0; i < particleCount; i++) {
         particles.push({
@@ -89,18 +92,20 @@ export const ParticleBackground: React.FC = () => {
           }
         }
 
-        // Connect particles to mouse
-        const mdx = p.x - mouse.x;
-        const mdy = p.y - mouse.y;
-        const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+        // Connect particles to mouse (desktop only)
+        if (!isMobile) {
+          const mdx = p.x - mouse.x;
+          const mdy = p.y - mouse.y;
+          const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
 
-        if (mdist < mouse.radius) {
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y);
-          ctx.lineTo(mouse.x, mouse.y);
-          ctx.strokeStyle = mouseLineColor;
-          ctx.lineWidth = (1 - mdist / mouse.radius) * 1.2;
-          ctx.stroke();
+          if (mdist < mouse.radius) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.strokeStyle = mouseLineColor;
+            ctx.lineWidth = (1 - mdist / mouse.radius) * 1.2;
+            ctx.stroke();
+          }
         }
       }
 
@@ -119,15 +124,19 @@ export const ParticleBackground: React.FC = () => {
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
-    window.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseleave', handleMouseLeave);
+    if (!isMobile) {
+      window.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseleave', handleMouseLeave);
+    }
     
     animationFrameId = requestAnimationFrame(draw);
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
-      window.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseleave', handleMouseLeave);
+      if (!isMobile) {
+        window.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseleave', handleMouseLeave);
+      }
       cancelAnimationFrame(animationFrameId);
     };
   }, []);

@@ -102,6 +102,7 @@
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
+  will-change: transform;
 }
 
 .animate-pulse-slow {
@@ -140,7 +141,13 @@
 .bento-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  gap: 1.5rem;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .bento-grid {
+    gap: 1.5rem;
+  }
 }
 
 @media (max-width: 1024px) {

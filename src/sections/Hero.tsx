@@ -8,19 +8,19 @@ interface HeroProps {
   profile: GitHubProfile | null;
 }
 
-export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
+const headlines = [
+  'Computer Science Engineering Student',
+  'Full Stack Developer',
+  'Blockchain Enthusiast'
+];
+
+const TypingHeadline: React.FC = () => {
   const [typedText, setTypedText] = useState('');
-  const headlines = [
-    'Computer Science Engineering Student',
-    'Full Stack Developer',
-    'Blockchain Enthusiast'
-  ];
   const [headlineIndex, setHeadlineIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [typingSpeed, setTypingSpeed] = useState(100);
 
   useEffect(() => {
-    let timer: number;
     const currentHeadline = headlines[headlineIndex];
 
     const handleTyping = () => {
@@ -45,10 +45,19 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
       }
     };
 
-    timer = window.setTimeout(handleTyping, typingSpeed);
+    const timer = window.setTimeout(handleTyping, typingSpeed);
     return () => clearTimeout(timer);
   }, [typedText, isDeleting, headlineIndex, typingSpeed]);
 
+  return (
+    <span className="text-lg sm:text-2xl font-mono font-medium text-cyan-400 text-glow-blue">
+      {typedText}
+      <span className="animate-pulse font-light">|</span>
+    </span>
+  );
+};
+
+export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
   return (
     <section id="hero" className="relative min-h-[90svh] flex flex-col items-center justify-center px-4 py-16 overflow-hidden z-10">
       {/* Background spotlights */}
@@ -95,14 +104,11 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="flex flex-col items-center gap-3"
         >
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-b from-zinc-50 to-zinc-300 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent leading-none">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-b from-zinc-50 to-zinc-300 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent leading-none">
             {profile?.name || "Sunny Pasumarthi"}
           </h1>
           <div className="h-8 sm:h-10 flex items-center justify-center">
-            <span className="text-lg sm:text-2xl font-mono font-medium text-cyan-400 text-glow-blue">
-              {typedText}
-              <span className="animate-pulse font-light">|</span>
-            </span>
+            <TypingHeadline />
           </div>
         </motion.div>
 

@@ -46,7 +46,7 @@ export const Journey: React.FC = () => {
   return (
     <section id="journey" className="py-24 px-4 max-w-4xl mx-auto z-10 relative">
       <div className="text-center mb-16">
-        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-b from-zinc-50 to-zinc-300 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-b from-zinc-50 to-zinc-300 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent">
           Learning Journey
         </h2>
         <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest mt-2">
@@ -54,7 +54,7 @@ export const Journey: React.FC = () => {
         </p>
       </div>
 
-      <div className="relative border-l border-zinc-800 dark:border-zinc-800 ml-4 md:ml-32 pl-6 md:pl-8 space-y-12">
+      <div className="relative border-l border-zinc-800 dark:border-zinc-800 ml-2 sm:ml-4 md:ml-32 pl-4 sm:pl-6 md:pl-8 space-y-12">
         {timelineData.map((item, idx) => {
           const Icon = item.icon;
           
@@ -78,7 +78,7 @@ export const Journey: React.FC = () => {
               </div>
 
               {/* Node bubble on the timeline line */}
-              <div className="absolute -left-[39px] md:-left-[47px] top-1 w-6 h-6 rounded-full bg-zinc-950 border-2 border-violet-500 flex items-center justify-center shadow-lg">
+              <div className="absolute -left-[28px] sm:-left-[39px] md:-left-[47px] top-1 w-6 h-6 rounded-full bg-zinc-950 border-2 border-violet-500 flex items-center justify-center shadow-lg">
                 <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
               </div>
 

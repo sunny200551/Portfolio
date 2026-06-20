@@ -30,7 +30,7 @@ export const CodingDashboard: React.FC = () => {
   return (
     <section id="coding" className="py-24 px-4 max-w-6xl mx-auto z-10 relative">
       <div className="text-center mb-16">
-        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-b from-zinc-50 to-zinc-300 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-b from-zinc-50 to-zinc-300 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent">
           Competitive Programming & Achievements
         </h2>
         <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest mt-2">
@@ -40,7 +40,7 @@ export const CodingDashboard: React.FC = () => {
 
       <div className="bento-grid">
         {/* Statistics Overview Row - Span 12 */}
-        <SpotlightCard className="col-span-12 p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <SpotlightCard className="col-span-12 p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
               <Icons.Trophy size={28} />
@@ -75,7 +75,7 @@ export const CodingDashboard: React.FC = () => {
         </SpotlightCard>
 
         {/* LeetCode Bento Column - Span 6 */}
-        <SpotlightCard className="col-span-12 md:col-span-6 p-6 flex flex-col justify-between gap-6 min-h-[380px]">
+        <SpotlightCard className="col-span-12 md:col-span-6 p-4 sm:p-6 flex flex-col justify-between gap-6 min-h-[380px]">
           <div className="flex items-center justify-between border-b border-white/5 pb-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-[#FFA116]/10 border border-[#FFA116]/20 text-[#FFA116]">
@@ -169,7 +169,7 @@ export const CodingDashboard: React.FC = () => {
         </SpotlightCard>
 
         {/* CodeChef Bento Column - Span 6 */}
-        <SpotlightCard className="col-span-12 md:col-span-6 p-6 flex flex-col justify-between gap-6 min-h-[380px]">
+        <SpotlightCard className="col-span-12 md:col-span-6 p-4 sm:p-6 flex flex-col justify-between gap-6 min-h-[380px]">
           <div className="flex items-center justify-between border-b border-white/5 pb-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-[#5B4636]/20 border border-[#5B4636]/30 text-[#A08060]">
@@ -188,30 +188,30 @@ export const CodingDashboard: React.FC = () => {
           </div>
 
           {stats.codechef.rating ? (
-            <div className="grid grid-cols-2 gap-4 flex-grow items-center">
-              <div className="p-4 rounded-2xl bg-white/2 border border-white/5 flex flex-col items-center justify-center">
-                <span className="text-3xl font-extrabold font-mono text-zinc-100">{stats.codechef.rating}</span>
-                <span className="text-[10px] text-zinc-500 uppercase tracking-wider mt-1.5 font-mono">Rating</span>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 flex-grow items-center">
+              <div className="p-3 sm:p-4 rounded-2xl bg-white/2 border border-white/5 flex flex-col items-center justify-center text-center">
+                <span className="text-2xl sm:text-3xl font-extrabold font-mono text-zinc-100">{stats.codechef.rating}</span>
+                <span className="text-[9px] sm:text-[10px] text-zinc-500 uppercase tracking-wider mt-1 sm:mt-1.5 font-mono">Rating</span>
               </div>
-              <div className={`p-4 rounded-2xl border flex flex-col items-center justify-center ${getCodeChefStarsColor(stats.codechef.stars)}`}>
-                <span className="text-3xl font-extrabold font-mono">
+              <div className={`p-3 sm:p-4 rounded-2xl border flex flex-col items-center justify-center text-center ${getCodeChefStarsColor(stats.codechef.stars)}`}>
+                <span className="text-2xl sm:text-3xl font-extrabold font-mono">
                   {stats.codechef.stars ? `${stats.codechef.stars}★` : '1★'}
                 </span>
-                <span className="text-[10px] uppercase tracking-wider mt-1.5 font-mono">Star Status</span>
+                <span className="text-[9px] sm:text-[10px] uppercase tracking-wider mt-1 sm:mt-1.5 font-mono">Star Status</span>
               </div>
               
-              <div className="col-span-2 grid grid-cols-2 gap-4">
-                <div className="px-4 py-2 bg-white/2 border border-white/5 rounded-xl text-center">
-                  <span className="text-sm font-semibold text-zinc-400 font-mono block">
+              <div className="col-span-2 grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="px-3 sm:px-4 py-2 bg-white/2 border border-white/5 rounded-xl text-center">
+                  <span className="text-xs sm:text-sm font-semibold text-zinc-400 font-mono block">
                     #{stats.codechef.globalRank || 'NA'}
                   </span>
-                  <span className="text-[9px] uppercase text-zinc-600 tracking-wider font-mono">Global Rank</span>
+                  <span className="text-[8px] sm:text-[9px] uppercase text-zinc-600 tracking-wider font-mono">Global Rank</span>
                 </div>
-                <div className="px-4 py-2 bg-white/2 border border-white/5 rounded-xl text-center">
-                  <span className="text-sm font-semibold text-zinc-400 font-mono block">
+                <div className="px-3 sm:px-4 py-2 bg-white/2 border border-white/5 rounded-xl text-center">
+                  <span className="text-xs sm:text-sm font-semibold text-zinc-400 font-mono block">
                     #{stats.codechef.countryRank || 'NA'}
                   </span>
-                  <span className="text-[9px] uppercase text-zinc-600 tracking-wider font-mono">Country Rank</span>
+                  <span className="text-[8px] sm:text-[9px] uppercase text-zinc-600 tracking-wider font-mono">Country Rank</span>
                 </div>
               </div>
             </div>

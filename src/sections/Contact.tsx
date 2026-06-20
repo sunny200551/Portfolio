@@ -62,7 +62,7 @@ export const Contact: React.FC<ContactProps> = ({ profile }) => {
   return (
     <section id="contact" className="py-24 px-4 max-w-6xl mx-auto z-10 relative">
       <div className="text-center mb-16">
-        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-b from-zinc-50 to-zinc-300 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-b from-zinc-50 to-zinc-300 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent">
           Get In Touch
         </h2>
         <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest mt-2">
@@ -73,7 +73,7 @@ export const Contact: React.FC<ContactProps> = ({ profile }) => {
       <div className="grid grid-cols-12 gap-8 items-stretch">
         {/* Contact Info Column (Span 5) */}
         <div className="col-span-12 lg:col-span-5 flex flex-col gap-6">
-          <SpotlightCard className="flex-grow flex flex-col justify-between gap-8 p-8">
+          <SpotlightCard className="flex-grow flex flex-col justify-between gap-6 sm:gap-8 p-4 sm:p-6 lg:p-8">
             <div className="flex flex-col gap-4">
               <h3 className="text-xl font-bold text-zinc-100">Let's talk about keys</h3>
               <p className="text-sm text-zinc-400 leading-relaxed">
@@ -123,7 +123,7 @@ export const Contact: React.FC<ContactProps> = ({ profile }) => {
 
         {/* Contact Form Column (Span 7) */}
         <div className="col-span-12 lg:col-span-7">
-          <SpotlightCard className="p-8 h-full">
+          <SpotlightCard className="p-4 sm:p-6 lg:p-8 h-full">
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">

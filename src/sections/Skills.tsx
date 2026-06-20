@@ -63,7 +63,7 @@ export const Skills: React.FC = () => {
   return (
     <section id="skills" className="py-24 px-4 max-w-6xl mx-auto z-10 relative">
       <div className="text-center mb-16">
-        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-b from-zinc-50 to-zinc-300 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-b from-zinc-50 to-zinc-300 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent">
           Technical Expertise
         </h2>
         <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest mt-2">
