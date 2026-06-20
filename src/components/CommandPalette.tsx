@@ -14,6 +14,7 @@ export const CommandPalette: React.FC = () => {
     { id: 'about', name: 'Go to About Me', category: 'Navigation', icon: Compass, action: () => scrollToSection('about') },
     { id: 'skills', name: 'Go to Skills System', category: 'Navigation', icon: Compass, action: () => scrollToSection('skills') },
     { id: 'projects', name: 'Go to Projects Showcase', category: 'Navigation', icon: Compass, action: () => scrollToSection('projects') },
+    { id: 'coding', name: 'Go to Coding Profiles & Stats', category: 'Navigation', icon: Compass, action: () => scrollToSection('coding') },
     { id: 'journey', name: 'Go to Learning Journey', category: 'Navigation', icon: Compass, action: () => scrollToSection('journey') },
     { id: 'focus', name: 'Go to Current Focus', category: 'Navigation', icon: Compass, action: () => scrollToSection('focus') },
     { id: 'github', name: 'Go to GitHub Activity', category: 'Navigation', icon: Compass, action: () => scrollToSection('github') },

@@ -12,6 +12,7 @@ import { CommandPalette } from './components/CommandPalette';
 import { ParticleBackground } from './components/ParticleBackground';
 import { CursorSpotlight } from './components/CursorSpotlight';
 import { useGitHubData } from './hooks/useGitHubData';
+import { CodingDashboard } from './sections/CodingDashboard';
 
 function App() {
   const { profile, repos, loading } = useGitHubData();
@@ -59,6 +60,7 @@ function App() {
           <a href="#about" onClick={(e) => { e.preventDefault(); document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">ABOUT</a>
           <a href="#skills" onClick={(e) => { e.preventDefault(); document.getElementById('skills')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">SKILLS</a>
           <a href="#projects" onClick={(e) => { e.preventDefault(); document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">PROJECTS</a>
+          <a href="#coding" onClick={(e) => { e.preventDefault(); document.getElementById('coding')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">CODING</a>
           <a href="#journey" onClick={(e) => { e.preventDefault(); document.getElementById('journey')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">JOURNEY</a>
           <a href="#contact" onClick={(e) => { e.preventDefault(); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">CONTACT</a>
         </nav>
@@ -83,6 +85,11 @@ function App() {
         <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
 
         <Projects repos={repos} loading={loading} />
+
+        {/* Divider */}
+        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
+
+        <CodingDashboard />
 
         {/* Divider */}
         <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
