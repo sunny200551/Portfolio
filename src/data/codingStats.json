@@ -1,10 +1,10 @@
 {
   "leetcode": {
     "username": "SunnyPasumarthi",
-    "ranking": 3928256,
+    "ranking": 3931627,
     "solved": {
-      "all": 24,
-      "easy": 15,
+      "all": 25,
+      "easy": 16,
       "medium": 8,
       "hard": 1
     },
@@ -18,5 +18,5 @@
     "countryRank": "131135",
     "division": "Div 4"
   },
-  "lastUpdated": "2026-07-21T01:49:20.104Z"
+  "lastUpdated": "2026-07-22T01:48:44.386Z"
 }
