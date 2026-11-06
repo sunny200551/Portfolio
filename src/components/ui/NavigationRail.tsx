@@ -16,13 +16,12 @@ const NAV_SECTIONS: NavSection[] = [
   { id: 'home', num: '01', label: 'HOME' },
   { id: 'about', num: '02', label: 'ABOUT' },
   { id: 'work', num: '03', label: 'WORK' },
-  { id: 'design', num: '04', label: 'DESIGN' },
-  { id: 'skills', num: '05', label: 'SKILLS' },
-  { id: 'github', num: '06', label: 'GITHUB' },
-  { id: 'stats', num: '07', label: 'STATS' },
-  { id: 'events', num: '08', label: 'EVENTS' },
-  { id: 'journey', num: '09', label: 'JOURNEY' },
-  { id: 'contact', num: '10', label: 'CONTACT' },
+  { id: 'skills', num: '04', label: 'SKILLS' },
+  { id: 'github', num: '05', label: 'GITHUB' },
+  { id: 'stats', num: '06', label: 'STATS' },
+  { id: 'events', num: '07', label: 'EVENTS' },
+  { id: 'journey', num: '08', label: 'JOURNEY' },
+  { id: 'contact', num: '09', label: 'CONTACT' },
 ];
 
 export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPalette }) => {

@@ -89,29 +89,6 @@ registerRoutine('work', (bolt) => {
 });
 
 // ---------------------------------------------------------------------------
-// 04 // DESIGN ROUTINE: Figma cursor & ruler, stage actions
-// ---------------------------------------------------------------------------
-registerRoutine('design', (bolt) => {
-  const stage = robotStore.getState().designStage;
-  switch (stage) {
-    case 'research':
-      bolt.setAnim('idle');
-      bolt.setExpr('focused');
-      break;
-    case 'wireframe':
-      bolt.setAnim('walk');
-      bolt.setExpr('focused');
-      break;
-    case 'prototype':
-      bolt.setAnim('jump');
-      bolt.setExpr('excited');
-      break;
-    case 'build':
-      bolt.setAnim('walk');
-      bolt.setExpr('happy');
-      break;
-  }
-});
 
 // ---------------------------------------------------------------------------
 // 05 // SKILLS ROUTINE: Stair climbing & slab hover dance

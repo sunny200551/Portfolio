@@ -56,7 +56,7 @@ export const Skills: React.FC = () => {
         <div className="flex items-center justify-between gap-4 mb-8">
           <div data-robot-anchor="skills:tag" data-robot-offset-x="-50" data-robot-offset-y="-20" className="flex items-center gap-3 flex-grow">
             <span className="font-mono text-xs font-bold px-3 py-1 bg-[#0A0A0A] text-white border-2 border-[#0A0A0A]">
-              05 // SKILLS
+              04 // SKILLS
             </span>
             <div className="h-0.5 flex-grow bg-[#0A0A0A]" />
           </div>

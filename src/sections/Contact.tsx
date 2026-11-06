@@ -98,7 +98,7 @@ export const Contact: React.FC<ContactProps> = ({ profile }) => {
         
         {/* Section Pill */}
         <div data-robot-anchor="contact:submit" data-robot-offset-x="-50" data-robot-offset-y="-20" className="inline-block px-3 py-1 bg-[#FF5A1F] text-black font-mono font-bold text-xs uppercase border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] mb-8">
-          10 // CONTACT
+          09 // CONTACT
         </div>
 
         {/* Giant Headline */}

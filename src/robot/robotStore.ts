@@ -1,6 +1,5 @@
 import type { RobotAnimation, RobotExpression } from './types';
 
-export type DesignStageId = 'research' | 'wireframe' | 'prototype' | 'build';
 
 export interface WorkCardHoverInfo {
   id: string;
@@ -120,8 +119,7 @@ class RobotStore {
     // Task 3 initial states
     aboutGradYearStage: 'idle',
     workCardHover: null,
-    designStage: 'research',
-    hoveredSlab: null,
+        hoveredSlab: null,
 
     // Task 4 initial states
     githubStage: 'hopping',

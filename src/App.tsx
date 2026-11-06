@@ -7,7 +7,6 @@ import { CommandPalette } from './components/CommandPalette';
 import { Hero } from './sections/Hero';
 import { About } from './sections/About';
 import { Projects } from './sections/Projects';
-import { Design } from './sections/Design';
 import { Skills } from './sections/Skills';
 import { CodingDashboard } from './sections/CodingDashboard';
 import { GitHubActivity } from './sections/GitHubActivity';
@@ -81,9 +80,7 @@ function App() {
         {/* 03. Featured Work / Projects Gallery (#work) */}
         <Projects />
 
-        {/* 04. UI Architecture & Design Tokens (#design) */}
-        <Design />
-
+        
         {/* 04. Technical Stack & Skills (#skills) */}
         <Skills />
 
