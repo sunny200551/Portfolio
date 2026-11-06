@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import baselineStats from '../data/codingStats.json';
 import { codingProfilesConfig } from '../config/codingProfiles';
 
@@ -42,7 +42,6 @@ export interface Achievement {
 export const useCodingStats = () => {
   const [stats, setStats] = useState<CodingProfileStats>(baselineStats as CodingProfileStats);
   const [loading, setLoading] = useState(true);
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
 
   useEffect(() => {
     const fetchLiveStats = async () => {
@@ -52,7 +51,6 @@ export const useCodingStats = () => {
         
         if (cached) {
           const parsed = JSON.parse(cached);
-          // 2-hour caching for live stats to avoid spamming the APIs
           if (Date.now() - parsed.timestamp < 7200000) {
             setStats(parsed.stats);
             setLoading(false);
@@ -60,36 +58,36 @@ export const useCodingStats = () => {
           }
         }
 
-        // Fetch LeetCode stats from Alfa API (CORS enabled)
         const lcUsername = codingProfilesConfig.leetcodeUsername;
         const response = await fetch(`https://alfa-leetcode-api.onrender.com/${lcUsername}`);
         
         if (response.ok) {
           const lcData = await response.json();
           if (lcData && !lcData.errors && lcData.ranking) {
-            const updatedStats: CodingProfileStats = {
-              ...stats,
-              leetcode: {
-                username: lcUsername,
-                ranking: lcData.ranking || stats.leetcode.ranking,
-                solved: {
-                  all: lcData.totalSolved || stats.leetcode.solved.all,
-                  easy: lcData.easySolved || stats.leetcode.solved.easy,
-                  medium: lcData.mediumSolved || stats.leetcode.solved.medium,
-                  hard: lcData.hardSolved || stats.leetcode.solved.hard
+            setStats((prev) => {
+              const updatedStats: CodingProfileStats = {
+                ...prev,
+                leetcode: {
+                  username: lcUsername,
+                  ranking: lcData.ranking || prev.leetcode.ranking,
+                  solved: {
+                    all: lcData.totalSolved || prev.leetcode.solved.all,
+                    easy: lcData.easySolved || prev.leetcode.solved.easy,
+                    medium: lcData.mediumSolved || prev.leetcode.solved.medium,
+                    hard: lcData.hardSolved || prev.leetcode.solved.hard
+                  },
+                  totalQuestions: lcData.totalQuestions || prev.leetcode.totalQuestions
                 },
-                totalQuestions: lcData.totalQuestions || stats.leetcode.totalQuestions
-              },
-              lastUpdated: new Date().toISOString()
-            };
+                lastUpdated: new Date().toISOString()
+              };
 
-            // Cache the successful fetch
-            sessionStorage.setItem(cacheKey, JSON.stringify({
-              stats: updatedStats,
-              timestamp: Date.now()
-            }));
-            
-            setStats(updatedStats);
+              sessionStorage.setItem(cacheKey, JSON.stringify({
+                stats: updatedStats,
+                timestamp: Date.now()
+              }));
+
+              return updatedStats;
+            });
           }
         }
       } catch (err) {
@@ -102,13 +100,12 @@ export const useCodingStats = () => {
     fetchLiveStats();
   }, []);
 
-  // Compute Achievements dynamically
-  useEffect(() => {
+  const achievements = useMemo<Achievement[]>(() => {
     const milestones = codingProfilesConfig.milestones;
     const lcSolved = stats.leetcode.solved;
     const ccRating = stats.codechef.rating || 0;
 
-    const dynamicAchievements: Achievement[] = [
+    return [
       {
         id: 'lc_explorer',
         title: 'LeetCode Explorer',
@@ -117,7 +114,7 @@ export const useCodingStats = () => {
         icon: 'Compass',
         unlocked: lcSolved.all >= milestones.leetcodeSolved[0],
         progress: {
-          current: lcSolved.all,
+          current: Math.min(lcSolved.all, milestones.leetcodeSolved[0]),
           target: milestones.leetcodeSolved[0],
           unit: 'solved'
         }
@@ -130,7 +127,7 @@ export const useCodingStats = () => {
         icon: 'Shield',
         unlocked: lcSolved.all >= milestones.leetcodeSolved[1],
         progress: {
-          current: lcSolved.all,
+          current: Math.min(lcSolved.all, milestones.leetcodeSolved[1]),
           target: milestones.leetcodeSolved[1],
           unit: 'solved'
         }
@@ -143,7 +140,7 @@ export const useCodingStats = () => {
         icon: 'BookOpen',
         unlocked: lcSolved.medium >= 5,
         progress: {
-          current: lcSolved.medium,
+          current: Math.min(lcSolved.medium, 5),
           target: 5,
           unit: 'medium solved'
         }
@@ -156,7 +153,7 @@ export const useCodingStats = () => {
         icon: 'Award',
         unlocked: lcSolved.hard >= 1,
         progress: {
-          current: lcSolved.hard,
+          current: Math.min(lcSolved.hard, 1),
           target: 1,
           unit: 'hard solved'
         }
@@ -182,7 +179,7 @@ export const useCodingStats = () => {
         icon: 'Star',
         unlocked: ccRating >= milestones.codechefRating[0],
         progress: {
-          current: ccRating,
+          current: Math.min(ccRating, milestones.codechefRating[0]),
           target: milestones.codechefRating[0],
           unit: 'rating'
         }
@@ -195,16 +192,15 @@ export const useCodingStats = () => {
         icon: 'Code',
         unlocked: (lcSolved.all + (ccRating > 0 ? 10 : 0)) >= 20,
         progress: {
-          current: lcSolved.all,
+          current: Math.min(lcSolved.all, 20),
           target: 20,
           unit: 'practices'
         }
       }
     ];
-
-    setAchievements(dynamicAchievements);
   }, [stats]);
 
   return { stats, loading, achievements };
 };
+
 export default useCodingStats;

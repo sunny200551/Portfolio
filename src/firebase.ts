@@ -1,5 +1,7 @@
 import { initializeApp } from 'firebase/app';
+import type { FirebaseApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import type { Firestore, FieldValue } from 'firebase/firestore';
 
 // Environment variables configuration
 const firebaseConfig = {
@@ -12,25 +14,22 @@ const firebaseConfig = {
 };
 
 // Check if valid firebase configurations exist
-const isFirebaseConfigured = !!(
+export const isFirebaseConfigured = !!(
   firebaseConfig.apiKey &&
   firebaseConfig.projectId &&
   firebaseConfig.appId
 );
 
-let db: any = null;
-let app: any = null;
+let db: Firestore | null = null;
+let app: FirebaseApp | null = null;
 
 if (isFirebaseConfigured) {
   try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
-    console.log("Firebase initialized successfully.");
   } catch (error) {
-    console.error("Failed to initialize Firebase, falling back to simulated mode:", error);
+    console.error("Failed to initialize Firebase:", error);
   }
-} else {
-  console.warn("Firebase credentials missing in .env. Falling back to simulated local database (localStorage).");
 }
 
 export interface ContactMessage {
@@ -38,33 +37,38 @@ export interface ContactMessage {
   email: string;
   subject: string;
   message: string;
-  timestamp?: any;
+  timestamp?: FieldValue | string;
 }
 
 /**
- * Saves a contact message to Firestore or fallbacks to LocalStorage
+ * Saves a contact message to Firestore or fallbacks to an explicit offline LocalStorage draft
  */
-export async function saveContactMessage(data: ContactMessage): Promise<{ success: boolean; id?: string; error?: string }> {
+export async function saveContactMessage(data: ContactMessage): Promise<{
+  success: boolean;
+  id?: string;
+  isOfflineDraft?: boolean;
+  error?: string;
+}> {
   if (db) {
     try {
       const docRef = await addDoc(collection(db, "contacts"), {
         ...data,
         timestamp: serverTimestamp()
       });
-      return { success: true, id: docRef.id };
-    } catch (error: any) {
-      console.error("Firestore submission failed:", error);
-      return { success: false, error: error.message };
+      return { success: true, id: docRef.id, isOfflineDraft: false };
+    } catch (error: unknown) {
+      const err = error as Error;
+      return { success: false, error: err.message || 'Failed to submit to Firestore.' };
     }
   } else {
-    // Simulated Firestore local storage backup
+    // Explicit offline draft storage when Firebase credentials are omitted
     return new Promise((resolve) => {
       setTimeout(() => {
         try {
-          const key = 'sunny_portfolio_contacts';
+          const key = 'sunny_portfolio_contacts_drafts';
           const existing = localStorage.getItem(key);
           const messages = existing ? JSON.parse(existing) : [];
-          const mockId = `mock-doc-${Math.random().toString(36).substring(2, 11)}`;
+          const mockId = `draft-${Math.random().toString(36).substring(2, 10)}`;
           
           messages.push({
             id: mockId,
@@ -73,12 +77,12 @@ export async function saveContactMessage(data: ContactMessage): Promise<{ succes
           });
           
           localStorage.setItem(key, JSON.stringify(messages));
-          console.log("Contact message simulated & saved locally:", { id: mockId, ...data });
-          resolve({ success: true, id: mockId });
-        } catch (e: any) {
-          resolve({ success: false, error: e.message });
+          resolve({ success: true, id: mockId, isOfflineDraft: true });
+        } catch (e: unknown) {
+          const err = e as Error;
+          resolve({ success: false, error: err.message || 'Offline draft storage failed.' });
         }
-      }, 800); // Simulate network latency
+      }, 400);
     });
   }
 }

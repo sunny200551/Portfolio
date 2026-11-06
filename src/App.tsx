@@ -1,28 +1,27 @@
-import { useEffect } from 'react';
+import { useState, lazy, Suspense } from 'react';
+import { NavigationRail } from './components/ui/NavigationRail';
+import { CustomCursor } from './components/ui/CustomCursor';
+import { SmoothScroll } from './components/ui/SmoothScroll';
+import { SkillsMarquee } from './components/ui/SkillsMarquee';
+import { CommandPalette } from './components/CommandPalette';
 import { Hero } from './sections/Hero';
 import { About } from './sections/About';
-import { Skills } from './sections/Skills';
 import { Projects } from './sections/Projects';
-import { Journey } from './sections/Journey';
-import { CurrentFocus } from './sections/CurrentFocus';
+import { Skills } from './sections/Skills';
+import { CodingDashboard } from './sections/CodingDashboard';
 import { GitHubActivity } from './sections/GitHubActivity';
+import { Events } from './sections/Events';
+import { Journey } from './sections/Journey';
 import { Contact } from './sections/Contact';
 import { Footer } from './sections/Footer';
-import { CommandPalette } from './components/CommandPalette';
-import { ParticleBackground } from './components/ParticleBackground';
-import { CursorSpotlight } from './components/CursorSpotlight';
 import { useGitHubData } from './hooks/useGitHubData';
-import { CodingDashboard } from './sections/CodingDashboard';
+
+// Lazy-load persistent 3D canvas so text is instantly readable
+const Scene = lazy(() => import('./components/three/Scene'));
 
 function App() {
-  const { profile, repos, loading } = useGitHubData();
-
-  // Set default theme and load configurations
-  useEffect(() => {
-    document.documentElement.classList.remove('light');
-    document.documentElement.classList.add('dark');
-    localStorage.setItem('theme', 'dark');
-  }, []);
+  const { profile, repos } = useGitHubData();
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
   const handleContactScroll = () => {
     const el = document.getElementById('contact');
@@ -32,91 +31,61 @@ function App() {
   };
 
   return (
-    <>
-      {/* Dynamic Cursor Spotlight Effect */}
-      <CursorSpotlight />
+    <SmoothScroll>
+      {/* Flat Custom Cursor */}
+      <CustomCursor />
 
-      {/* Dynamic connecting particles background */}
-      <ParticleBackground />
+      {/* Persistent Fixed 3D Canvas behind HTML */}
+      <Suspense fallback={null}>
+        <Scene />
+      </Suspense>
 
-      {/* Futuristic Floating Header */}
-      <header className="fixed top-4 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-4xl px-6 py-3.5 glassmorphism rounded-2xl shadow-xl flex items-center justify-between border border-white/8">
-        {/* Logo Branding */}
-        <a 
-          href="#hero" 
-          onClick={(e) => {
-            e.preventDefault();
-            document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' });
-          }}
-          className="text-sm font-bold bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent font-mono flex items-center gap-1.5 hover:scale-102 transition-transform cursor-pointer"
-        >
-          <span className="text-zinc-500 dark:text-zinc-400 font-normal">[</span>
-          sunny.dev
-          <span className="text-zinc-500 dark:text-zinc-400 font-normal">]</span>
-        </a>
+      {/* Non-Navbar Modern Navigation: SP Logo + Controls + Vertical Section Rail + Fullscreen Menu */}
+      <NavigationRail onOpenCommandPalette={() => setCommandPaletteOpen(true)} />
 
-        {/* Navigation Items (Desktop only) */}
-        <nav className="hidden md:flex items-center gap-6 text-xs font-mono font-semibold tracking-wide">
-          <a href="#about" onClick={(e) => { e.preventDefault(); document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">ABOUT</a>
-          <a href="#skills" onClick={(e) => { e.preventDefault(); document.getElementById('skills')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">SKILLS</a>
-          <a href="#projects" onClick={(e) => { e.preventDefault(); document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">PROJECTS</a>
-          <a href="#coding" onClick={(e) => { e.preventDefault(); document.getElementById('coding')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">CODING</a>
-          <a href="#journey" onClick={(e) => { e.preventDefault(); document.getElementById('journey')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">JOURNEY</a>
-          <a href="#contact" onClick={(e) => { e.preventDefault(); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors">CONTACT</a>
-        </nav>
-      </header>
-
-      {/* Main Container */}
-      <main className="relative z-10 w-full">
-        {/* Sections */}
+      {/* Main Page Layout Shell (Light Base) */}
+      <main className="w-full bg-transparent text-[#0A0A0A] relative z-10">
+        {/* 01. Hero Section (#home) */}
         <Hero onContactClick={handleContactScroll} profile={profile} />
-        
-        {/* Divider */}
-        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
 
+        {/* Two-row infinite Skills Marquee directly under Hero */}
+        <SkillsMarquee />
+
+        {/* 02. About Section (#about) */}
         <About profile={profile} />
 
-        {/* Divider */}
-        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
-        
+        {/* 03. Featured Work / Projects Gallery (#work) */}
+        <Projects />
+
+        {/* 04. Technical Stack & Skills (#skills) */}
         <Skills />
 
-        {/* Divider */}
-        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
-
-        <Projects repos={repos} loading={loading} />
-
-        {/* Divider */}
-        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
-
-        <CodingDashboard />
-
-        {/* Divider */}
-        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
-
-        <Journey />
-
-        {/* Divider */}
-        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
-
-        <CurrentFocus />
-
-        {/* Divider */}
-        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
-
+        {/* 05. GitHub Activity (#github) */}
         <GitHubActivity profile={profile} repos={repos} />
 
-        {/* Divider */}
-        <div className="w-full max-w-6xl mx-auto px-4"><div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-800/15 dark:via-white/5 to-transparent" /></div>
+        {/* 06. Coding Dashboard (#stats) */}
+        <CodingDashboard />
 
+        {/* 07. Participated Events & Hackathons (#events) */}
+        <Events />
+
+        {/* 08. Learning Journey (#journey) */}
+        <Journey />
+
+        {/* 09. Contact Form (#contact) */}
         <Contact profile={profile} />
 
+        {/* Minimal Solid Navy Footer */}
         <Footer profile={profile} />
       </main>
 
-      {/* Interactive Command Palette Trigger (Fixed lower right) */}
-      <CommandPalette />
-    </>
+      {/* Accessible Command Palette (Ctrl+K) */}
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onOpen={() => setCommandPaletteOpen(true)}
+        onClose={() => setCommandPaletteOpen(false)}
+      />
+    </SmoothScroll>
   );
 }
 

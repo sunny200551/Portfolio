@@ -8,4 +8,25 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes('node_modules/three') || id.includes('node_modules/@react-three')) {
+            return 'three-vendor';
+          }
+          if (id.includes('node_modules/gsap') || id.includes('node_modules/lenis')) {
+            return 'gsap-vendor';
+          }
+          if (id.includes('node_modules/lucide-react')) {
+            return 'icons-vendor';
+          }
+          if (id.includes('node_modules/firebase')) {
+            return 'firebase-vendor';
+          }
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1200
+  }
 })

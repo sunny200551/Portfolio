@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Send, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
-import { saveContactMessage } from '../firebase';
-import confetti from 'canvas-confetti';
-import { SpotlightCard } from '../components/SpotlightCard';
+import { Mail, MapPin, Send, Loader2, CheckCircle2, AlertCircle, Copy, Check } from 'lucide-react';
+import { saveContactMessage, isFirebaseConfigured } from '../firebase';
+import { FlatConfetti } from '../components/ui/FlatConfetti';
 import type { GitHubProfile } from '../hooks/useGitHubData';
 
 interface ContactProps {
-  profile: GitHubProfile | null;
+  profile?: GitHubProfile | null;
 }
 
 export const Contact: React.FC<ContactProps> = ({ profile }) => {
@@ -14,217 +13,363 @@ export const Contact: React.FC<ContactProps> = ({ profile }) => {
     name: '',
     email: '',
     subject: '',
-    message: ''
+    message: '',
+    honeypot: '' // Anti-spam bot honeypot
   });
   
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isOfflineDraft, setIsOfflineDraft] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleCopyEmail = () => {
+    navigator.clipboard.writeText('sunnypasumarthi9@gmail.com');
+    setCopiedEmail(true);
+    setTimeout(() => setCopiedEmail(false), 2000);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.message) {
+
+    // Honeypot check for bots
+    if (formData.honeypot) {
+      setStatus('success');
+      return;
+    }
+
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
       setStatus('error');
-      setErrorMessage('Please fill in all required fields.');
+      setErrorMessage('Please complete all required fields.');
+      return;
+    }
+
+    // Valid email format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      setStatus('error');
+      setErrorMessage('Please provide a valid email address.');
       return;
     }
 
     setStatus('loading');
     
     try {
-      const result = await saveContactMessage(formData);
+      const result = await saveContactMessage({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        subject: formData.subject.trim() || 'General Inquiry',
+        message: formData.message.trim()
+      });
       
       if (result.success) {
+        setIsOfflineDraft(Boolean(result.isOfflineDraft));
         setStatus('success');
-        setFormData({ name: '', email: '', subject: '', message: '' });
-        
-        // Trigger celebratory confetti burst!
-        confetti({
-          particleCount: 150,
-          spread: 80,
-          origin: { y: 0.6 },
-          colors: ['#8b5cf6', '#06b6d4', '#a855f7', '#3b82f6']
-        });
+        setShowConfetti(true);
+        setFormData({ name: '', email: '', subject: '', message: '', honeypot: '' });
       } else {
         setStatus('error');
-        setErrorMessage(result.error || 'Failed to send message.');
+        setErrorMessage(result.error || 'Failed to dispatch message.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as Error;
       setStatus('error');
-      setErrorMessage(err.message || 'An unexpected error occurred.');
+      setErrorMessage(error.message || 'An unexpected error occurred.');
     }
   };
 
   return (
-    <section id="contact" className="py-24 px-4 max-w-6xl mx-auto z-10 relative">
-      <div className="text-center mb-16">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-b from-zinc-50 to-zinc-300 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent">
-          Get In Touch
-        </h2>
-        <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest mt-2">
-          Connect / Send a Message
-        </p>
-      </div>
+    <section id="contact" className="w-full bg-[#0047AB] text-white py-16 md:py-24 relative z-10 border-t-2 border-b-2 border-[#0A0A0A]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        
+        {/* Section Pill */}
+        <div className="inline-block px-3 py-1 bg-[#FF5A1F] text-black font-mono font-bold text-xs uppercase border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] mb-8">
+          09 // CONTACT
+        </div>
 
-      <div className="grid grid-cols-12 gap-8 items-stretch">
-        {/* Contact Info Column (Span 5) */}
-        <div className="col-span-12 lg:col-span-5 flex flex-col gap-6">
-          <SpotlightCard className="flex-grow flex flex-col justify-between gap-6 sm:gap-8 p-4 sm:p-6 lg:p-8">
-            <div className="flex flex-col gap-4">
-              <h3 className="text-xl font-bold text-zinc-100">Let's talk about keys</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                Whether you want to discuss full stack code cycles, smart contract layers, or coordinate collaborative projects, drop a line.
-              </p>
-            </div>
+        {/* Giant Headline */}
+        <div className="mb-14">
+          <h2 className="font-display font-black text-4xl sm:text-7xl md:text-8xl uppercase tracking-tight text-white leading-none">
+            LET'S BUILD SOMETHING.
+          </h2>
+          <p className="font-mono text-xs sm:text-base text-white/80 mt-4 max-w-2xl leading-relaxed">
+            Have a project in mind, an opportunity, or want to collaborate? Send a message or reach out through direct channels.
+          </p>
+        </div>
 
-            <div className="flex flex-col gap-5">
-              <div className="flex items-center gap-4 text-sm">
-                <div className="p-3 rounded-lg bg-zinc-900 border border-violet-500/20 text-violet-400">
-                  <Mail size={18} />
+        <div className="grid grid-cols-12 gap-8 items-start">
+          
+          {/* Direct Channels Column */}
+          <div className="col-span-12 lg:col-span-5 flex flex-col gap-6">
+            
+            {/* Direct Cards */}
+            <div className="p-6 sm:p-8 bg-white border-2 border-[#0A0A0A] shadow-[8px_8px_0px_#0A0A0A] text-[#0A0A0A] flex flex-col justify-between gap-6">
+              <div>
+                <h3 className="font-display font-black text-xl uppercase tracking-tight text-[#0A0A0A] border-b-2 border-[#0A0A0A] pb-3 mb-5">
+                  DIRECT CONTACT
+                </h3>
+
+                <div className="flex flex-col gap-3 font-mono text-xs">
+                  {/* Email */}
+                  <div className="p-3.5 bg-[#EEF2FA] border-2 border-[#0A0A0A] flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-[#FF5A1F] text-black border border-[#0A0A0A]">
+                        <Mail size={16} />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] text-[#0A0A0A]/60 uppercase font-bold">Email</span>
+                        <a href="mailto:sunnypasumarthi9@gmail.com" className="text-[#0A0A0A] font-bold hover:text-[#0047AB] transition-colors break-all">
+                          sunnypasumarthi9@gmail.com
+                        </a>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleCopyEmail}
+                      aria-label="Copy email"
+                      className="p-1.5 border border-[#0A0A0A] bg-white hover:bg-[#FF5A1F] text-black transition-colors cursor-pointer shrink-0"
+                      title="Copy email to clipboard"
+                    >
+                      {copiedEmail ? <Check size={14} className="text-black" /> : <Copy size={14} />}
+                    </button>
+                  </div>
+
+                  {/* Location */}
+                  <div className="p-3.5 bg-[#EEF2FA] border-2 border-[#0A0A0A] flex items-center gap-3">
+                    <div className="p-2 bg-[#0047AB] text-white border border-[#0A0A0A]">
+                      <MapPin size={16} />
+                    </div>
+                    <div>
+                      <span className="block text-[10px] text-[#0A0A0A]/60 uppercase font-bold">Location</span>
+                      <span className="text-[#0A0A0A] font-bold">
+                        {profile?.location || 'Nellore, Andhra Pradesh, India'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="block text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Email Address</span>
-                  <a href="mailto:sunnypasumarthi9@gmail.com" className="text-zinc-200 hover:text-cyan-400 transition-colors">
-                    sunnypasumarthi9@gmail.com
+              </div>
+
+              {/* Verified Social Channels */}
+              <div>
+                <span className="font-mono text-xs font-bold text-[#0A0A0A] uppercase block mb-3">
+                  Verified Social Channels
+                </span>
+                <div className="grid grid-cols-3 gap-2 font-mono text-xs font-bold">
+                  <a
+                    href="https://github.com/sunny200551"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 bg-[#EEF2FA] border-2 border-[#0A0A0A] text-[#0A0A0A] hover:bg-[#FF5A1F] hover:text-black transition-colors flex flex-col items-center gap-1.5 text-center"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+                      <path d="M9 18c-4.51 2-5-2-7-2" />
+                    </svg>
+                    <span>GITHUB</span>
+                  </a>
+
+                  <a
+                    href="https://www.linkedin.com/in/sunny-pasumarthi-357615333/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 bg-[#EEF2FA] border-2 border-[#0A0A0A] text-[#0A0A0A] hover:bg-[#FF5A1F] hover:text-black transition-colors flex flex-col items-center gap-1.5 text-center"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                      <rect width="4" height="12" x="2" y="9" />
+                      <circle cx="4" cy="4" r="2" />
+                    </svg>
+                    <span>LINKEDIN</span>
+                  </a>
+
+                  <a
+                    href="https://instagram.com/sunny_pasumarthi"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 bg-[#EEF2FA] border-2 border-[#0A0A0A] text-[#0A0A0A] hover:bg-[#FF5A1F] hover:text-black transition-colors flex flex-col items-center gap-1.5 text-center"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                    </svg>
+                    <span>INSTAGRAM</span>
                   </a>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 text-sm">
-                <div className="p-3 rounded-lg bg-zinc-900 border border-cyan-500/20 text-cyan-400">
-                  <Phone size={18} />
-                </div>
-                <div>
-                  <span className="block text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Communication Channel</span>
-                  <span className="text-zinc-300">GitHub Open Issues / Inboxes</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 text-sm">
-                <div className="p-3 rounded-lg bg-zinc-900 border border-pink-500/20 text-pink-400">
-                  <MapPin size={18} />
-                </div>
-                <div>
-                  <span className="block text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Location</span>
-                  <span className="text-zinc-300">{profile?.location || 'India'}</span>
-                </div>
+              {/* Backend Notice */}
+              <div className="pt-4 border-t-2 border-[#0A0A0A]/10 font-mono text-[11px] text-[#0A0A0A]/70">
+                {isFirebaseConfigured ? (
+                  <span className="flex items-center gap-2 font-bold text-[#0047AB]">
+                    <span className="w-2.5 h-2.5 bg-[#0047AB] border border-[#0A0A0A]" />
+                    BACKEND CONNECTED
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2 font-bold text-[#0A1A3F]">
+                    <span className="w-2.5 h-2.5 bg-[#FF5A1F] border border-[#0A0A0A]" />
+                    LOCAL DRAFT MODE
+                  </span>
+                )}
               </div>
             </div>
+          </div>
 
-            <div className="text-[11px] text-zinc-500 font-mono border-t border-white/5 pt-4">
-              🔒 Submissions are cataloged inside a secure client database.
-            </div>
-          </SpotlightCard>
-        </div>
+          {/* Form Column on White Flat Panel */}
+          <div className="col-span-12 lg:col-span-7 relative">
+            
+            {/* Flat Confetti Burst overlay on success */}
+            {showConfetti && <FlatConfetti onComplete={() => setShowConfetti(false)} />}
 
-        {/* Contact Form Column (Span 7) */}
-        <div className="col-span-12 lg:col-span-7">
-          <SpotlightCard className="p-4 sm:p-6 lg:p-8 h-full">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="name" className="text-xs font-mono text-zinc-400">Name *</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    required
-                    value={formData.name}
-                    onChange={handleChange}
-                    disabled={status === 'loading'}
-                    placeholder="Enter your name"
-                    className="px-4 py-3 bg-zinc-900/60 border border-white/8 rounded-xl outline-none text-zinc-200 text-sm focus:border-violet-500/50 focus:bg-zinc-900 transition-all font-sans"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="email" className="text-xs font-mono text-zinc-400">Email Address *</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    disabled={status === 'loading'}
-                    placeholder="name@example.com"
-                    className="px-4 py-3 bg-zinc-900/60 border border-white/8 rounded-xl outline-none text-zinc-200 text-sm focus:border-violet-500/50 focus:bg-zinc-900 transition-all font-sans"
-                  />
-                </div>
+            <div className="p-6 sm:p-10 bg-white border-2 border-[#0A0A0A] shadow-[8px_8px_0px_#0A0A0A] text-[#0A0A0A] relative">
+              <div className="border-b-2 border-[#0A0A0A] pb-4 mb-6 flex items-center justify-between">
+                <h3 className="font-display font-black text-2xl uppercase tracking-tight text-[#0A0A0A]">
+                  SEND A MESSAGE
+                </h3>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="subject" className="text-xs font-mono text-zinc-400">Subject</label>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                
+                {/* Honeypot field (hidden from view) */}
                 <input
                   type="text"
-                  id="subject"
-                  name="subject"
-                  value={formData.subject}
+                  name="honeypot"
+                  value={formData.honeypot}
                   onChange={handleChange}
-                  disabled={status === 'loading'}
-                  placeholder="What is this about?"
-                  className="px-4 py-3 bg-zinc-900/60 border border-white/8 rounded-xl outline-none text-zinc-200 text-sm focus:border-violet-500/50 focus:bg-zinc-900 transition-all font-sans"
+                  className="hidden"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
                 />
-              </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="message" className="text-xs font-mono text-zinc-400">Message *</label>
-                <textarea
-                  id="message"
-                  name="message"
-                  required
-                  rows={5}
-                  value={formData.message}
-                  onChange={handleChange}
-                  disabled={status === 'loading'}
-                  placeholder="Write your message here..."
-                  className="px-4 py-3 bg-zinc-900/60 border border-white/8 rounded-xl outline-none text-zinc-200 text-sm focus:border-violet-500/50 focus:bg-zinc-900 transition-all resize-none font-sans"
-                />
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="name" className="text-xs font-mono font-bold uppercase text-[#0A0A0A]">
+                      Your Name *
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      required
+                      value={formData.name}
+                      onChange={handleChange}
+                      disabled={status === 'loading'}
+                      placeholder="Your name"
+                      className="px-4 py-3 bg-[#EEF2FA] border-2 border-[#0A0A0A] text-[#0A0A0A] text-sm focus:bg-white focus:outline-none transition-all font-mono no-custom-cursor"
+                    />
+                  </div>
 
-              {/* Submit Button & Notifications */}
-              <div className="flex flex-col gap-4 mt-2">
-                <button
-                  type="submit"
-                  disabled={status === 'loading'}
-                  className="flex items-center justify-center gap-2 px-6 py-3.5 bg-violet-600 hover:bg-violet-500 disabled:bg-violet-700/50 text-white rounded-xl shadow-lg font-bold text-sm cursor-pointer transition-all hover:scale-101 active:scale-99"
-                >
-                  {status === 'loading' ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Sending Message...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4" />
-                      Send Message
-                    </>
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="email" className="text-xs font-mono font-bold uppercase text-[#0A0A0A]">
+                      Your Email *
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      required
+                      value={formData.email}
+                      onChange={handleChange}
+                      disabled={status === 'loading'}
+                      placeholder="you@domain.com"
+                      className="px-4 py-3 bg-[#EEF2FA] border-2 border-[#0A0A0A] text-[#0A0A0A] text-sm focus:bg-white focus:outline-none transition-all font-mono no-custom-cursor"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="subject" className="text-xs font-mono font-bold uppercase text-[#0A0A0A]">
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    id="subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    disabled={status === 'loading'}
+                    placeholder="Project Inquiry / Frontend Development"
+                    className="px-4 py-3 bg-[#EEF2FA] border-2 border-[#0A0A0A] text-[#0A0A0A] text-sm focus:bg-white focus:outline-none transition-all font-mono no-custom-cursor"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="message" className="text-xs font-mono font-bold uppercase text-[#0A0A0A]">
+                    Message *
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    required
+                    rows={5}
+                    value={formData.message}
+                    onChange={handleChange}
+                    disabled={status === 'loading'}
+                    placeholder="Describe your project, timeline, or message..."
+                    className="px-4 py-3 bg-[#EEF2FA] border-2 border-[#0A0A0A] text-[#0A0A0A] text-sm focus:bg-white focus:outline-none transition-all resize-none font-mono no-custom-cursor"
+                  />
+                </div>
+
+                {/* Submit Button & Status Alerts */}
+                <div className="flex flex-col gap-3 mt-2">
+                  <button
+                    type="submit"
+                    disabled={status === 'loading'}
+                    className="flex items-center justify-center gap-2 px-6 py-4 bg-[#FF5A1F] hover:bg-[#0A0A0A] hover:text-white disabled:bg-gray-300 text-black border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] font-mono font-bold text-xs uppercase cursor-pointer transition-all active:translate-y-0.5 active:shadow-[2px_2px_0px_#0A0A0A]"
+                  >
+                    {status === 'loading' ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-black" />
+                        <span>SENDING MESSAGE...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>SEND MESSAGE</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* Success Alert */}
+                  {status === 'success' && (
+                    <div className="p-4 bg-[#EEF2FA] border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] text-black font-mono text-xs">
+                      <div className="flex items-center gap-2 font-bold mb-1">
+                        <CheckCircle2 size={16} className="text-[#0047AB] shrink-0" />
+                        <span>
+                          {isOfflineDraft ? 'OFFLINE DRAFT RECORDED' : 'MESSAGE SENT'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#0A0A0A]/80 leading-relaxed mt-1">
+                        {isOfflineDraft
+                          ? 'Firebase environment credentials are not active on this build. Your message was saved locally as an offline draft. Please email sunnypasumarthi9@gmail.com directly for an immediate reply.'
+                          : 'Your message was sent successfully. I will reply to your provided email address shortly.'}
+                      </p>
+                    </div>
                   )}
-                </button>
 
-                {/* Submit Feedback */}
-                {status === 'success' && (
-                  <div className="flex items-center gap-2 p-3.5 bg-emerald-500/10 border border-emerald-500/35 text-emerald-400 rounded-xl text-xs sm:text-sm font-mono">
-                    <CheckCircle2 size={16} className="shrink-0" />
-                    <span>Message received! Confetti launched. Thank you.</span>
-                  </div>
-                )}
+                  {/* Error Alert */}
+                  {status === 'error' && (
+                    <div className="flex items-center gap-2 p-3 bg-[#FF5A1F]/20 border-2 border-[#0A0A0A] text-black text-xs font-mono font-bold">
+                      <AlertCircle size={16} className="text-[#FF5A1F] shrink-0" />
+                      <span>{errorMessage}</span>
+                    </div>
+                  )}
+                </div>
 
-                {status === 'error' && (
-                  <div className="flex items-center gap-2 p-3.5 bg-rose-500/10 border border-rose-500/35 text-rose-400 rounded-xl text-xs sm:text-sm font-mono">
-                    <AlertCircle size={16} className="shrink-0" />
-                    <span>{errorMessage}</span>
-                  </div>
-                )}
-              </div>
-            </form>
-          </SpotlightCard>
+              </form>
+            </div>
+          </div>
+
         </div>
+
       </div>
     </section>
   );
 };
+
 export default Contact;

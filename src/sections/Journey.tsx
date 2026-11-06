@@ -1,126 +1,246 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useRef } from 'react';
 import { Terminal, Globe, Code, Shield } from 'lucide-react';
-import { SpotlightCard } from '../components/SpotlightCard';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-interface TimelineItem {
+gsap.registerPlugin(ScrollTrigger);
+
+interface MilestoneItem {
   year: string;
   title: string;
   icon: React.ElementType;
   description: string;
   skills: string[];
+  status?: string;
 }
 
-const timelineData: TimelineItem[] = [
+const milestonesData: MilestoneItem[] = [
   {
     year: '2023',
-    title: 'Started Programming',
+    title: 'Programming Fundamentals',
     icon: Terminal,
-    description: 'Began the Computer Science journey by learning foundational languages. Mastered programming fundamentals, flow control, arrays, and standard algorithm logic.',
-    skills: ['C Programming', 'Python Basics', 'Algorithms Basics']
+    description: 'Began Computer Science degree at NBKRIST. Built core foundations in C, Python basics, and algorithmic problem-solving.',
+    skills: ['C Programming', 'Python Basics', 'Algorithms Basics'],
+    status: 'FOUNDATION'
   },
   {
     year: '2024',
-    title: 'Frontend Development',
+    title: 'Frontend Web Development',
     icon: Globe,
-    description: 'Transitioned into web development, focusing on semantic interfaces, modern layouts, styling utilities, and responsive design systems.',
-    skills: ['HTML5 & CSS3', 'JavaScript ES6', 'Responsive Web Design', 'Git & GitHub']
+    description: 'Learned client-side development, responsive layouts, semantic HTML5, modern CSS, JavaScript ES6+, and Git workflows.',
+    skills: ['HTML5 & CSS3', 'JavaScript ES6+', 'Responsive Design', 'Git & GitHub'],
+    status: 'FRONTEND'
   },
   {
     year: '2025',
-    title: 'Web Development Projects',
+    title: 'Full Stack & React Applications',
     icon: Code,
-    description: 'Engineered operational web applications. Integrated live data via RESTful web APIs and designed collaborative structures.',
-    skills: ['Weather Applications', 'Academic Platform Design']
+    description: 'Built full stack web applications including StevesLabHub and Weather App. Integrated REST APIs and worked with React and Firebase.',
+    skills: ['React', 'REST APIs', 'Firebase', 'Full Stack Basics'],
+    status: 'WEB APPS'
   },
   {
     year: '2026',
-    title: 'Full Stack & Blockchain Exploration',
+    title: 'LEARNING WEB3',
     icon: Shield,
-    description: 'Currently expanding technical stack into backend service layers, server configurations, distributed databases, smart contract languages, and decentralized architectures.',
-    skills: ['Node.js', 'Firebase / Firestore', 'Smart Contracts', 'Web3 Concepts']
+    description: 'Newly learning blockchain fundamentals, Solidity, and smart contracts while continuing to build responsive frontend web applications.',
+    skills: ['Blockchain', 'Smart Contracts', 'Web3'],
+    status: 'LEARNING WEB3'
   }
 ];
 
 export const Journey: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const lineRef = useRef<HTMLDivElement>(null);
+  const nodesRef = useRef<(HTMLDivElement | null)[]>([]);
+  const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      if (lineRef.current) lineRef.current.style.transform = 'scaleY(1)';
+      return;
+    }
+
+    const ctx = gsap.context(() => {
+      // Timeline center line draws itself on scroll
+      if (lineRef.current && containerRef.current) {
+        gsap.fromTo(
+          lineRef.current,
+          { scaleY: 0 },
+          {
+            scaleY: 1,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: containerRef.current,
+              start: 'top 75%',
+              end: 'bottom 80%',
+              scrub: 1
+            }
+          }
+        );
+      }
+
+      // Nodes pop in as line reaches them
+      nodesRef.current.forEach((node) => {
+        if (!node) return;
+        gsap.fromTo(
+          node,
+          { scale: 0, rotation: 45 },
+          {
+            scale: 1,
+            rotation: 0,
+            duration: 0.6,
+            ease: 'back.out(2.2)',
+            scrollTrigger: {
+              trigger: node,
+              start: 'top 80%'
+            }
+          }
+        );
+      });
+
+      // Cards slide in subtly
+      cardsRef.current.forEach((card, idx) => {
+        if (!card) return;
+        const isEven = idx % 2 === 0;
+        gsap.fromTo(
+          card,
+          {
+            opacity: 0,
+            x: isEven ? -20 : 20
+          },
+          {
+            opacity: 1,
+            x: 0,
+            duration: 0.6,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: card,
+              start: 'top 85%'
+            }
+          }
+        );
+      });
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section id="journey" className="py-24 px-4 max-w-4xl mx-auto z-10 relative">
-      <div className="text-center mb-16">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-b from-zinc-50 to-zinc-300 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent">
-          Learning Journey
-        </h2>
-        <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest mt-2">
-          Academic & Developer Timeline
-        </p>
-      </div>
+    <section id="journey" className="w-full bg-white text-[#0A0A0A] relative z-10 border-b-2 border-[#0A0A0A]">
+      <div className="py-16 md:py-24 px-4 sm:px-6 max-w-6xl mx-auto">
+        
+        {/* Section Tag */}
+        <div className="flex items-center gap-3 mb-8">
+          <span className="font-mono text-xs font-bold px-3 py-1 bg-[#0A0A0A] text-white border-2 border-[#0A0A0A]">
+            08 // JOURNEY
+          </span>
+          <div className="h-0.5 flex-grow bg-[#0A0A0A]" />
+        </div>
 
-      <div className="relative border-l border-zinc-800 dark:border-zinc-800 ml-2 sm:ml-4 md:ml-32 pl-4 sm:pl-6 md:pl-8 space-y-12">
-        {timelineData.map((item, idx) => {
-          const Icon = item.icon;
+        {/* Header */}
+        <div className="mb-12">
+          <h2 className="font-display font-black text-4xl sm:text-6xl uppercase tracking-tight text-[#0A0A0A] leading-none">
+            LEARNING JOURNEY
+          </h2>
+          <p className="font-mono text-xs sm:text-sm text-[#0A0A0A]/70 mt-2 max-w-2xl">
+            Learning timeline from 2023 to present.
+          </p>
+        </div>
+
+        {/* Interactive Vertical Timeline Container */}
+        <div ref={containerRef} className="relative py-4">
           
-          return (
-            <motion.div
-              key={item.year}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: '-100px' }}
-              transition={{ duration: 0.5, delay: idx * 0.1 }}
-              className="relative"
-            >
-              {/* Year indicator for desktop (fixed on left side) */}
-              <div className="absolute hidden md:block -left-[180px] w-28 text-right top-1">
-                <span className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-cyan-400 font-mono">
-                  {item.year}
-                </span>
-                <div className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mt-0.5">
-                  Milestone
-                </div>
-              </div>
+          {/* Background Track Guide */}
+          <div className="absolute top-0 bottom-0 left-6 md:left-1/2 -translate-x-1/2 w-0.5 bg-[#0A0A0A]/15 pointer-events-none" />
 
-              {/* Node bubble on the timeline line */}
-              <div className="absolute -left-[28px] sm:-left-[39px] md:-left-[47px] top-1 w-6 h-6 rounded-full bg-zinc-950 border-2 border-violet-500 flex items-center justify-center shadow-lg">
-                <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
-              </div>
+          {/* The Black Line that Draws Itself On Scroll */}
+          <div 
+            ref={lineRef}
+            className="absolute top-0 bottom-0 left-6 md:left-1/2 -translate-x-1/2 w-1 bg-[#0A0A0A] origin-top pointer-events-none"
+          />
 
-              {/* Card content */}
-              <SpotlightCard className="p-6">
-                <div className="flex flex-col gap-3">
-                  {/* Mobile Year Badge */}
-                  <div className="md:hidden flex items-center gap-2 mb-1">
-                    <span className="text-lg font-extrabold text-cyan-400 font-mono">
-                      {item.year}
-                    </span>
-                    <span className="text-xs text-zinc-600 font-mono">•</span>
+          {/* Milestone Entries with tightened spacing */}
+          <div className="flex flex-col gap-6 sm:gap-7">
+            {milestonesData.map((item, idx) => {
+              const Icon = item.icon;
+              const isEven = idx % 2 === 0;
+
+              return (
+                <div
+                  key={item.year}
+                  className="relative flex flex-col md:flex-row items-start md:items-center w-full"
+                >
+                  {/* Pop-in Flat Orange Square Milestone Node */}
+                  <div
+                    ref={(el) => { nodesRef.current[idx] = el; }}
+                    className="absolute left-6 md:left-1/2 -translate-x-1/2 top-4 md:top-1/2 md:-translate-y-1/2 w-6 h-6 bg-[#FF5A1F] border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] z-20 flex items-center justify-center pointer-events-none"
+                  >
+                    <div className="w-1.5 h-1.5 bg-black" />
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-violet-600/10 border border-violet-500/20 text-violet-400 flex items-center justify-center">
-                      <Icon size={16} />
+                  {/* Alternating Card Wrapper */}
+                  <div 
+                    ref={(el) => { cardsRef.current[idx] = el; }}
+                    className={`w-full pl-14 sm:pl-16 md:pl-0 md:w-[calc(50%-2rem)] ${
+                      isEven 
+                        ? 'md:mr-auto md:text-left' 
+                        : 'md:ml-auto md:text-left'
+                    }`}
+                  >
+                    <div className="p-5 sm:p-6 bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] hover:-translate-y-1 hover:shadow-[6px_6px_0px_#0A0A0A] transition-all flex flex-col justify-between">
+                      <div>
+                        {/* Top Meta Bar */}
+                        <div className="flex items-center justify-between border-b-2 border-[#0A0A0A]/10 pb-3 mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-display font-black text-2xl sm:text-3xl text-[#0047AB] tracking-tight">
+                              {item.year}
+                            </span>
+                            <span className="font-mono text-[10px] font-bold px-2 py-0.5 bg-[#EEF2FA] border border-[#0A0A0A] uppercase">
+                              {item.status}
+                            </span>
+                          </div>
+
+                          <div className="p-2 bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A]">
+                            <Icon size={16} />
+                          </div>
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="font-display font-black text-lg sm:text-xl uppercase tracking-tight text-[#0A0A0A] leading-snug">
+                          {item.title}
+                        </h3>
+
+                        {/* Description */}
+                        <p className="font-sans text-xs sm:text-sm text-[#0A0A0A]/80 leading-relaxed mt-2">
+                          {item.description}
+                        </p>
+                      </div>
+
+                      {/* Skill Tags */}
+                      <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t-2 border-[#0A0A0A]/10">
+                        {item.skills.map((skill) => (
+                          <span
+                            key={skill}
+                            className="text-[11px] font-mono py-0.5 px-2 bg-[#EEF2FA] border border-[#0A0A0A] text-[#0A0A0A] font-bold"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <h3 className="text-base sm:text-lg font-bold text-zinc-100 dark:text-zinc-100">{item.title}</h3>
                   </div>
 
-                  <p className="text-sm text-zinc-400 dark:text-zinc-400 leading-relaxed">
-                    {item.description}
-                  </p>
-
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {item.skills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="text-[10px] font-mono py-0.5 px-2 rounded bg-violet-500/5 border border-violet-500/10 text-violet-300"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
                 </div>
-              </SpotlightCard>
-            </motion.div>
-          );
-        })}
+              );
+            })}
+          </div>
+
+        </div>
       </div>
     </section>
   );
 };
+
 export default Journey;

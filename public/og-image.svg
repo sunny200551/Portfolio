@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- Background White -->
+  <rect width="1200" height="630" fill="#FFFFFF"/>
+
+  <!-- Thick Outer Border -->
+  <rect x="24" y="24" width="1152" height="582" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="8"/>
+
+  <!-- Top Decorative Header Strip in Cobalt -->
+  <rect x="24" y="24" width="1152" height="64" fill="#0047AB" stroke="#0A0A0A" stroke-width="8"/>
+  <text x="56" y="65" font-family="'Courier New', monospace" font-size="20" font-weight="900" fill="#FFFFFF" letter-spacing="2">SUNNY PASUMARTHI // EDITORIAL 3D PORTFOLIO</text>
+  <rect x="1100" y="44" width="24" height="24" fill="#FF5A1F" stroke="#0A0A0A" stroke-width="4"/>
+
+  <!-- Giant Orange Monogram Block (Hard offset shadow) -->
+  <rect x="88" y="168" width="120" height="120" fill="#0A0A0A"/>
+  <rect x="80" y="160" width="120" height="120" fill="#FF5A1F" stroke="#0A0A0A" stroke-width="8"/>
+  <text x="140" y="242" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="900" fill="#0A0A0A" text-anchor="middle" letter-spacing="-2">SP</text>
+
+  <!-- Giant Name -->
+  <text x="240" y="220" font-family="system-ui, -apple-system, sans-serif" font-size="76" font-weight="900" fill="#0A0A0A" letter-spacing="-3">SUNNY PASUMARTHI</text>
+  
+  <!-- Role Pill Block in Navy -->
+  <rect x="248" y="248" width="608" height="48" fill="#0A0A0A"/>
+  <rect x="240" y="240" width="608" height="48" fill="#0A1A3F" stroke="#0A0A0A" stroke-width="4"/>
+  <text x="260" y="272" font-family="'Courier New', monospace" font-size="22" font-weight="700" fill="#FFFFFF" letter-spacing="2">FRONTEND DEVELOPER &amp; UI/UX DESIGNER</text>
+
+  <!-- One Honest Line Description -->
+  <text x="80" y="370" font-family="'Courier New', monospace" font-size="24" font-weight="700" fill="#0A0A0A">B.Tech CSE student building high-performance interfaces and decentralized products.</text>
+
+  <!-- Grid of Feature Blocks -->
+  <!-- Block 1: React & Three.js -->
+  <rect x="86" y="446" width="310" height="90" fill="#0A0A0A"/>
+  <rect x="80" y="440" width="310" height="90" fill="#EEF2FA" stroke="#0A0A0A" stroke-width="4"/>
+  <text x="104" y="474" font-family="'Courier New', monospace" font-size="14" font-weight="700" fill="#0047AB">3D CEL-SHADED CANVAS</text>
+  <text x="104" y="504" font-family="system-ui, sans-serif" font-size="20" font-weight="900" fill="#0A0A0A">React 19 + Three.js</text>
+
+  <!-- Block 2: Design Rules -->
+  <rect x="446" y="446" width="310" height="90" fill="#0A0A0A"/>
+  <rect x="440" y="440" width="310" height="90" fill="#EEF2FA" stroke="#0A0A0A" stroke-width="4"/>
+  <text x="464" y="474" font-family="'Courier New', monospace" font-size="14" font-weight="700" fill="#FF5A1F">STRICT 5-COLOR PALETTE</text>
+  <text x="464" y="504" font-family="system-ui, sans-serif" font-size="20" font-weight="900" fill="#0A0A0A">Zero Gradients / Hard Shadows</text>
+
+  <!-- Block 3: Stack -->
+  <rect x="806" y="446" width="310" height="90" fill="#0A0A0A"/>
+  <rect x="800" y="440" width="310" height="90" fill="#EEF2FA" stroke="#0A0A0A" stroke-width="4"/>
+  <text x="824" y="474" font-family="'Courier New', monospace" font-size="14" font-weight="700" fill="#0A1A3F">VERIFIED BENCHMARKS</text>
+  <text x="824" y="504" font-family="system-ui, sans-serif" font-size="20" font-weight="900" fill="#0A0A0A">GitHub &amp; LeetCode Data</text>
+</svg>
+

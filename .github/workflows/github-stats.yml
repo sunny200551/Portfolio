@@ -1,0 +1,38 @@
+name: Fetch GitHub Activity & Contributions
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # Runs daily at 02:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: "github-stats"
+  cancel-in-progress: false
+
+jobs:
+  update-github-stats:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch Real GitHub Data via GraphQL API
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/fetch-github.mjs
+
+      - name: Commit and Push Updated github.json
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/github.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore(data): auto-update real github contribution stats [skip ci]" && git push)
+

@@ -67,17 +67,17 @@ export const useGitHubData = () => {
           following: profileData.following || 0
         };
 
-        const cleanRepos: GitHubRepo[] = reposData.map((r: any) => ({
-          name: r.name,
-          description: r.description || '',
-          html_url: r.html_url,
-          homepage: r.homepage || '',
-          stargazers_count: r.stargazers_count || 0,
-          forks_count: r.forks_count || 0,
-          language: r.language || 'JavaScript',
-          topics: r.topics || [],
-          fork: r.fork,
-          has_pages: r.has_pages
+        const cleanRepos: GitHubRepo[] = (reposData as Record<string, unknown>[]).map((r) => ({
+          name: String(r.name || ''),
+          description: String(r.description || ''),
+          html_url: String(r.html_url || ''),
+          homepage: String(r.homepage || ''),
+          stargazers_count: Number(r.stargazers_count || 0),
+          forks_count: Number(r.forks_count || 0),
+          language: String(r.language || 'JavaScript'),
+          topics: Array.isArray(r.topics) ? (r.topics as string[]) : [],
+          fork: Boolean(r.fork),
+          has_pages: Boolean(r.has_pages)
         }));
 
         // Cache the result
