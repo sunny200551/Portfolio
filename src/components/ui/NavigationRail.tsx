@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Menu, X, FileText, Terminal, ArrowUpRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Menu, X, FileText, Terminal } from 'lucide-react';
 import { robotStore } from '../../robot/robotStore';
 
 interface NavigationRailProps {
@@ -28,11 +28,42 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPal
   const [activeSection, setActiveSection] = useState('home');
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [isScrolledPast80, setIsScrolledPast80] = useState(false);
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const [activeLabelVisible, setActiveLabelVisible] = useState(false);
+  const [hoveredSection, setHoveredSection] = useState<string | null>(null);
+  const lastScrollY = useRef(0);
+  const labelTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isMac] = useState(() => typeof window !== 'undefined' && /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent || navigator.platform));
 
-  // Reliable scroll spy using getBoundingClientRect()
+  // Trigger 1.5s label visibility on activeSection change
+  useEffect(() => {
+    setActiveLabelVisible(true);
+    if (labelTimeoutRef.current) clearTimeout(labelTimeoutRef.current);
+    labelTimeoutRef.current = setTimeout(() => {
+      setActiveLabelVisible(false);
+    }, 1500);
+    return () => {
+      if (labelTimeoutRef.current) clearTimeout(labelTimeoutRef.current);
+    };
+  }, [activeSection]);
+
+  // Reliable scroll spy using getBoundingClientRect() and navbar auto-hide
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
+      setIsScrolledPast80(scrollY > 80);
+
+      // Auto-hide navbar on scroll down, show on scroll up, always show at hero (< 120px)
+      if (scrollY <= 120) {
+        setHeaderVisible(true);
+      } else if (scrollY > lastScrollY.current + 8) {
+        setHeaderVisible(false); // scrolling down
+      } else if (scrollY < lastScrollY.current - 8) {
+        setHeaderVisible(true); // scrolling up
+      }
+      lastScrollY.current = scrollY;
+
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
       const progress = scrollHeight > 0 ? Math.min(100, Math.max(0, (scrollY / scrollHeight) * 100)) : 0;
       setScrollProgress(progress);
@@ -102,97 +133,135 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPal
 
   return (
     <>
-      {/* (A) Fixed Orange Square "SP" Logo Top-Left */}
-      <div className="fixed top-5 left-5 sm:top-6 sm:left-6 z-40">
-        <button
-          onClick={() => scrollTo('home')}
-          className="group flex items-center gap-2.5 p-1 bg-transparent border-0 cursor-pointer focus:outline-none focus-visible:ring-3 focus-visible:ring-[#FF5A1F]"
-          aria-label="Sunny Pasumarthi - Scroll to top"
-        >
-          <span className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center font-display font-black text-xl sm:text-2xl bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] group-hover:bg-[#0047AB] group-hover:text-white transition-all active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0px_#0A0A0A]">
-            SP
-          </span>
-          <span className="hidden md:inline font-mono font-bold text-xs uppercase tracking-wider text-[#0A0A0A] bg-white px-2 py-1 border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A]">
-            SUNNY PASUMARTHI
-          </span>
-        </button>
-      </div>
+      {/* (A & B) Top Bar: Solid white background bar with 2px black border, hard offset shadow, auto-hide on scroll down */}
+      <header
+        className={`fixed top-0 left-0 right-0 h-16 sm:h-18 bg-white border-b-2 border-[#0A0A0A] shadow-[0_4px_0_#0A0A0A] z-40 transition-transform duration-300 ease-in-out px-4 sm:px-6 flex items-center justify-between ${
+          headerVisible ? 'translate-y-0' : '-translate-y-full'
+        }`}
+      >
+        {/* Left: SP Logo & Name Chip */}
+        <div className="flex items-center">
+          <button
+            onClick={() => scrollTo('home')}
+            className="group flex items-center gap-2.5 p-1 bg-transparent border-0 cursor-pointer focus:outline-none focus-visible:ring-3 focus-visible:ring-[#FF5A1F]"
+            aria-label="SP - Sunny Pasumarthi - Scroll to top"
+          >
+            <span className="w-10 h-10 flex items-center justify-center font-display font-black text-xl bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] group-hover:bg-[#0047AB] group-hover:text-white transition-all active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#0A0A0A]">
+              SP
+            </span>
+            <span 
+              className={`hidden md:inline-flex items-center font-mono font-bold text-xs uppercase tracking-wider text-[#0A0A0A] bg-white px-2.5 py-1.5 border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] transition-all duration-200 overflow-hidden whitespace-nowrap ${
+                isScrolledPast80
+                  ? 'opacity-0 max-w-0 -translate-x-2 pointer-events-none p-0 border-0 shadow-none'
+                  : 'opacity-100 max-w-[220px] translate-x-0'
+              }`}
+            >
+              SUNNY PASUMARTHI
+            </span>
+          </button>
+        </div>
 
-      {/* (B) Fixed Top-Right Controls: Resume + Ctrl+K + MENU */}
-      <div className="fixed top-5 right-5 sm:top-6 sm:right-6 z-40 flex items-center gap-2 sm:gap-3">
-        {/* Command Palette Trigger */}
-        <button
-          onClick={onOpenCommandPalette}
-          className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] font-mono font-bold text-xs hover:bg-[#EEF2FA] transition-all cursor-pointer active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#0A0A0A]"
-          aria-label="Open Command Palette"
-          title="Command Palette (Ctrl+K)"
-        >
-          <Terminal size={14} className="text-[#0047AB]" />
-          <span>CMD</span>
-          <kbd className="px-1.5 py-0.2 bg-[#EEF2FA] border border-[#0A0A0A] text-[10px]">⌘K</kbd>
-        </button>
+        {/* Right: Controls (Resume + Ctrl/Cmd+K + MENU) */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Command Palette Trigger */}
+          <button
+            onClick={onOpenCommandPalette}
+            className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] font-mono font-bold text-xs hover:bg-[#EEF2FA] transition-all cursor-pointer active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#0A0A0A]"
+            aria-label={isMac ? "Open Command Palette (⌘K)" : "Open Command Palette (Ctrl+K)"}
+            title={isMac ? "Command Palette (⌘K)" : "Command Palette (Ctrl+K)"}
+          >
+            <Terminal size={14} className="text-[#0047AB]" />
+            {isMac ? (
+              <span className="flex items-center gap-1 font-bold">
+                <span>CMD</span>
+                <kbd className="px-1.5 py-0.5 bg-[#EEF2FA] border border-[#0A0A0A] text-[10px] flex items-center gap-0.5">
+                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/>
+                  </svg>
+                  <span>K</span>
+                </kbd>
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 font-bold">
+                <span>CTRL K</span>
+              </span>
+            )}
+          </button>
 
-        {/* Small Orange Resume Button */}
-        <a
-          href="Resume.pdf"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-3 py-2 bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] font-mono font-bold text-xs uppercase hover:bg-black hover:text-white transition-all cursor-pointer active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#0A0A0A]"
-          title="Download Resume (PDF)"
-        >
-          <FileText size={14} />
-          <span className="hidden xs:inline">RESUME</span>
-        </a>
+          {/* Small Orange Resume Button */}
+          <a
+            href="/Resume.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-2 bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] font-mono font-bold text-xs uppercase hover:bg-black hover:text-white transition-all cursor-pointer active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#0A0A0A]"
+            title="Download Resume PDF"
+          >
+            <FileText size={14} />
+            <span className="hidden xs:inline">RESUME</span>
+          </a>
 
-        {/* Square MENU Button */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label={menuOpen ? 'Close Menu' : 'Open Menu'}
-          className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center bg-white text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] hover:bg-[#EEF2FA] transition-all cursor-pointer active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#0A0A0A]"
-        >
-          {menuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </div>
+          {/* Square MENU Button */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label={menuOpen ? 'Close Menu' : 'Open Menu'}
+            className="w-10 h-10 flex items-center justify-center bg-white text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] hover:bg-[#EEF2FA] transition-all cursor-pointer active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#0A0A0A]"
+          >
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+      </header>
 
-      {/* (C) Fixed Vertical Section Rail on Right Edge (Desktop only) */}
+      {/* (C) Fixed Vertical Section Rail on Right Edge (Compact squares <= 40px, hidden below 1200px) */}
       <nav 
-        className="hidden lg:flex fixed right-6 top-1/2 -translate-y-1/2 z-40 flex-col items-center select-none"
+        className="nav-rail fixed right-3 top-1/2 -translate-y-1/2 z-40 w-10 flex-col items-center select-none"
         aria-label="Section Navigation"
       >
         {/* Background track line */}
-        <div className="absolute top-3 bottom-3 w-[2px] bg-[#0A0A0A]/20 -z-10" />
+        <div className="absolute top-2 bottom-2 w-[2px] bg-[#0A0A0A]/20 -z-10" />
 
         {/* Scroll fill line */}
         <div 
-          className="absolute top-3 w-[2px] bg-[#FF5A1F] -z-10 transition-all duration-100 ease-out"
-          style={{ height: `${(scrollProgress / 100) * (NAV_SECTIONS.length - 1) * 44}px` }}
+          className="absolute top-2 w-[2px] bg-[#FF5A1F] -z-10 transition-all duration-100 ease-out"
+          style={{ height: `${(scrollProgress / 100) * (NAV_SECTIONS.length - 1) * 38}px` }}
         />
 
-        {/* 10 Numbered Nodes */}
-        <div className="flex flex-col gap-4">
+        {/* 9 Compact Numbered Node Squares */}
+        <div className="flex flex-col gap-2.5 items-center">
           {NAV_SECTIONS.map((sec) => {
             const isActive = activeSection === sec.id;
+            const isHovered = hoveredSection === sec.id;
+            const showLabel = (isActive && activeLabelVisible) || isHovered;
+
             return (
-              <div key={sec.id} className="relative flex items-center justify-end group">
-                {/* Active or Hovered Section Name Pill (always visible when active, on hover when inactive) */}
+              <div 
+                key={sec.id} 
+                className="relative flex items-center justify-end"
+                onMouseEnter={() => setHoveredSection(sec.id)}
+                onMouseLeave={() => setHoveredSection(null)}
+              >
+                {/* Section Name Pill: visible only for 1.5s on active change OR while hovered */}
                 <div
-                  className={`absolute right-9 px-2.5 py-1 font-mono text-xs font-bold uppercase whitespace-nowrap transition-all duration-150 pointer-events-none border-2 border-[#0A0A0A] ${
+                  className={`absolute right-10 px-2 py-1 font-mono text-[11px] font-bold uppercase whitespace-nowrap transition-all duration-200 pointer-events-none border-2 border-[#0A0A0A] ${
+                    showLabel
+                      ? 'opacity-100 translate-x-0'
+                      : 'opacity-0 translate-x-2'
+                  } ${
                     isActive
-                      ? 'opacity-100 translate-x-0 bg-[#0A0A0A] text-white shadow-[2px_2px_0px_#FF5A1F]'
-                      : 'opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 bg-white text-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A]'
+                      ? 'bg-[#0A0A0A] text-white shadow-[2px_2px_0px_#FF5A1F]'
+                      : 'bg-white text-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A]'
                   }`}
                 >
                   <span className="text-[#FF5A1F] mr-1.5">{sec.num}</span>
                   {sec.label}
                 </div>
 
-                {/* Node Button */}
+                {/* Node Button: Compact square (28x28 <= 40px) */}
                 <button
                   onClick={() => scrollTo(sec.id)}
                   aria-label={`Jump to section ${sec.num} ${sec.label}`}
                   className={`w-7 h-7 flex items-center justify-center font-mono text-[10px] font-bold border-2 border-[#0A0A0A] transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-[#FF5A1F] text-black shadow-[3px_3px_0px_#0A0A0A] scale-110 ring-2 ring-[#0A0A0A]'
+                      ? 'bg-[#FF5A1F] text-black shadow-[2px_2px_0px_#0A0A0A] scale-105 ring-2 ring-[#0A0A0A]'
                       : 'bg-white text-[#0A0A0A]/80 hover:bg-[#EEF2FA] hover:text-[#0A0A0A] hover:scale-105 shadow-[1px_1px_0px_#0A0A0A]'
                   }`}
                 >
@@ -204,83 +273,71 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPal
         </div>
       </nav>
 
-      {/* (D) Full-Screen Modal Menu with Giant Staggered Section Names */}
+      {/* (D) Full-Screen Navigation Overlay */}
       {menuOpen && (
         <div 
-          className="fixed inset-0 z-50 bg-white text-[#0A0A0A] flex flex-col justify-between p-6 sm:p-12 overflow-y-auto"
+          className="fixed inset-0 bg-[#0A0A0A]/80 backdrop-grayscale-0 z-50 flex items-center justify-center p-4 sm:p-6"
           role="dialog"
           aria-modal="true"
-          aria-label="Site Navigation Menu"
+          aria-label="Navigation Menu"
         >
-          {/* Menu Top Bar */}
-          <div className="flex items-center justify-between border-b-2 border-[#0A0A0A] pb-6">
-            <div className="flex items-center gap-3">
-              <span className="w-10 h-10 flex items-center justify-center font-display font-black text-xl bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A]">
-                SP
-              </span>
-              <span className="font-mono text-xs sm:text-sm font-bold tracking-wider uppercase text-[#0A0A0A]">
-                SUNNY PASUMARTHI // DIRECTORY
-              </span>
-            </div>
-
-            <button
-              onClick={() => setMenuOpen(false)}
-              aria-label="Close menu"
-              className="w-10 h-10 flex items-center justify-center bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] hover:bg-black hover:text-white transition-colors cursor-pointer"
-            >
-              <X size={20} />
-            </button>
-          </div>
-
-          {/* Center Giant Section Links (01 to 10) */}
-          <div className="py-8 my-auto max-w-4xl">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-8">
-              {NAV_SECTIONS.map((sec, idx) => (
-                <button
-                  key={sec.id}
-                  onClick={() => scrollTo(sec.id)}
-                  className="group flex items-center gap-4 py-2 sm:py-3 text-left transition-all cursor-pointer border-b border-[#0A0A0A]/10 hover:border-[#0A0A0A]"
-                  style={{ animationDelay: `${idx * 40}ms` }}
-                >
-                  <span className="font-mono text-sm sm:text-base font-bold text-[#FF5A1F] group-hover:text-[#0047AB] transition-colors">
-                    {sec.num}
-                  </span>
-                  <span className="font-display font-black text-2xl sm:text-4xl uppercase tracking-tight text-[#0A0A0A] group-hover:translate-x-2 group-hover:text-[#0047AB] transition-transform">
-                    {sec.label}
-                  </span>
-                  <ArrowUpRight size={20} className="opacity-0 group-hover:opacity-100 text-[#0047AB] transition-opacity ml-auto" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Menu Bottom Bar: Resume, Command Palette, Socials */}
-          <div className="pt-6 border-t-2 border-[#0A0A0A] flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono text-xs font-bold">
-            <div className="flex flex-wrap items-center gap-3">
-              <a
-                href="Resume.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-4 py-2.5 bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] hover:bg-black hover:text-white transition-colors"
-              >
-                <FileText size={14} />
-                <span>OFFICIAL RESUME (PDF)</span>
-              </a>
-
+          <div className="bg-white border-4 border-[#0A0A0A] shadow-[12px_12px_0px_#FF5A1F] w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 sm:p-10 flex flex-col justify-between">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b-2 border-[#0A0A0A] pb-4 mb-6">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 bg-[#FF5A1F] text-black font-display font-black text-sm border border-[#0A0A0A]">
+                  MENU
+                </span>
+                <span className="font-mono text-xs font-bold text-[#0A0A0A]/70 uppercase">
+                  9 SECTIONS
+                </span>
+              </div>
               <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  onOpenCommandPalette();
-                }}
-                className="flex items-center gap-1.5 px-4 py-2.5 bg-[#EEF2FA] text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] hover:bg-white transition-colors cursor-pointer"
+                onClick={() => setMenuOpen(false)}
+                aria-label="Close menu"
+                className="w-9 h-9 flex items-center justify-center border-2 border-[#0A0A0A] bg-white text-[#0A0A0A] hover:bg-[#FF5A1F] transition-colors cursor-pointer"
               >
-                <Terminal size={14} className="text-[#0047AB]" />
-                <span>COMMAND PALETTE (CTRL+K)</span>
+                <X size={20} />
               </button>
             </div>
 
-            <div className="text-[#0A0A0A]/70 text-[11px]">
-              Computer Science Student | Frontend Developer | Blockchain Enthusiast
+            {/* Section Link Rows */}
+            <div className="flex flex-col divide-y-2 divide-[#0A0A0A]/10 my-auto">
+              {NAV_SECTIONS.map((sec) => (
+                <button
+                  key={sec.id}
+                  onClick={() => scrollTo(sec.id)}
+                  className="py-3 px-2 flex items-center justify-between group hover:bg-[#EEF2FA] transition-colors text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="font-mono text-xs font-bold text-[#FF5A1F] group-hover:text-[#0047AB]">
+                      {sec.num}
+                    </span>
+                    <span className="font-display font-black text-xl sm:text-2xl uppercase tracking-tight text-[#0A0A0A] group-hover:translate-x-1 transition-transform">
+                      {sec.label}
+                    </span>
+                  </div>
+                  <span className="font-mono text-xs opacity-0 group-hover:opacity-100 transition-opacity font-bold text-[#0047AB]">
+                    GO →
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Overlay Footer */}
+            <div className="mt-8 pt-6 border-t-2 border-[#0A0A0A] flex flex-wrap items-center justify-between gap-4 font-mono text-xs">
+              <span className="text-[#0A0A0A]/70">
+                SUNNY PASUMARTHI // 2025
+              </span>
+              <a
+                href="/Resume.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 bg-[#0047AB] text-white font-bold border-2 border-[#0A0A0A] hover:bg-[#0A1A3F] transition-colors flex items-center gap-1.5"
+              >
+                <span>OFFICIAL RESUME</span>
+                <FileText size={12} />
+              </a>
             </div>
           </div>
         </div>
@@ -288,5 +345,3 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPal
     </>
   );
 };
-
-export default NavigationRail;
