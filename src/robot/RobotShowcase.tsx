@@ -28,7 +28,7 @@ const SHOWCASE_POSES: { label: string; anim: RobotAnimation; expr: RobotExpressi
 ];
 
 export const RobotShowcase: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'expressions' | 'poses' | 'variants'>('expressions');
+  const [activeTab, setActiveTab] = useState<'expressions' | 'poses' | 'variants' | 'design-sheet'>('design-sheet');
 
   return (
     <div className="fixed inset-0 z-50 bg-[#EEF2FA] text-[#0A0A0A] overflow-y-auto p-6 sm:p-10 font-mono">
@@ -44,7 +44,7 @@ export const RobotShowcase: React.FC = () => {
           </div>
 
           <div className="flex gap-2">
-            {(['expressions', 'poses', 'variants'] as const).map((tab) => (
+            {(['design-sheet', 'expressions', 'poses', 'variants'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -53,7 +53,7 @@ export const RobotShowcase: React.FC = () => {
                   activeTab === tab ? 'bg-[#0047AB] text-white' : 'bg-white text-black'
                 }`}
               >
-                {tab}
+                {tab.replace('-', ' ')}
               </button>
             ))}
             <a
@@ -197,6 +197,85 @@ export const RobotShowcase: React.FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+        {/* 4. Complete Design Sheet: Front, Side, Back, 3/4 View across Poses */}
+        {activeTab === 'design-sheet' && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-bold uppercase text-[#0A0A0A]">
+                BOLT DESIGN SHEET // 4 VIEWS × 4 POSES (RIG STRUCTURE & PROPORTIONS)
+              </h2>
+              <span className="text-xs font-bold px-2 py-0.5 bg-[#0047AB] text-white border border-[#0A0A0A]">
+                ZERO COLLISION DETECTED
+              </span>
+            </div>
+
+            {[
+              {
+                title: 'POSE 1: REST IDLE POSE (18° ARMS OUTWARD, VISIBLE MITTENS & SHORT NECK)',
+                anim: 'idle' as RobotAnimation,
+                expr: 'happy' as RobotExpression,
+              },
+              {
+                title: 'POSE 2: T-POSE RIG (FULL LIMB EXTENSION, CONNECTOR VISIBILITY)',
+                anim: 'flex' as RobotAnimation,
+                expr: 'focused' as RobotExpression,
+              },
+              {
+                title: 'POSE 3: MID-WALK CYCLE (FOOT PLANT & STRIDE, PELVIC BOB, COUNTER-SWING)',
+                anim: 'walk' as RobotAnimation,
+                expr: 'grin' as RobotExpression,
+              },
+              {
+                title: 'POSE 4: MID-DANCE CHOREOGRAPHY (120 BPM BEAT STEP, ARMS EXTENDED)',
+                anim: 'dance' as RobotAnimation,
+                expr: 'excited' as RobotExpression,
+              },
+            ].map((section, sIdx) => (
+              <div key={sIdx} className="mb-8">
+                <h3 className="text-xs font-bold uppercase text-[#0047AB] mb-3 pb-1 border-b border-[#0A0A0A]/20">
+                  {section.title}
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: 'FRONT VIEW (0°)', rotY: 0 },
+                    { label: 'SIDE VIEW (90°)', rotY: Math.PI / 2 },
+                    { label: 'BACK VIEW (180°)', rotY: Math.PI },
+                    { label: '3/4 ANGLE VIEW (45°)', rotY: Math.PI / 4 },
+                  ].map((view, vIdx) => (
+                    <div
+                      key={vIdx}
+                      data-testid={`sheet-${sIdx}-${vIdx}`}
+                      className="bg-white border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] p-3 flex flex-col items-center"
+                    >
+                      <div className="w-full h-52 bg-[#EEF2FA] border border-[#0A0A0A] relative">
+                        <Canvas
+                          orthographic
+                          camera={{ position: [0, 0.38, 3], zoom: 130 }}
+                          gl={{ alpha: true }}
+                        >
+                          <ambientLight intensity={1.2} />
+                          <directionalLight position={[3, 5, 4]} intensity={1.5} />
+                          <Robot
+                            variant="bolt"
+                            expression={section.expr}
+                            animation={section.anim}
+                            position={[0, -0.32, 0]}
+                            rotation={[0, view.rotY, 0]}
+                            scale={0.9}
+                            headTrackCursor={false}
+                          />
+                        </Canvas>
+                      </div>
+                      <span className="mt-2 text-[10px] font-bold uppercase text-[#0A0A0A]">
+                        {view.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
