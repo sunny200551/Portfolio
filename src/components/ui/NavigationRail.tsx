@@ -27,12 +27,12 @@ const NAV_SECTIONS: NavSection[] = [
 export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPalette }) => {
   const [activeSection, setActiveSection] = useState('home');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [isScrolledPast80, setIsScrolledPast80] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(true);
   const [activeLabelVisible, setActiveLabelVisible] = useState(false);
   const [hoveredSection, setHoveredSection] = useState<string | null>(null);
   const lastScrollY = useRef(0);
+  const fillLineRef = useRef<HTMLDivElement>(null);
   const [isMac] = useState(() => typeof window !== 'undefined' && /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent || navigator.platform));
 
   // Trigger 1.5s label visibility on activeSection change
@@ -45,52 +45,75 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPal
     };
   }, [activeSection]);
 
-  // Reliable scroll spy using getBoundingClientRect() and navbar auto-hide
+  // Reliable, high-performance scroll spy
   useEffect(() => {
+    let rafId: number;
+
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      setIsScrolledPast80(scrollY > 80);
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const scrollY = window.scrollY;
+        const past80 = scrollY > 80;
+        setIsScrolledPast80((prev) => (prev !== past80 ? past80 : prev));
 
-      // Auto-hide navbar on scroll down, show on scroll up, always show at hero (< 120px)
-      if (scrollY <= 120) {
-        setHeaderVisible(true);
-      } else if (scrollY > lastScrollY.current + 8) {
-        setHeaderVisible(false); // scrolling down
-      } else if (scrollY < lastScrollY.current - 8) {
-        setHeaderVisible(true); // scrolling up
-      }
-      lastScrollY.current = scrollY;
+        // Auto-hide navbar on scroll down, show on scroll up, always show at hero (< 120px)
+        if (scrollY <= 120) {
+          setHeaderVisible(true);
+        } else if (scrollY > lastScrollY.current + 8) {
+          setHeaderVisible(false); // scrolling down
+        } else if (scrollY < lastScrollY.current - 8) {
+          setHeaderVisible(true); // scrolling up
+        }
+        lastScrollY.current = scrollY;
 
-      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = scrollHeight > 0 ? Math.min(100, Math.max(0, (scrollY / scrollHeight) * 100)) : 0;
-      setScrollProgress(progress);
+        // Direct DOM update for scroll line height to avoid component re-renders
+        const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = scrollHeight > 0 ? Math.min(100, Math.max(0, (scrollY / scrollHeight) * 100)) : 0;
+        if (fillLineRef.current) {
+          fillLineRef.current.style.height = `${(progress / 100) * (NAV_SECTIONS.length - 1) * 38}px`;
+        }
 
-      // Force HOME active when near the top of the viewport
-      if (scrollY < 180) {
-        setActiveSection('home');
-        robotStore.setActiveSection('home');
-        return;
-      }
+        // Force HOME active when near the top of the viewport
+        if (scrollY < 180) {
+          setActiveSection((prev) => {
+            if (prev !== 'home') {
+              robotStore.setActiveSection('home');
+              return 'home';
+            }
+            return prev;
+          });
+          return;
+        }
 
-      // Check sections from bottom to top
-      const triggerY = window.innerHeight * 0.35;
-      for (let i = NAV_SECTIONS.length - 1; i >= 0; i--) {
-        const item = NAV_SECTIONS[i];
-        const el = document.getElementById(item.id);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= triggerY && rect.bottom > 0) {
-            setActiveSection(item.id);
-            robotStore.setActiveSection(item.id);
-            return;
+        // Check sections from bottom to top
+        const triggerY = window.innerHeight * 0.35;
+        for (let i = NAV_SECTIONS.length - 1; i >= 0; i--) {
+          const item = NAV_SECTIONS[i];
+          const el = document.getElementById(item.id);
+          if (el) {
+            const top = el.offsetTop - scrollY;
+            const bottom = top + el.offsetHeight;
+            if (top <= triggerY && bottom > 0) {
+              setActiveSection((prev) => {
+                if (prev !== item.id) {
+                  robotStore.setActiveSection(item.id);
+                  return item.id;
+                }
+                return prev;
+              });
+              return;
+            }
           }
         }
-      }
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // Lock body scroll when full-screen menu is open
@@ -218,8 +241,9 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPal
 
         {/* Scroll fill line */}
         <div 
-          className="absolute top-2 w-[2px] bg-[#FF5A1F] -z-10 transition-all duration-100 ease-out"
-          style={{ height: `${(scrollProgress / 100) * (NAV_SECTIONS.length - 1) * 38}px` }}
+          ref={fillLineRef}
+          className="absolute top-2 w-[2px] bg-[#FF5A1F] -z-10 transition-all duration-75 ease-out"
+          style={{ height: '0px' }}
         />
 
         {/* 9 Compact Numbered Node Squares */}

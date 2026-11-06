@@ -81,3 +81,4 @@ const { chromium } = require('playwright-core');
   await browser.close();
   console.log('\nAll Parts 5, 6, 7 verifications completed!');
 })();
+

@@ -23,80 +23,114 @@ export interface GitHubRepo {
   has_pages: boolean;
 }
 
+const DEFAULT_PROFILE: GitHubProfile = {
+  name: 'Sunny Pasumarthi',
+  bio: 'Computer Science student building responsive web applications with React, TypeScript, and Tailwind CSS.',
+  avatar_url: '/profile.webp',
+  location: 'India',
+  public_repos: 25,
+  followers: 0,
+  following: 0,
+};
+
 export const useGitHubData = () => {
-  const [profile, setProfile] = useState<GitHubProfile | null>(null);
+  const [profile, setProfile] = useState<GitHubProfile>(DEFAULT_PROFILE);
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async () => {
+      const cacheKey = 'sunny_portfolio_github_data';
+
+      // 1. Check local session cache
       try {
-        const cacheKey = 'sunny_portfolio_github_data';
         const cached = sessionStorage.getItem(cacheKey);
-        
         if (cached) {
           const parsed = JSON.parse(cached);
-          // Check if cache has both profile and repos and is less than 1 hour old
-          if (parsed.profile && parsed.repos && (Date.now() - parsed.timestamp < 3600000)) {
+          if (parsed.profile && parsed.repos && isMounted) {
             setProfile(parsed.profile);
             setRepos(parsed.repos);
             setLoading(false);
-            return;
+            if (Date.now() - parsed.timestamp < 3600000) return;
           }
         }
+      } catch {
+        // Continue
+      }
 
-        const [profileRes, reposRes] = await Promise.all([
-          fetch('https://api.github.com/users/sunny200551'),
-          fetch('https://api.github.com/users/sunny200551/repos?sort=updated&per_page=100')
-        ]);
+      // 2. Load static verified repository and profile telemetry
+      try {
+        const baseUrl = import.meta.env.BASE_URL || '/';
+        const url = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}data/github.json`;
+        const staticRes = await fetch(url);
+        if (staticRes.ok) {
+          const staticData = await staticRes.json();
+          const cleanProfile: GitHubProfile = {
+            name: 'Sunny Pasumarthi',
+            bio: 'Computer Science student building responsive web applications with React, TypeScript, and Tailwind CSS.',
+            avatar_url: '/profile.webp',
+            location: 'India',
+            public_repos: staticData.publicReposCount ?? 25,
+            followers: 0,
+            following: 0,
+          };
 
-        if (!profileRes.ok || !reposRes.ok) {
-          throw new Error('Failed to fetch from GitHub API');
+          const cleanRepos: GitHubRepo[] = Array.isArray(staticData.activeRepos)
+            ? staticData.activeRepos.map((r: {
+                name?: string;
+                description?: string;
+                url?: string;
+                homepageUrl?: string;
+                stars?: number;
+                forks?: number;
+                language?: string;
+              }) => ({
+                name: String(r.name || ''),
+                description: String(r.description || ''),
+                html_url: String(r.url || ''),
+                homepage: String(r.homepageUrl || ''),
+                stargazers_count: Number(r.stars || 0),
+                forks_count: Number(r.forks || 0),
+                language: String(r.language || 'TypeScript'),
+                topics: [],
+                fork: false,
+                has_pages: Boolean(r.homepageUrl),
+              }))
+            : [];
+
+          if (isMounted) {
+            setProfile(cleanProfile);
+            setRepos(cleanRepos);
+            setLoading(false);
+          }
+
+          try {
+            sessionStorage.setItem(
+              cacheKey,
+              JSON.stringify({
+                profile: cleanProfile,
+                repos: cleanRepos,
+                timestamp: Date.now(),
+              })
+            );
+          } catch {
+            // Ignore storage quota
+          }
         }
-
-        const profileData = await profileRes.json();
-        const reposData = await reposRes.json();
-
-        const cleanProfile: GitHubProfile = {
-          name: profileData.name || 'Sunny Pasumarthi',
-          bio: profileData.bio || 'Computer Science Engineering student passionate about full stack development and blockchain.',
-          avatar_url: profileData.avatar_url || 'https://github.com/sunny200551.png',
-          location: profileData.location || 'India',
-          public_repos: profileData.public_repos || 25,
-          followers: profileData.followers || 0,
-          following: profileData.following || 0
-        };
-
-        const cleanRepos: GitHubRepo[] = (reposData as Record<string, unknown>[]).map((r) => ({
-          name: String(r.name || ''),
-          description: String(r.description || ''),
-          html_url: String(r.html_url || ''),
-          homepage: String(r.homepage || ''),
-          stargazers_count: Number(r.stargazers_count || 0),
-          forks_count: Number(r.forks_count || 0),
-          language: String(r.language || 'JavaScript'),
-          topics: Array.isArray(r.topics) ? (r.topics as string[]) : [],
-          fork: Boolean(r.fork),
-          has_pages: Boolean(r.has_pages)
-        }));
-
-        // Cache the result
-        sessionStorage.setItem(cacheKey, JSON.stringify({
-          profile: cleanProfile,
-          repos: cleanRepos,
-          timestamp: Date.now()
-        }));
-
-        setProfile(cleanProfile);
-        setRepos(cleanRepos);
-      } catch (err) {
-        console.error('Error fetching GitHub data:', err);
+      } catch {
+        // Fallback to static defaults
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return { profile, repos, loading };

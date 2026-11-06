@@ -44,31 +44,6 @@ html.modal-open .fixed:not([role="dialog"]):not([role="dialog"] *) {
   visibility: hidden !important;
 }
 
-/* Adaptive Contrast 3D Overlap System */
-[data-adaptive] {
-  position: relative !important;
-  z-index: 10 !important;
-  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease !important;
-}
-
-.over-3d {
-  background-color: #FFFFFF !important;
-  color: #0A0A0A !important;
-  border: 2px solid #0A0A0A !important;
-  box-shadow: 4px 4px 0px #0A0A0A !important;
-  padding: 0.2rem 0.5rem !important;
-  border-radius: 0px !important;
-  display: inline-block !important;
-}
-
-.over-3d-dark {
-  color: #FFFFFF !important;
-}
-
-.over-3d-light {
-  color: #0A0A0A !important;
-}
-
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {

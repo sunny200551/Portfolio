@@ -36,3 +36,4 @@ const { chromium } = require('playwright-core');
   await animPage.close();
   await browser.close();
 })();
+

@@ -16,8 +16,9 @@ import { Contact } from './sections/Contact';
 import { Footer } from './sections/Footer';
 import { useGitHubData } from './hooks/useGitHubData';
 
+
 // Lazy-load persistent 3D canvas so text is instantly readable
-const Scene = lazy(() => import('./components/three/Scene'));
+
 const TravelingBolt = lazy(() => import('./robot/TravelingBolt'));
 const RobotShowcase = lazy(() => import('./robot/RobotShowcase'));
 
@@ -26,6 +27,9 @@ function App() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const isRobotShowcase = typeof window !== 'undefined' && window.location.search.includes('robot-showcase');
   const [mountedAfterPaint, setMountedAfterPaint] = useState(false);
+
+  // Monitor roaming 3D pane overlap and dynamically adapt contrast
+
 
   useEffect(() => {
     // Mount mascot module after initial DOM paint to prioritize critical content
@@ -58,10 +62,7 @@ function App() {
         </Suspense>
       )}
 
-      {/* Persistent Fixed 3D Canvas behind HTML */}
-      <Suspense fallback={null}>
-        <Scene />
-      </Suspense>
+
 
       {/* Non-Navbar Modern Navigation: SP Logo + Controls + Vertical Section Rail + Fullscreen Menu */}
       <NavigationRail onOpenCommandPalette={() => setCommandPaletteOpen(true)} />

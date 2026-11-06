@@ -1,6 +1,7 @@
 import { robotStore } from '../robot/robotStore';
 import React from 'react';
 import { Mail, ArrowUp, FileText } from 'lucide-react';
+import { CONTACT_INFO } from '../data/contact';
 import type { GitHubProfile } from '../hooks/useGitHubData';
 
 interface FooterProps {
@@ -19,7 +20,7 @@ const navLinks = [
   { id: 'contact', label: 'CONTACT' },
 ];
 
-export const Footer: React.FC<FooterProps> = ({ profile }) => {
+export const Footer: React.FC<FooterProps> = () => {
   const scrollToTop = () => {
     robotStore.setBackToTopFlying(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -49,7 +50,7 @@ export const Footer: React.FC<FooterProps> = ({ profile }) => {
                 SP
               </span>
               <span className="font-display font-black text-xl uppercase tracking-wider text-white">
-                {profile?.name || "SUNNY PASUMARTHI"}
+                SUNNY PASUMARTHI
               </span>
             </div>
             <p className="text-xs text-white/70">
@@ -60,7 +61,7 @@ export const Footer: React.FC<FooterProps> = ({ profile }) => {
           {/* Action CTAs: Resume & Back to Top */}
           <div className="flex items-center gap-3">
             <a
-              href="Resume.pdf"
+              href="/Resume.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3.5 py-2 bg-white text-black font-bold text-xs uppercase border border-white hover:bg-[#FF5A1F] transition-colors cursor-pointer"
@@ -70,7 +71,7 @@ export const Footer: React.FC<FooterProps> = ({ profile }) => {
             </a>
 
             <button
-              data-robot-anchor="footer:top-btn"
+              data-robot-anchor="footer:top-btn" data-robot-react="footer:back-to-top"
               onClick={scrollToTop}
               className="flex items-center gap-1.5 px-3.5 py-2 bg-[#FF5A1F] text-black font-bold text-xs uppercase border border-white hover:bg-white transition-colors cursor-pointer"
               title="Scroll back to top"
@@ -84,7 +85,7 @@ export const Footer: React.FC<FooterProps> = ({ profile }) => {
 
         {/* Navigation Quick Links Grid */}
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-bold text-white/80">
-          <span className="text-white/40 uppercase mr-2 text-[10px]">SECTIONS:</span>
+          <span className="text-white/80 uppercase mr-2 text-[10px]">SECTIONS:</span>
           {navLinks.map((link) => (
             <button
               key={link.id}
@@ -143,7 +144,7 @@ export const Footer: React.FC<FooterProps> = ({ profile }) => {
             </a>
 
             <a
-              href="mailto:sunnypasumarthi9@gmail.com"
+              href={`mailto:${CONTACT_INFO.email}?subject=Hello%20Sunny`}
               className="p-2 bg-white/10 border border-white/25 text-white hover:bg-[#FF5A1F] hover:text-black hover:border-black transition-colors"
               title="Email"
             >

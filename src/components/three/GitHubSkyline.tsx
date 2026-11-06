@@ -1,6 +1,6 @@
 import React, { useRef, useMemo, useEffect, useCallback } from 'react';
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { Edges, Text, OrthographicCamera } from '@react-three/drei';
+import { Edges, OrthographicCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -44,11 +44,19 @@ const MAX_ROTATION_DELTA = Math.PI / 6; // 30 degrees
 
 /**
  * Declarative component to auto-fit orthographic camera zoom based on container width.
+ * True isometric (front-left, elevated) looking at the center of the skyline.
  */
 function AutoFitCamera() {
-  const size = useThree((state) => state.size);
-  const zoom = Math.min(50, Math.max(16, size.width / 24));
-  return <OrthographicCamera makeDefault position={[-5, 8, 10]} zoom={zoom} />;
+  const { size, camera } = useThree();
+  const zoom = Math.min(38, Math.max(16, size.width / 28));
+
+  useEffect(() => {
+    camera.position.set(-10, 11, 10);
+    camera.lookAt(0, 0, 0);
+    camera.updateProjectionMatrix();
+  }, [camera]);
+
+  return <OrthographicCamera makeDefault position={[-10, 11, 10]} zoom={zoom} />;
 }
 
 export const GitHubSkyline: React.FC<GitHubSkylineProps> = ({ weeks, onHoverDay }) => {
@@ -100,7 +108,7 @@ export const GitHubSkyline: React.FC<GitHubSkylineProps> = ({ weeks, onHoverDay 
   const offsetZ = (7 * SPACING_Z) / 2;
 
   // Flatten bars data
-  const { flatBars, monthLabels } = useMemo(() => {
+  const { flatBars } = useMemo(() => {
     const bars: {
       key: string;
       weekIdx: number;
@@ -112,9 +120,6 @@ export const GitHubSkyline: React.FC<GitHubSkylineProps> = ({ weeks, onHoverDay 
       date: string;
       count: number;
     }[] = [];
-
-    const months: { label: string; x: number }[] = [];
-    let lastMonth = '';
 
     displayWeeks.forEach((week, wIdx) => {
       const x = wIdx * SPACING_X - offsetX;
@@ -136,15 +141,6 @@ export const GitHubSkyline: React.FC<GitHubSkylineProps> = ({ weeks, onHoverDay 
           numericLevel = Math.min(4, Math.ceil(day.contributionCount / 2));
         }
 
-        // Check month label
-        if (day.date) {
-          const monthStr = new Date(day.date).toLocaleString('en-US', { month: 'short' });
-          if (monthStr !== lastMonth) {
-            months.push({ label: monthStr.toUpperCase(), x });
-            lastMonth = monthStr;
-          }
-        }
-
         // Sunday at back (dIdx = 0), Saturday at front (dIdx = 6)
         const z = dIdx * SPACING_Z - offsetZ;
         const count = day.contributionCount || 0;
@@ -164,7 +160,7 @@ export const GitHubSkyline: React.FC<GitHubSkylineProps> = ({ weeks, onHoverDay 
       });
     });
 
-    return { flatBars: bars, monthLabels: months };
+    return { flatBars: bars };
   }, [displayWeeks, offsetX, offsetZ]);
 
   // Pointer drag event handlers for interactive rotation
@@ -287,46 +283,7 @@ export const GitHubSkyline: React.FC<GitHubSkylineProps> = ({ weeks, onHoverDay 
           </mesh>
         ))}
 
-        {/* Weekday labels along the left edge (X side) */}
-        {[
-          { label: 'MON', dIdx: 1 },
-          { label: 'WED', dIdx: 3 },
-          { label: 'FRI', dIdx: 5 },
-        ].map((item) => {
-          const z = item.dIdx * SPACING_Z - offsetZ;
-          return (
-            <Text
-              key={item.label}
-              position={[-offsetX - 0.45, 0.06, z]}
-              rotation={[-Math.PI / 2, 0, 0]}
-              fontSize={0.2}
-              color="#0A0A0A"
-              anchorX="right"
-              anchorY="middle"
-              font="monospace"
-              fontWeight="bold"
-            >
-              {item.label}
-            </Text>
-          );
-        })}
 
-        {/* Month labels along the front edge (Z side, Saturday edge) */}
-        {monthLabels.map((m) => (
-          <Text
-            key={m.label + m.x}
-            position={[m.x, 0.06, offsetZ + 0.35]}
-            rotation={[-Math.PI / 2, 0, 0]}
-            fontSize={0.2}
-            color="#0A0A0A"
-            anchorX="center"
-            anchorY="top"
-            font="monospace"
-            fontWeight="bold"
-          >
-            {m.label}
-          </Text>
-        ))}
       </group>
     </>
   );

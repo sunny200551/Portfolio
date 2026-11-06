@@ -148,3 +148,4 @@ const replacement = `{/* (A & B) Top Bar: Solid white background bar with 2px bl
 file = file.replace(target, replacement);
 fs.writeFileSync('src/components/ui/NavigationRail.tsx', file, 'utf8');
 console.log('NavigationRail successfully updated!');
+

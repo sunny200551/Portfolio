@@ -106,3 +106,4 @@ export const RIG = {
     HEAD_PITCH_MAX: 0.35,
   },
 } as const;
+

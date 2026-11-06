@@ -292,10 +292,10 @@ export const Skills: React.FC = () => {
         </div>
 
         <div className="mb-8">
-          <h2 data-adaptive className="font-display font-black text-4xl sm:text-6xl uppercase tracking-tight text-[#0A0A0A] leading-none">
+          <h2 className="font-display font-black text-4xl sm:text-6xl uppercase tracking-tight text-[#0A0A0A] leading-none">
             SKILL TABLE
           </h2>
-          <p data-adaptive className="font-mono text-xs sm:text-sm text-[#0A0A0A]/70 mt-2 max-w-2xl font-bold">
+          <p className="font-mono text-xs sm:text-sm text-[#0A0A0A]/70 mt-2 max-w-2xl font-bold">
             Technologies and tools I work with.
           </p>
         </div>

@@ -1,5 +1,6 @@
 import type { RobotAnimation, RobotExpression } from './types';
 
+export type DesignStageId = 'research' | 'wireframe' | 'prototype' | 'build';
 
 export interface WorkCardHoverInfo {
   id: string;
@@ -41,7 +42,6 @@ export interface RobotState {
   // Task 3 routine states
   aboutGradYearStage: AboutGradYearStage;
   workCardHover: WorkCardHoverInfo | null;
-  designStage: DesignStageId;
   hoveredSlab: HoveredSlabInfo | null;
 
   // Task 4 routine states
@@ -119,7 +119,7 @@ class RobotStore {
     // Task 3 initial states
     aboutGradYearStage: 'idle',
     workCardHover: null,
-        hoveredSlab: null,
+    hoveredSlab: null,
 
     // Task 4 initial states
     githubStage: 'hopping',
@@ -495,12 +495,18 @@ class RobotStore {
   }
 
   public setBoltScreenPos(x: number, y: number, visible: boolean) {
-    this.state.boltScreenPos = { x, y, visible };
-    this.notify();
+    const prev = this.state.boltScreenPos;
+    const moved = Math.hypot(prev.x - x, prev.y - y) > 3;
+    const visChanged = prev.visible !== visible;
+    if (moved || visChanged) {
+      this.state.boltScreenPos = { x, y, visible };
+      this.notify();
+    }
   }
 
   public setHomePlatformPos(x: number, y: number) {
-    if (this.state.homePlatformPos.x !== x || this.state.homePlatformPos.y !== y) {
+    const prev = this.state.homePlatformPos;
+    if (Math.hypot(prev.x - x, prev.y - y) > 3) {
       this.state.homePlatformPos = { x, y };
       this.notify();
     }
@@ -515,8 +521,8 @@ class RobotStore {
 
   public setScrollVelocity(velocity: number) {
     const isFast = Math.abs(velocity) > 16;
-    if (this.state.scrollVelocity !== velocity || this.state.isFastScrolling !== isFast) {
-      this.state.scrollVelocity = velocity;
+    this.state.scrollVelocity = velocity;
+    if (this.state.isFastScrolling !== isFast) {
       this.state.isFastScrolling = isFast;
       this.notify();
     }
@@ -532,13 +538,6 @@ class RobotStore {
   public setWorkCardHover(hover: WorkCardHoverInfo | null) {
     this.state.workCardHover = hover;
     this.notify();
-  }
-
-  public setDesignStage(stage: DesignStageId) {
-    if (this.state.designStage !== stage) {
-      this.state.designStage = stage;
-      this.notify();
-    }
   }
 
   public setHoveredSlab(slab: HoveredSlabInfo | null) {
@@ -605,3 +604,6 @@ class RobotStore {
 }
 
 export const robotStore = new RobotStore();
+if (typeof window !== 'undefined') {
+  (window as unknown as { __ROBOT_STORE__: RobotStore }).__ROBOT_STORE__ = robotStore;
+}

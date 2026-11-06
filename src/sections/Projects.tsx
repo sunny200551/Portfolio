@@ -18,8 +18,7 @@ export const Projects: React.FC = () => {
     typeof window !== 'undefined' ? window.innerWidth < 1024 : false
   );
 
-  const isDev = import.meta.env.DEV;
-
+  
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
@@ -110,7 +109,7 @@ export const Projects: React.FC = () => {
     <section 
       id="work" 
       ref={containerRef}
-      className={`w-full relative z-10 bg-white text-[#0A0A0A] border-b-2 border-[#0A0A0A] ${
+      className={`w-full relative z-10 bg-white text-[#0A0A0A] border-b-2 border-[#0A0A0A] scroll-mt-24 sm:scroll-mt-28 ${
         isMobile ? 'py-16' : 'h-screen max-h-screen overflow-hidden flex flex-col justify-center py-6'
       }`}
     >
@@ -193,15 +192,9 @@ export const Projects: React.FC = () => {
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-[#0047AB] text-white">
-                    {/* Only show TODO badge in development */}
-                    {isDev && project.isTodoScreenshot && (
-                      <span className="font-mono text-[10px] font-bold px-2 py-0.5 bg-[#FF5A1F] text-black border border-[#0A0A0A] uppercase mb-2">
-                        SCREENSHOT PENDING (TODO)
-                      </span>
-                    )}
-                    <h4 className="font-display font-black text-2xl sm:text-3xl uppercase tracking-tight">
+                    <h3 className="font-display font-black text-2xl sm:text-3xl uppercase tracking-tight">
                       {project.name}
-                    </h4>
+                    </h3>
                     <span className="font-mono text-xs text-white/80 mt-1">
                       {project.stack.slice(0, 3).join(' • ')}
                     </span>

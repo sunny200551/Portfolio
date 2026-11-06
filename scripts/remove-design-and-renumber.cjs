@@ -117,3 +117,4 @@ store = store.replace(/designStage:\s*['"]research['"],?\r?\n?/, '');
 store = store.replace(/setDesignStage:\s*\(designStage\)\s*=>\s*set\(\{[^}]*\}\),?\r?\n?/, '');
 fs.writeFileSync('src/robot/robotStore.ts', store);
 console.log('robotStore.ts updated');
+

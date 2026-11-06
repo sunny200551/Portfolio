@@ -13,3 +13,4 @@ export const HERO_PANEL_FOOTPRINTS = [
   { id: 'pane3_navy', minX: 0.45, maxX: 1.80, minZ: -0.50, maxZ: 0.60 },
   { id: 'pane4_orange', minX: 0.05, maxX: 0.70, minZ: -0.20, maxZ: 0.25 },
 ];
+

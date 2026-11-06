@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Terminal, Globe, Code, Shield } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { robotStore } from '../robot/robotStore';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -52,6 +53,7 @@ const milestonesData: MilestoneItem[] = [
 export const Journey: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const lineRef = useRef<HTMLDivElement>(null);
+  const walkedTrailRef = useRef<HTMLDivElement>(null);
   const nodesRef = useRef<(HTMLDivElement | null)[]>([]);
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -59,6 +61,7 @@ export const Journey: React.FC = () => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) {
       if (lineRef.current) lineRef.current.style.transform = 'scaleY(1)';
+      if (walkedTrailRef.current) walkedTrailRef.current.style.transform = 'scaleY(1)';
       return;
     }
 
@@ -81,9 +84,29 @@ export const Journey: React.FC = () => {
         );
       }
 
-      // Nodes pop in as line reaches them
-      nodesRef.current.forEach((node) => {
+      // Colored walked trail following BOLT's journey down the timeline
+      if (walkedTrailRef.current && containerRef.current) {
+        gsap.fromTo(
+          walkedTrailRef.current,
+          { scaleY: 0 },
+          {
+            scaleY: 1,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: containerRef.current,
+              start: 'top 70%',
+              end: 'bottom 85%',
+              scrub: 1
+            }
+          }
+        );
+      }
+
+      // Nodes pop in and trigger BOLT reactions when line reaches them
+      nodesRef.current.forEach((node, idx) => {
         if (!node) return;
+        const year = milestonesData[idx].year;
+
         gsap.fromTo(
           node,
           { scale: 0, rotation: 45 },
@@ -94,7 +117,13 @@ export const Journey: React.FC = () => {
             ease: 'back.out(2.2)',
             scrollTrigger: {
               trigger: node,
-              start: 'top 80%'
+              start: 'top 80%',
+              onEnter: () => {
+                robotStore.setJourneyYear(year as '2023' | '2024' | '2025' | '2026');
+              },
+              onEnterBack: () => {
+                robotStore.setJourneyYear(year as '2023' | '2024' | '2025' | '2026');
+              }
             }
           }
         );
@@ -128,8 +157,8 @@ export const Journey: React.FC = () => {
   }, []);
 
   return (
-    <section id="journey" className="w-full bg-white text-[#0A0A0A] relative z-10 border-b-2 border-[#0A0A0A]">
-      <div className="py-16 md:py-24 px-4 sm:px-6 max-w-6xl mx-auto">
+    <section id="journey" className="w-full bg-white text-[#0A0A0A] relative z-10 border-b-2 border-[#0A0A0A] scroll-mt-24 sm:scroll-mt-28">
+      <div className="pt-20 pb-16 md:pt-28 md:pb-24 px-4 sm:px-6 max-w-6xl mx-auto">
         
         {/* Section Tag */}
         <div data-robot-anchor="journey:timeline" data-robot-offset-x="-50" data-robot-offset-y="-20" className="flex items-center gap-3 mb-8">
@@ -161,7 +190,13 @@ export const Journey: React.FC = () => {
             className="absolute top-0 bottom-0 left-6 md:left-1/2 -translate-x-1/2 w-1 bg-[#0A0A0A] origin-top pointer-events-none"
           />
 
-          {/* Milestone Entries with tightened spacing */}
+          {/* Orange walked trail that fills as BOLT travels down the line */}
+          <div 
+            ref={walkedTrailRef}
+            className="absolute top-0 bottom-0 left-6 md:left-1/2 -translate-x-1/2 w-1.5 bg-[#FF5A1F] origin-top pointer-events-none"
+          />
+
+          {/* Milestone Entries */}
           <div className="flex flex-col gap-6 sm:gap-7">
             {milestonesData.map((item, idx) => {
               const Icon = item.icon;
@@ -174,7 +209,10 @@ export const Journey: React.FC = () => {
                 >
                   {/* Pop-in Flat Orange Square Milestone Node */}
                   <div
-                    ref={(el) => { nodesRef.current[idx] = el; }} data-robot-anchor={`journey:node-${item.year}`} className="absolute left-6 md:left-1/2 -translate-x-1/2 top-4 md:top-1/2 md:-translate-y-1/2 w-6 h-6 bg-[#FF5A1F] border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] z-20 flex items-center justify-center pointer-events-none"
+                    ref={(el) => { nodesRef.current[idx] = el; }}
+                    data-robot-anchor={`journey:node-${item.year}`}
+                    data-robot-react="journey:node"
+                    className="absolute left-6 md:left-1/2 -translate-x-1/2 top-4 md:top-1/2 md:-translate-y-1/2 w-6 h-6 bg-[#FF5A1F] border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] z-20 flex items-center justify-center pointer-events-none"
                   >
                     <div className="w-1.5 h-1.5 bg-black" />
                   </div>
@@ -218,11 +256,11 @@ export const Journey: React.FC = () => {
                       </div>
 
                       {/* Skill Tags */}
-                      <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t-2 border-[#0A0A0A]/10">
+                      <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t-2 border-[#0A0A0A]/10 font-mono text-[10px]">
                         {item.skills.map((skill) => (
-                          <span
+                          <span 
                             key={skill}
-                            className="text-[11px] font-mono py-0.5 px-2 bg-[#EEF2FA] border border-[#0A0A0A] text-[#0A0A0A] font-bold"
+                            className="px-2 py-0.5 bg-[#EEF2FA] border border-[#0A0A0A] font-bold text-[#0A0A0A]"
                           >
                             {skill}
                           </span>
@@ -230,13 +268,12 @@ export const Journey: React.FC = () => {
                       </div>
                     </div>
                   </div>
-
                 </div>
               );
             })}
           </div>
-
         </div>
+
       </div>
     </section>
   );

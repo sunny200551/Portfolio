@@ -335,8 +335,8 @@ export class RobotFaceTexture {
         // Star eyes ★ ★ (5-point stars)
         const drawStar = (cx: number, cy: number, spikes: number, outerR: number, innerR: number) => {
           let rot = (Math.PI / 2) * 3;
-          let x = cx;
-          let y = cy;
+          let x: number;
+          let y: number;
           const step = Math.PI / spikes;
 
           ctx.beginPath();

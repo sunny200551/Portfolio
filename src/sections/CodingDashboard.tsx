@@ -53,9 +53,9 @@ export const CodingDashboard: React.FC = () => {
     <section 
       id="stats" 
       ref={sectionRef} 
-      className="w-full bg-white text-[#0A0A0A] relative z-10 border-b-2 border-[#0A0A0A]"
+      className="w-full bg-white text-[#0A0A0A] relative z-10 border-b-2 border-[#0A0A0A] scroll-mt-24 sm:scroll-mt-28"
     >
-      <div className="py-16 md:py-24 px-4 sm:px-6 max-w-6xl mx-auto">
+      <div className="pt-20 pb-16 md:pt-28 md:pb-24 px-4 sm:px-6 max-w-6xl mx-auto">
         {/* Section Tag */}
         <div data-robot-anchor="stats:board" data-robot-offset-x="-50" data-robot-offset-y="-20" className="flex items-center gap-3 mb-8">
           <span className="font-mono text-xs font-bold px-3 py-1 bg-[#0A0A0A] text-white border-2 border-[#0A0A0A]">
@@ -99,7 +99,7 @@ export const CodingDashboard: React.FC = () => {
           </div>
 
           <div className="px-4 py-2.5 bg-white border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] flex flex-col items-center">
-            <span className="text-2xl font-black text-[#FF5A1F]">
+            <span className="text-2xl font-black text-[#0047AB]">
               {unlockedCount}/{achievements.length}
             </span>
             <span className="text-[10px] uppercase font-bold text-[#0A0A0A] mt-0.5">Badges Earned</span>
@@ -147,7 +147,7 @@ export const CodingDashboard: React.FC = () => {
               {/* Easy */}
               <div>
                 <div className="flex justify-between text-xs font-bold mb-1.5">
-                  <span className="text-[#0047AB]">EASY</span>
+                  <span className="inline-flex items-center gap-1.5 text-[#0A0A0A]"><span className="w-2.5 h-2.5 bg-[#0047AB] border border-[#0A0A0A] inline-block" /> EASY</span>
                   <span className="text-[#0A0A0A]">{leetcodeEasy} solved</span>
                 </div>
                 <div className="w-full h-3.5 bg-[#EEF2FA] border-2 border-[#0A0A0A]">
@@ -161,7 +161,7 @@ export const CodingDashboard: React.FC = () => {
               {/* Medium */}
               <div>
                 <div className="flex justify-between text-xs font-bold mb-1.5">
-                  <span className="text-[#FF5A1F]">MEDIUM</span>
+                  <span className="inline-flex items-center gap-1.5 text-[#0A0A0A]"><span className="w-2.5 h-2.5 bg-[#FF5A1F] border border-[#0A0A0A] inline-block" /> MEDIUM</span>
                   <span className="text-[#0A0A0A]">{leetcodeMedium} solved</span>
                 </div>
                 <div className="w-full h-3.5 bg-[#EEF2FA] border-2 border-[#0A0A0A]">
@@ -173,9 +173,9 @@ export const CodingDashboard: React.FC = () => {
               </div>
 
               {/* Hard */}
-              <div data-robot-anchor="stats:hard">
+              <div data-robot-anchor="stats:hard" data-robot-react="stats:card">
                 <div className="flex justify-between text-xs font-bold mb-1.5">
-                  <span className="text-[#0A1A3F]">HARD</span>
+                  <span className="inline-flex items-center gap-1.5 text-[#0A0A0A]"><span className="w-2.5 h-2.5 bg-[#0A1A3F] border border-[#0A0A0A] inline-block" /> HARD</span>
                   <span className="text-[#0A0A0A]">{leetcodeHard} solved</span>
                 </div>
                 <div className="w-full h-3.5 bg-[#EEF2FA] border-2 border-[#0A0A0A]">
@@ -267,7 +267,7 @@ export const CodingDashboard: React.FC = () => {
 
       {/* Flat Milestone Badges */}
       <div>
-        <div data-robot-anchor="stats:badges" className="flex items-center justify-between mb-6 border-b-2 border-[#0A0A0A] pb-3">
+        <div data-robot-anchor="stats:badges" data-robot-react="stats:badge" className="flex items-center justify-between mb-6 border-b-2 border-[#0A0A0A] pb-3">
           <h3 className="font-display font-black text-xl sm:text-2xl uppercase tracking-tight text-[#0A0A0A]">
             MILESTONE BADGES
           </h3>

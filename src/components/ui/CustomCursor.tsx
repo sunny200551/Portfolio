@@ -4,30 +4,64 @@ export const CustomCursor: React.FC = () => {
   const [pos, setPos] = useState({ x: -100, y: -100 });
   const [isHovering, setIsHovering] = useState(false);
   const [isHidden, setIsHidden] = useState(true);
-  const [isTouchDevice] = useState(() => {
+  const [isTouchDevice, setIsTouchDevice] = useState(() => {
     if (typeof window === 'undefined') return true;
     const isFinePointer = window.matchMedia('(pointer: fine)').matches;
+    const isCoarse = window.matchMedia('(pointer: coarse)').matches;
+    const noHover = window.matchMedia('(hover: none)').matches;
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    return !isFinePointer || prefersReducedMotion;
+    return !isFinePointer || isCoarse || noHover || prefersReducedMotion;
   });
   const cursorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Dynamic media query listeners for device / orientation changes
+    const fineQuery = window.matchMedia('(pointer: fine)');
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const updateTouchStatus = () => {
+      const isFinePointer = window.matchMedia('(pointer: fine)').matches;
+      const isCoarse = window.matchMedia('(pointer: coarse)').matches;
+      const noHover = window.matchMedia('(hover: none)').matches;
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      setIsTouchDevice(!isFinePointer || isCoarse || noHover || prefersReducedMotion);
+    };
+
+    fineQuery.addEventListener('change', updateTouchStatus);
+    motionQuery.addEventListener('change', updateTouchStatus);
+
+    return () => {
+      fineQuery.removeEventListener('change', updateTouchStatus);
+      motionQuery.removeEventListener('change', updateTouchStatus);
+    };
+  }, []);
 
   useEffect(() => {
     if (isTouchDevice) return;
 
     const onMouseMove = (e: MouseEvent) => {
       setPos({ x: e.clientX, y: e.clientY });
-      setIsHidden(false);
 
       const target = e.target as HTMLElement | null;
-      if (!target) return;
+      if (!target) {
+        setIsHidden(false);
+        return;
+      }
 
-      // Hide cursor completely over inputs, textareas, and editable fields
-      const isInput = !!target.closest('input, textarea, select, [contenteditable="true"], .no-custom-cursor');
-      if (isInput) {
+      // Hide cursor completely:
+      // 1. Inside the Events panel or modal
+      // 2. Over inputs, textareas, selects, and editable fields
+      // 3. Elements marked .no-custom-cursor
+      const isInsideEventsOrInput = !!target.closest(
+        '#events, [data-section="events"], .events-modal-portal, input, textarea, select, [contenteditable="true"], .no-custom-cursor'
+      );
+
+      if (isInsideEventsOrInput) {
         setIsHidden(true);
         return;
       }
+
+      setIsHidden(false);
 
       // Check if target is an interactive clickable element
       const isInteractive = !!target.closest('button, a, [role="button"], input[type="submit"]');

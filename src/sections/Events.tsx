@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar, MapPin, ExternalLink, Award, X, Sparkles } from 'lucide-react';
 import { getAllEvents, type EventItem, type EventType } from '../data/events';
+import { getLenis } from '../lib/lenis';
 
 const GithubIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg className={className || "w-4 h-4"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -34,34 +36,79 @@ export const Events: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>('All');
   const modalCloseRef = useRef<HTMLButtonElement>(null);
+  const modalContainerRef = useRef<HTMLDivElement>(null);
 
   const filteredEvents = useMemo(() => {
     if (activeFilter === 'All') return events;
     return events.filter((e) => e.type === activeFilter);
   }, [events, activeFilter]);
 
-  // Lock body scroll and pause Lenis when modal is open
+  // Lock body scroll, pause Lenis, manage focus trap, and inert fixed UI when modal is open
   useEffect(() => {
     if (selectedEvent) {
+      // 1. Pause Lenis smooth scrolling strictly
+      getLenis()?.stop();
       document.body.style.overflow = 'hidden';
       document.documentElement.classList.add('lenis-stopped');
-      // Focus close button on open
-      setTimeout(() => {
-        modalCloseRef.current?.focus();
-      }, 50);
+      document.documentElement.classList.add('modal-open');
 
+      // 2. Hide / inert background fixed elements (rails, buttons) so modal is strictly on top
+      const fixedElements = Array.from(document.querySelectorAll('.fixed:not([role="dialog"])')) as HTMLElement[];
+      fixedElements.forEach((el) => {
+        el.setAttribute('aria-hidden', 'true');
+        el.style.pointerEvents = 'none';
+      });
+
+      // 3. Focus management
+      setTimeout(() => {
+        if (modalContainerRef.current) {
+          modalContainerRef.current.focus();
+        } else {
+          modalCloseRef.current?.focus();
+        }
+      }, 30);
+
+      // 4. Keyboard trap: Tab loop & Escape to close
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           setSelectedEvent(null);
+          return;
+        }
+
+        if (e.key === 'Tab' && modalContainerRef.current) {
+          const focusable = modalContainerRef.current.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          if (focusable.length === 0) return;
+
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
         }
       };
+
       window.addEventListener('keydown', handleKeyDown);
+
       return () => {
+        getLenis()?.start();
         document.body.style.overflow = '';
         document.documentElement.classList.remove('lenis-stopped');
+        document.documentElement.classList.remove('modal-open');
+        fixedElements.forEach((el) => {
+          el.removeAttribute('aria-hidden');
+          el.style.pointerEvents = '';
+        });
         window.removeEventListener('keydown', handleKeyDown);
       };
     } else {
+      getLenis()?.start();
       document.body.style.overflow = '';
       document.documentElement.classList.remove('lenis-stopped');
     }
@@ -76,7 +123,7 @@ export const Events: React.FC = () => {
   }, []);
 
   return (
-    <section id="events" className="py-24 sm:py-32 bg-white relative border-b-2 border-[#0A0A0A]">
+    <section id="events" className="pt-24 pb-20 sm:pt-32 sm:pb-28 bg-white relative border-b-2 border-[#0A0A0A] scroll-mt-24 sm:scroll-mt-28">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 sm:mb-16 gap-6">
@@ -137,7 +184,7 @@ export const Events: React.FC = () => {
 
               {/* 3D Perspective container */}
               <div 
-                data-robot-anchor="events:tickets" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" style={{ perspective: '1200px' }}
+                data-robot-anchor="events:tickets" data-robot-react="events:ticket" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" style={{ perspective: '1200px' }}
               >
                 {events.slice(0, 4).map((evt, idx) => {
                   const typeStyle = typeBadgeStyles[evt.type];
@@ -174,11 +221,7 @@ export const Events: React.FC = () => {
                           <span className={`px-2 py-0.5 text-[10px] font-mono font-black border border-[#0A0A0A] ${typeStyle.bg} ${typeStyle.text}`}>
                             {typeStyle.label}
                           </span>
-                          {evt.draft && (
-                            <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-[#FFD700] text-black border border-[#0A0A0A]">
-                              DRAFT
-                            </span>
-                          )}
+                          
                           <span className="text-[11px] font-mono text-[#0A0A0A]/60 font-bold ml-auto">
                             {evt.date}
                           </span>
@@ -264,11 +307,7 @@ export const Events: React.FC = () => {
                           <span className={`px-2 py-0.5 text-[10px] font-mono font-black border border-[#0A0A0A] ${typeStyle.bg} ${typeStyle.text}`}>
                             {typeStyle.label}
                           </span>
-                          {evt.draft && (
-                            <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-[#FFD700] text-black border border-[#0A0A0A]">
-                              DRAFT
-                            </span>
-                          )}
+                          
                         </div>
                         <span className="text-xs font-mono font-bold text-[#0A0A0A]/60">
                           {evt.date}
@@ -301,17 +340,20 @@ export const Events: React.FC = () => {
         )}
       </div>
 
-      {/* Full-Screen Detail Modal Panel */}
-      {selectedEvent && (
+      {/* Full-Screen Detail Modal Panel (z-[100] strictly above all fixed UI) */}
+      {selectedEvent && typeof document !== 'undefined' && createPortal(
         <div 
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-event-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#0A0A0A]/70"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-[#0A0A0A]/75 backdrop-blur-[1px]"
           onClick={handleCloseModal}
         >
           <div
-            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white border-4 border-[#0A0A0A] shadow-[8px_8px_0px_#0A0A0A] p-6 sm:p-8 relative"
+            ref={modalContainerRef}
+            data-lenis-prevent="true"
+            tabIndex={0}
+            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto overscroll-contain bg-white border-4 border-[#0A0A0A] shadow-[8px_8px_0px_#0A0A0A] p-6 sm:p-8 relative outline-none focus:ring-2 focus:ring-[#0047AB]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
@@ -330,11 +372,7 @@ export const Events: React.FC = () => {
                 <span className={`px-2 py-0.5 text-xs font-mono font-black border border-[#0A0A0A] ${typeBadgeStyles[selectedEvent.type].bg} ${typeBadgeStyles[selectedEvent.type].text}`}>
                   {typeBadgeStyles[selectedEvent.type].label}
                 </span>
-                {selectedEvent.draft && (
-                  <span className="px-2 py-0.5 text-xs font-mono font-bold bg-[#FFD700] text-black border border-[#0A0A0A]">
-                    DRAFT (Pending Review)
-                  </span>
-                )}
+                
                 <span className="text-xs font-mono text-[#0A0A0A]/60 font-bold ml-auto">
                   {selectedEvent.date}
                 </span>
@@ -460,7 +498,8 @@ export const Events: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );

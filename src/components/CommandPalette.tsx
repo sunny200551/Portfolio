@@ -1,3 +1,4 @@
+import { CONTACT_INFO } from '../data/contact';
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Compass, 
@@ -57,7 +58,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
   };
 
   const handleCopyEmail = () => {
-    navigator.clipboard.writeText('sunnypasumarthi9@gmail.com');
+    navigator.clipboard.writeText(CONTACT_INFO.email);
     setCopiedEmail(true);
     setTimeout(() => {
       setCopiedEmail(false);
@@ -81,7 +82,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       category: 'Actions',
       icon: FileText,
       action: () => {
-        window.open('Resume.pdf', '_blank');
+        window.open('/Resume.pdf', '_blank');
         onClose();
       }
     },
@@ -97,7 +98,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
     },
         {
       id: 'copy-email',
-      name: 'Copy Direct Email (sunnypasumarthi9@gmail.com)',
+      name: `Copy Direct Email (${CONTACT_INFO.email})`,
       category: 'Actions',
       icon: Mail,
       action: handleCopyEmail
@@ -283,7 +284,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
         {copiedEmail && (
           <div className="bg-[#FF5A1F] text-black px-4 py-2 border-b-2 border-[#0A0A0A] font-bold text-xs flex items-center gap-2">
             <Check size={14} />
-            <span>EMAIL COPIED: sunnypasumarthi9@gmail.com</span>
+            {`EMAIL COPIED: ${CONTACT_INFO.email}`}
           </div>
         )}
 

@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Download, ArrowRight, Mail } from 'lucide-react';
+import { CONTACT_INFO } from '../data/contact';
 import type { GitHubProfile } from '../hooks/useGitHubData';
 import { robotStore } from '../robot/robotStore';
 import { RobotDebugOverlay } from '../robot/RobotDebugOverlay';
+import { HeroIllustration } from '../components/three/HeroIllustration';
 
 interface HeroProps {
   onContactClick: () => void;
@@ -10,8 +12,23 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
-  const avatarUrl = profile?.avatar_url || 'https://github.com/sunny200551.png';
+  const fallbackAvatar = profile?.avatar_url || 'https://github.com/sunny200551.png';
   const [boltScreen, setBoltScreen] = useState(() => robotStore.getState().boltScreenPos);
+  const [isHeroInView, setIsHeroInView] = useState(true);
+  const heroRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsHeroInView(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const unsubscribe = robotStore.subscribe(() => {
@@ -22,6 +39,7 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
 
   return (
     <section 
+      ref={heroRef}
       id="home" 
       className="relative min-h-[92svh] flex items-center justify-center px-4 sm:px-6 lg:px-12 py-16 sm:py-24 overflow-hidden z-10 bg-transparent text-[#0A0A0A]"
     >
@@ -38,19 +56,28 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
 
           {/* Photo & Giant Poster Name */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-6">
-            {/* Grayscale multiply photo over cobalt block with offset orange block */}
-            <div className="relative shrink-0">
+            {/* Square Profile Photo with 3px Black Border and Offset Orange Block */}
+            <div className="relative shrink-0 w-28 h-28 sm:w-32 sm:h-32">
               <div 
-                className="absolute inset-0 bg-[#FF5A1F] translate-x-2.5 translate-y-2.5 border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A]" 
+                className="absolute inset-0 bg-[#FF5A1F] translate-x-2.5 translate-y-2.5 border-[3px] border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A]" 
                 aria-hidden="true" 
               />
-              <div className="relative w-28 h-28 sm:w-32 sm:h-32 bg-[#0047AB] border-2 border-[#0A0A0A] p-1.5 flex items-center justify-center overflow-hidden">
+              <div className="relative w-full h-full bg-[#0047AB] border-[3px] border-[#0A0A0A] overflow-hidden flex items-center justify-center">
                 <img
-                  src={avatarUrl}
-                  alt="Sunny Pasumarthi"
-                  className="w-full h-full object-cover grayscale contrast-110"
+                  src="/profile.webp"
+                  alt="Sunny Pasumarthi - Computer Science Student & Frontend Developer"
+                  width={128}
+                  height={128}
+                  loading="eager"
+                  fetchPriority="high"
+                  className="w-full h-full object-cover"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://github.com/sunny200551.png';
+                    const img = e.currentTarget;
+                    if (!img.src.includes(fallbackAvatar)) {
+                      img.src = fallbackAvatar;
+                    } else if (!img.src.endsWith('/avatar.png')) {
+                      img.src = '/avatar.png';
+                    }
                   }}
                 />
               </div>
@@ -77,6 +104,7 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
           {/* Action CTAs */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 mt-2 font-mono text-xs uppercase font-bold w-full sm:w-auto">
             <button
+              data-robot-react="hero:get-in-touch"
               onClick={onContactClick}
               onMouseEnter={() => window.dispatchEvent(new CustomEvent('robot:action', { detail: 'jump' }))}
               onMouseLeave={() => window.dispatchEvent(new CustomEvent('robot:action', { detail: 'idle' }))}
@@ -87,7 +115,8 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
             </button>
             
             <a
-              href="Resume.pdf"
+              data-robot-react="hero:download-resume"
+              href="/Resume.pdf"
               download="Sunny_Pasumarthi_Resume.pdf"
               onMouseEnter={() => window.dispatchEvent(new CustomEvent('robot:action', { detail: 'salute' }))}
               onMouseLeave={() => window.dispatchEvent(new CustomEvent('robot:action', { detail: 'idle' }))}
@@ -105,7 +134,7 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
               target="_blank"
               rel="noopener noreferrer"
               className="w-10 h-10 border-2 border-[#0A0A0A] bg-white text-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] flex items-center justify-center hover:bg-[#FF5A1F] hover:text-black active:translate-x-0.5 active:translate-y-0.5 transition-all"
-              title="GitHub"
+              title="GitHub" data-robot-react="hero:social"
               aria-label="GitHub profile"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -119,7 +148,7 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
               target="_blank"
               rel="noopener noreferrer"
               className="w-10 h-10 border-2 border-[#0A0A0A] bg-white text-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] flex items-center justify-center hover:bg-[#FF5A1F] hover:text-black active:translate-x-0.5 active:translate-y-0.5 transition-all"
-              title="LinkedIn"
+              title="LinkedIn" data-robot-react="hero:social"
               aria-label="LinkedIn profile"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -134,7 +163,7 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
               target="_blank"
               rel="noopener noreferrer"
               className="w-10 h-10 border-2 border-[#0A0A0A] bg-white text-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] flex items-center justify-center hover:bg-[#FF5A1F] hover:text-black active:translate-x-0.5 active:translate-y-0.5 transition-all"
-              title="Instagram"
+              title="Instagram" data-robot-react="hero:social"
               aria-label="Instagram profile"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -145,9 +174,9 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
             </a>
 
             <a
-              href="mailto:sunnypasumarthi9@gmail.com"
+              href={`mailto:${CONTACT_INFO.email}?subject=Hello%20Sunny`}
               className="w-10 h-10 border-2 border-[#0A0A0A] bg-white text-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] flex items-center justify-center hover:bg-[#FF5A1F] hover:text-black active:translate-x-0.5 active:translate-y-0.5 transition-all"
-              title="Email"
+              title="Email" data-robot-react="hero:social"
               aria-label="Send direct email"
             >
               <Mail size={16} />
@@ -156,8 +185,15 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
 
         </div>
 
-        {/* Right Column: Protected 3D Visual Stage (desktop) / below text on mobile */}
-        <div data-robot-anchor="home:platform" data-robot-offset-x="0" data-robot-offset-y="0" className="hidden lg:block lg:col-span-5 h-[420px] pointer-events-none" aria-hidden="true" />
+        {/* Right Column: Contained 3D Visual Stage with Plinth, Architectural Panels and Robots */}
+        <div 
+          data-robot-anchor="home:platform" 
+          data-robot-offset-x="0" 
+          data-robot-offset-y="0" 
+          className="w-full lg:col-span-5 h-[380px] sm:h-[440px] lg:h-[480px] max-w-[500px] mx-auto relative flex items-center justify-center pointer-events-auto"
+        >
+          <HeroIllustration isHeroInView={isHeroInView} />
+        </div>
 
       </div>
 
@@ -166,7 +202,7 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
         <button
           onClick={() => {
             const current = robotStore.getState().boltAnim;
-            robotStore.setBolt(current === 'jump' ? 'idle' : 'jump', 'star-eyed');
+            robotStore.setBolt(current === 'jump' ? 'idle' : 'jump', 'excited');
           }}
           aria-label="Interact with Bolt Robot"
           style={{

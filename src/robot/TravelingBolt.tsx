@@ -83,19 +83,38 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
       obstaclesRef.current = obstacles;
     };
 
-    window.addEventListener('scroll', updateObstacles, { passive: true });
+    let scrollTimeout: ReturnType<typeof setTimeout>;
+    const handleDebouncedScroll = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(updateObstacles, 250);
+    };
+
+    window.addEventListener('scroll', handleDebouncedScroll, { passive: true });
     window.addEventListener('resize', updateObstacles, { passive: true });
     updateObstacles();
     return () => {
-      window.removeEventListener('scroll', updateObstacles);
+      clearTimeout(scrollTimeout);
+      window.removeEventListener('scroll', handleDebouncedScroll);
       window.removeEventListener('resize', updateObstacles);
     };
   }, []);
 
-  // Throttled cursor tracking for elementFromPoint (Part 4)
+  // Throttled cursor tracking for elementFromPoint (Part 4) - paused during active scroll
   useEffect(() => {
     let rafId: number;
+    let isScrolling = false;
+    let scrollTimeout: ReturnType<typeof setTimeout>;
+
+    const handleScroll = () => {
+      isScrolling = true;
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        isScrolling = false;
+      }, 150);
+    };
+
     const handlePointerMove = (e: MouseEvent) => {
+      if (isScrolling) return;
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
         const el = document.elementFromPoint(e.clientX, e.clientY);
@@ -104,10 +123,13 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
       });
     };
 
+    window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('pointermove', handlePointerMove, { passive: true });
     return () => {
+      window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('pointermove', handlePointerMove);
       cancelAnimationFrame(rafId);
+      clearTimeout(scrollTimeout);
     };
   }, []);
 
@@ -256,33 +278,33 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
       // FULL-WIDTH HORIZONTAL GALLERY: Park in empty header strip beside heading (max 100px tall)
       const workEl = document.getElementById('work');
       if (workEl) {
-        const rect = workEl.getBoundingClientRect();
+        const top = workEl.offsetTop - (window.scrollY || 0);
         targetX = Math.max(safeLeftX, leftMargin + 60);
-        targetY = Math.max(80, Math.min(rect.top + 70, windowH - 120));
+        targetY = Math.max(80, Math.min(top + 70, windowH - 120));
       } else {
         targetX = safeLeftX;
         targetY = 90;
       }
     } else if (activeSection === 'skills' && hoveredSlab) {
       // SKILLS INTERACTION: Allowed exception (Part 6) - walks to hovered slab in skills grid
-      const slabEl = document.querySelector(`[data-robot-react="skills:tile"]:nth-child(${hoveredSlab.index})`);
+      const slabEl = document.querySelector(`[data-robot-react="skills:tile"]:nth-child(${hoveredSlab.index})`) as HTMLElement | null;
       if (slabEl) {
-        const rect = slabEl.getBoundingClientRect();
-        targetX = rect.left + rect.width * 0.5;
-        targetY = rect.top + rect.height * 0.5 - 32;
+        const top = slabEl.offsetTop - (window.scrollY || 0);
+        targetX = slabEl.offsetLeft + slabEl.offsetWidth * 0.5;
+        targetY = top + slabEl.offsetHeight * 0.5 - 32;
       } else {
         targetX = safeRightX;
         targetY = continuousY;
       }
     } else if (activeSection === 'journey') {
       // JOURNEY TIMELINE: Allowed exception - walks down vertical timeline line (~70px wide gap)
-      const lineEl = document.getElementById('journey')?.querySelector('.relative.py-4');
-      if (lineEl) {
-        const rect = lineEl.getBoundingClientRect();
-        targetX = rect.left + rect.width * 0.5;
-        // Position along the timeline line linked to scroll progress through Journey section
-        const journeyScrollP = THREE.MathUtils.clamp((windowH * 0.5 - rect.top) / Math.max(1, rect.height), 0, 1);
-        targetY = THREE.MathUtils.clamp(rect.top + journeyScrollP * rect.height, 90, windowH - 90);
+      const journeyEl = document.getElementById('journey');
+      if (journeyEl) {
+        const top = journeyEl.offsetTop - (window.scrollY || 0);
+        const h = journeyEl.offsetHeight || 800;
+        targetX = windowW * 0.5;
+        const journeyScrollP = THREE.MathUtils.clamp((windowH * 0.5 - top) / Math.max(1, h), 0, 1);
+        targetY = THREE.MathUtils.clamp(top + journeyScrollP * h, 90, windowH - 90);
       } else {
         targetX = safeLeftX;
         targetY = continuousY;
@@ -618,6 +640,7 @@ export const TravelingBolt: React.FC = () => {
   const [isMobile, setIsMobile] = useState(() => 
     typeof window !== 'undefined' ? window.innerWidth < 1024 : false
   );
+  const [activeSection, setActiveSection] = useState(() => robotStore.getState().activeSection);
   const [robotEnabled, setRobotEnabled] = useState(() => robotStore.getState().robotEnabled);
   const [speechBubble, setSpeechBubble] = useState(() => robotStore.getState().speechBubble);
   const [boltPos, setBoltPos] = useState(() => robotStore.getState().boltScreenPos);
@@ -653,6 +676,7 @@ export const TravelingBolt: React.FC = () => {
   useEffect(() => {
     const unsubscribe = robotStore.subscribe(() => {
       const state = robotStore.getState();
+      setActiveSection(state.activeSection);
       setRobotEnabled(state.robotEnabled);
       setSpeechBubble(state.speechBubble);
       setBoltPos(state.boltScreenPos);
@@ -664,11 +688,15 @@ export const TravelingBolt: React.FC = () => {
     return null;
   }
 
+  const isHome = activeSection === 'home';
+
   return (
     <>
       {/* Persistent Fixed Overlay Canvas at z-index 25 (above sections, below navigation rails & modals) */}
       <div 
-        className="fixed inset-0 pointer-events-none z-25 overflow-hidden"
+        className={`fixed inset-0 pointer-events-none z-25 overflow-hidden transition-opacity duration-300 ${
+          isHome ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
         aria-hidden="true"
       >
         <CanvasErrorBoundary fallback={null}>
@@ -677,7 +705,7 @@ export const TravelingBolt: React.FC = () => {
               className="pointer-events-none"
               style={{ pointerEvents: 'none' }}
               dpr={[1, 1.5]}
-              frameloop={isTabVisible ? 'always' : 'never'}
+              frameloop={isTabVisible && !isHome ? 'always' : 'never'}
               camera={{ position: [0, 0, 7.5], fov: 34 }}
               gl={{
                 alpha: true,
@@ -696,7 +724,7 @@ export const TravelingBolt: React.FC = () => {
       </div>
 
       {/* Real Interactive Button over BOLT */}
-      {boltPos.visible && boltPos.x > 0 && (
+      {!isHome && boltPos.visible && boltPos.x > 0 && (
         <button
           onClick={() => {
             robotStore.handleBoltClick();
@@ -720,7 +748,7 @@ export const TravelingBolt: React.FC = () => {
       )}
 
       {/* Neo-brutalist Speech Bubble */}
-      {speechBubble && boltPos.visible && boltPos.x > 0 && (
+      {!isHome && speechBubble && boltPos.visible && boltPos.x > 0 && (
         <div
           style={{
             position: 'fixed',
