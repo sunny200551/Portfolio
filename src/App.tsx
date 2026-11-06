@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { NavigationRail } from './components/ui/NavigationRail';
 import { CustomCursor } from './components/ui/CustomCursor';
 import { SmoothScroll } from './components/ui/SmoothScroll';
@@ -7,6 +7,7 @@ import { CommandPalette } from './components/CommandPalette';
 import { Hero } from './sections/Hero';
 import { About } from './sections/About';
 import { Projects } from './sections/Projects';
+import { Design } from './sections/Design';
 import { Skills } from './sections/Skills';
 import { CodingDashboard } from './sections/CodingDashboard';
 import { GitHubActivity } from './sections/GitHubActivity';
@@ -18,10 +19,22 @@ import { useGitHubData } from './hooks/useGitHubData';
 
 // Lazy-load persistent 3D canvas so text is instantly readable
 const Scene = lazy(() => import('./components/three/Scene'));
+const TravelingBolt = lazy(() => import('./robot/TravelingBolt'));
+const RobotShowcase = lazy(() => import('./robot/RobotShowcase'));
 
 function App() {
   const { profile, repos } = useGitHubData();
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const isRobotShowcase = typeof window !== 'undefined' && window.location.search.includes('robot-showcase');
+  const [mountedAfterPaint, setMountedAfterPaint] = useState(false);
+
+  useEffect(() => {
+    // Mount mascot module after initial DOM paint to prioritize critical content
+    const raf = requestAnimationFrame(() => {
+      setTimeout(() => setMountedAfterPaint(true), 60);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   const handleContactScroll = () => {
     const el = document.getElementById('contact');
@@ -34,6 +47,17 @@ function App() {
     <SmoothScroll>
       {/* Flat Custom Cursor */}
       <CustomCursor />
+      {/* Persistent Traveling BOLT Mascot Canvas (deferred after first paint) */}
+      {mountedAfterPaint && (
+        <Suspense fallback={null}>
+          <TravelingBolt />
+        </Suspense>
+      )}
+      {isRobotShowcase && (
+        <Suspense fallback={null}>
+          <RobotShowcase />
+        </Suspense>
+      )}
 
       {/* Persistent Fixed 3D Canvas behind HTML */}
       <Suspense fallback={null}>
@@ -56,6 +80,9 @@ function App() {
 
         {/* 03. Featured Work / Projects Gallery (#work) */}
         <Projects />
+
+        {/* 04. UI Architecture & Design Tokens (#design) */}
+        <Design />
 
         {/* 04. Technical Stack & Skills (#skills) */}
         <Skills />

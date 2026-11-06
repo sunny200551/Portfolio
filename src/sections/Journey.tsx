@@ -132,9 +132,9 @@ export const Journey: React.FC = () => {
       <div className="py-16 md:py-24 px-4 sm:px-6 max-w-6xl mx-auto">
         
         {/* Section Tag */}
-        <div className="flex items-center gap-3 mb-8">
+        <div data-robot-anchor="journey:timeline" data-robot-offset-x="-50" data-robot-offset-y="-20" className="flex items-center gap-3 mb-8">
           <span className="font-mono text-xs font-bold px-3 py-1 bg-[#0A0A0A] text-white border-2 border-[#0A0A0A]">
-            08 // JOURNEY
+            09 // JOURNEY
           </span>
           <div className="h-0.5 flex-grow bg-[#0A0A0A]" />
         </div>
@@ -174,8 +174,7 @@ export const Journey: React.FC = () => {
                 >
                   {/* Pop-in Flat Orange Square Milestone Node */}
                   <div
-                    ref={(el) => { nodesRef.current[idx] = el; }}
-                    className="absolute left-6 md:left-1/2 -translate-x-1/2 top-4 md:top-1/2 md:-translate-y-1/2 w-6 h-6 bg-[#FF5A1F] border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] z-20 flex items-center justify-center pointer-events-none"
+                    ref={(el) => { nodesRef.current[idx] = el; }} data-robot-anchor={`journey:node-${item.year}`} className="absolute left-6 md:left-1/2 -translate-x-1/2 top-4 md:top-1/2 md:-translate-y-1/2 w-6 h-6 bg-[#FF5A1F] border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] z-20 flex items-center justify-center pointer-events-none"
                   >
                     <div className="w-1.5 h-1.5 bg-black" />
                   </div>

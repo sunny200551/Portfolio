@@ -11,8 +11,15 @@ import {
   Briefcase, 
   Award,
   Mail,
-  Check
+  Check,
+  Palette,
+  Sparkles,
+  Moon,
+  Sun,
+  Users,
+  Power
 } from 'lucide-react';
+import { robotStore } from '../robot/robotStore';
 
 const GithubIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg className={className || "w-4 h-4"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -63,12 +70,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
     { id: 'home', name: 'Go to 01 // Home', category: 'Navigation', icon: Compass, action: () => scrollToSection('home') },
     { id: 'about', name: 'Go to 02 // About', category: 'Navigation', icon: User, action: () => scrollToSection('about') },
     { id: 'work', name: 'Go to 03 // Work (Featured Projects)', category: 'Navigation', icon: Briefcase, action: () => scrollToSection('work') },
-    { id: 'skills', name: 'Go to 04 // Skills', category: 'Navigation', icon: Code, action: () => scrollToSection('skills') },
-    { id: 'github', name: 'Go to 05 // GitHub Commit Skyline', category: 'Navigation', icon: Terminal, action: () => scrollToSection('github') },
-    { id: 'stats', name: 'Go to 06 // Coding Stats', category: 'Navigation', icon: Award, action: () => scrollToSection('stats') },
-    { id: 'events', name: 'Go to 07 // Events & Hackathons', category: 'Navigation', icon: Calendar, action: () => scrollToSection('events') },
-    { id: 'journey', name: 'Go to 08 // Learning Journey', category: 'Navigation', icon: Compass, action: () => scrollToSection('journey') },
-    { id: 'contact', name: 'Go to 09 // Contact', category: 'Navigation', icon: User, action: () => scrollToSection('contact') },
+    { id: 'design', name: 'Go to 04 // Design (UI Tokens & Systems)', category: 'Navigation', icon: Palette, action: () => scrollToSection('design') },
+    { id: 'skills', name: 'Go to 05 // Skills', category: 'Navigation', icon: Code, action: () => scrollToSection('skills') },
+    { id: 'github', name: 'Go to 06 // GitHub Commit Skyline', category: 'Navigation', icon: Terminal, action: () => scrollToSection('github') },
+    { id: 'stats', name: 'Go to 07 // Coding Stats', category: 'Navigation', icon: Award, action: () => scrollToSection('stats') },
+    { id: 'events', name: 'Go to 08 // Events & Hackathons', category: 'Navigation', icon: Calendar, action: () => scrollToSection('events') },
+    { id: 'journey', name: 'Go to 09 // Learning Journey', category: 'Navigation', icon: Compass, action: () => scrollToSection('journey') },
+    { id: 'contact', name: 'Go to 10 // Contact', category: 'Navigation', icon: User, action: () => scrollToSection('contact') },
     {
       id: 'resume',
       name: 'Open Official Resume (PDF)',
@@ -89,12 +97,72 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
         onClose();
       }
     },
-    {
+        {
       id: 'copy-email',
       name: 'Copy Direct Email (sunnypasumarthi9@gmail.com)',
       category: 'Actions',
       icon: Mail,
       action: handleCopyEmail
+    },
+    {
+      id: 'robot-dance',
+      name: 'Dance (Robot: Dance Party)',
+      category: 'Actions',
+      icon: Sparkles,
+      action: () => {
+        robotStore.triggerDance();
+        onClose();
+      }
+    },
+    {
+      id: 'robot-sleep',
+      name: 'Sleep (Robot: Nap Time)',
+      category: 'Actions',
+      icon: Moon,
+      action: () => {
+        robotStore.triggerSleep();
+        onClose();
+      }
+    },
+    {
+      id: 'robot-wake',
+      name: 'Wake (Robot: Wake Up)',
+      category: 'Actions',
+      icon: Sun,
+      action: () => {
+        robotStore.triggerWake();
+        onClose();
+      }
+    },
+    {
+      id: 'robot-summon-friend',
+      name: 'Summon Friend (Robot: Chase Gag with NUT & CHIP)',
+      category: 'Actions',
+      icon: Users,
+      action: () => {
+        robotStore.triggerSummonFriends();
+        onClose();
+      }
+    },
+    {
+      id: 'robot-off',
+      name: 'Robot Off (Disable 3D Mascots)',
+      category: 'Actions',
+      icon: Power,
+      action: () => {
+        robotStore.setRobotEnabled(false);
+        onClose();
+      }
+    },
+    {
+      id: 'robot-on',
+      name: 'Robot On (Enable 3D Mascots)',
+      category: 'Actions',
+      icon: Check,
+      action: () => {
+        robotStore.setRobotEnabled(true);
+        onClose();
+      }
     }
   ];
 

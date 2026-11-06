@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Download, ArrowRight, Mail } from 'lucide-react';
 import type { GitHubProfile } from '../hooks/useGitHubData';
+import { robotStore } from '../robot/robotStore';
+import { RobotDebugOverlay } from '../robot/RobotDebugOverlay';
 
 interface HeroProps {
   onContactClick: () => void;
@@ -9,6 +11,14 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
   const avatarUrl = profile?.avatar_url || 'https://github.com/sunny200551.png';
+  const [boltScreen, setBoltScreen] = useState(() => robotStore.getState().boltScreenPos);
+
+  useEffect(() => {
+    const unsubscribe = robotStore.subscribe(() => {
+      setBoltScreen(robotStore.getState().boltScreenPos);
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <section 
@@ -68,6 +78,8 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 mt-2 font-mono text-xs uppercase font-bold w-full sm:w-auto">
             <button
               onClick={onContactClick}
+              onMouseEnter={() => window.dispatchEvent(new CustomEvent('robot:action', { detail: 'jump' }))}
+              onMouseLeave={() => window.dispatchEvent(new CustomEvent('robot:action', { detail: 'idle' }))}
               className="flex items-center justify-center gap-2 px-7 py-3.5 bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] hover:bg-black hover:text-white active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0px_#0A0A0A] transition-all cursor-pointer"
             >
               <span>GET IN TOUCH</span>
@@ -77,6 +89,8 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
             <a
               href="Resume.pdf"
               download="Sunny_Pasumarthi_Resume.pdf"
+              onMouseEnter={() => window.dispatchEvent(new CustomEvent('robot:action', { detail: 'salute' }))}
+              onMouseLeave={() => window.dispatchEvent(new CustomEvent('robot:action', { detail: 'idle' }))}
               className="flex items-center justify-center gap-2 px-7 py-3.5 bg-white text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] hover:bg-[#EEF2FA] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0px_#0A0A0A] transition-all cursor-pointer"
             >
               <Download size={14} />
@@ -143,9 +157,36 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
         </div>
 
         {/* Right Column: Protected 3D Visual Stage (desktop) / below text on mobile */}
-        <div className="hidden lg:block lg:col-span-5 h-[420px] pointer-events-none" aria-hidden="true" />
+        <div data-robot-anchor="home:platform" data-robot-offset-x="0" data-robot-offset-y="0" className="hidden lg:block lg:col-span-5 h-[420px] pointer-events-none" aria-hidden="true" />
 
       </div>
+
+      {/* DOM Hit-Area Button for Clicking BOLT (independent of pointer-events: none canvas) */}
+      {boltScreen.visible && boltScreen.x > 0 && (
+        <button
+          onClick={() => {
+            const current = robotStore.getState().boltAnim;
+            robotStore.setBolt(current === 'jump' ? 'idle' : 'jump', 'star-eyed');
+          }}
+          aria-label="Interact with Bolt Robot"
+          style={{
+            position: 'fixed',
+            left: `${boltScreen.x - 45}px`,
+            top: `${boltScreen.y - 65}px`,
+            width: '90px',
+            height: '130px',
+            cursor: 'pointer',
+            zIndex: 30,
+            background: 'transparent',
+            border: 'none',
+            outline: 'none',
+          }}
+          className="focus-visible:ring-2 focus-visible:ring-[#FF5A1F]"
+        />
+      )}
+
+      {/* On-screen debug readout if ?robotDebug=1 is present */}
+      <RobotDebugOverlay />
     </section>
   );
 };

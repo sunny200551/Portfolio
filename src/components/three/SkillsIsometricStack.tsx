@@ -1,3 +1,4 @@
+import { robotStore } from '../../robot/robotStore';
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Edges, Text } from '@react-three/drei';
@@ -52,11 +53,18 @@ const GridBlock: React.FC<GridBlockProps> = ({
         e.stopPropagation();
         onSelect();
       }}
-      onPointerOver={() => {
+      onPointerOver={(e) => {
+        e.stopPropagation();
         document.body.style.cursor = 'pointer';
+        robotStore.setHoveredSlab({
+          index,
+          name: group.category,
+        });
       }}
-      onPointerOut={() => {
+      onPointerOut={(e) => {
+        e.stopPropagation();
         document.body.style.cursor = 'auto';
+        robotStore.setHoveredSlab(null);
       }}
     >
       {/* Slab Mesh */}

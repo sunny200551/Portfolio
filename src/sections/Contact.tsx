@@ -1,3 +1,4 @@
+import { robotStore } from '../robot/robotStore';
 import React, { useState } from 'react';
 import { Mail, MapPin, Send, Loader2, CheckCircle2, AlertCircle, Copy, Check } from 'lucide-react';
 import { saveContactMessage, isFirebaseConfigured } from '../firebase';
@@ -31,7 +32,11 @@ export const Contact: React.FC<ContactProps> = ({ profile }) => {
   const handleCopyEmail = () => {
     navigator.clipboard.writeText('sunnypasumarthi9@gmail.com');
     setCopiedEmail(true);
-    setTimeout(() => setCopiedEmail(false), 2000);
+    robotStore.setContactAction('cheer');
+    setTimeout(() => {
+      setCopiedEmail(false);
+      robotStore.setContactAction('building');
+    }, 2000);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,6 +63,10 @@ export const Contact: React.FC<ContactProps> = ({ profile }) => {
     }
 
     setStatus('loading');
+    robotStore.setContactAction('rocket');
+    setTimeout(() => {
+      robotStore.setContactAction('building');
+    }, 2500);
     
     try {
       const result = await saveContactMessage({
@@ -88,13 +97,13 @@ export const Contact: React.FC<ContactProps> = ({ profile }) => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         
         {/* Section Pill */}
-        <div className="inline-block px-3 py-1 bg-[#FF5A1F] text-black font-mono font-bold text-xs uppercase border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] mb-8">
-          09 // CONTACT
+        <div data-robot-anchor="contact:submit" data-robot-offset-x="-50" data-robot-offset-y="-20" className="inline-block px-3 py-1 bg-[#FF5A1F] text-black font-mono font-bold text-xs uppercase border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] mb-8">
+          10 // CONTACT
         </div>
 
         {/* Giant Headline */}
         <div className="mb-14">
-          <h2 className="font-display font-black text-4xl sm:text-7xl md:text-8xl uppercase tracking-tight text-white leading-none">
+          <h2 data-robot-anchor="contact:headline" className="font-display font-black text-4xl sm:text-7xl md:text-8xl uppercase tracking-tight text-white leading-none">
             LET'S BUILD SOMETHING.
           </h2>
           <p className="font-mono text-xs sm:text-base text-white/80 mt-4 max-w-2xl leading-relaxed">
@@ -256,6 +265,8 @@ export const Contact: React.FC<ContactProps> = ({ profile }) => {
                       id="name"
                       name="name"
                       required
+                      onFocus={() => robotStore.setContactInputFocus('name')}
+                      onBlur={() => robotStore.setContactInputFocus(null)}
                       value={formData.name}
                       onChange={handleChange}
                       disabled={status === 'loading'}
@@ -273,6 +284,8 @@ export const Contact: React.FC<ContactProps> = ({ profile }) => {
                       id="email"
                       name="email"
                       required
+                      onFocus={() => robotStore.setContactInputFocus('email')}
+                      onBlur={() => robotStore.setContactInputFocus(null)}
                       value={formData.email}
                       onChange={handleChange}
                       disabled={status === 'loading'}
@@ -290,6 +303,8 @@ export const Contact: React.FC<ContactProps> = ({ profile }) => {
                     type="text"
                     id="subject"
                     name="subject"
+                    onFocus={() => robotStore.setContactInputFocus('subject')}
+                    onBlur={() => robotStore.setContactInputFocus(null)}
                     value={formData.subject}
                     onChange={handleChange}
                     disabled={status === 'loading'}
@@ -306,6 +321,8 @@ export const Contact: React.FC<ContactProps> = ({ profile }) => {
                     id="message"
                     name="message"
                     required
+                    onFocus={() => robotStore.setContactInputFocus('message')}
+                    onBlur={() => robotStore.setContactInputFocus(null)}
                     rows={5}
                     value={formData.message}
                     onChange={handleChange}
@@ -318,6 +335,7 @@ export const Contact: React.FC<ContactProps> = ({ profile }) => {
                 {/* Submit Button & Status Alerts */}
                 <div className="flex flex-col gap-3 mt-2">
                   <button
+                    data-robot-anchor="contact:send-btn"
                     type="submit"
                     disabled={status === 'loading'}
                     className="flex items-center justify-center gap-2 px-6 py-4 bg-[#FF5A1F] hover:bg-[#0A0A0A] hover:text-white disabled:bg-gray-300 text-black border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] font-mono font-bold text-xs uppercase cursor-pointer transition-all active:translate-y-0.5 active:shadow-[2px_2px_0px_#0A0A0A]"

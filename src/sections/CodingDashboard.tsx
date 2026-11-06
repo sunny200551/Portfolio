@@ -57,9 +57,9 @@ export const CodingDashboard: React.FC = () => {
     >
       <div className="py-16 md:py-24 px-4 sm:px-6 max-w-6xl mx-auto">
         {/* Section Tag */}
-        <div className="flex items-center gap-3 mb-8">
+        <div data-robot-anchor="stats:board" data-robot-offset-x="-50" data-robot-offset-y="-20" className="flex items-center gap-3 mb-8">
           <span className="font-mono text-xs font-bold px-3 py-1 bg-[#0A0A0A] text-white border-2 border-[#0A0A0A]">
-            06 // STATS
+            07 // STATS
           </span>
           <div className="h-0.5 flex-grow bg-[#0A0A0A]" />
         </div>
@@ -173,7 +173,7 @@ export const CodingDashboard: React.FC = () => {
               </div>
 
               {/* Hard */}
-              <div>
+              <div data-robot-anchor="stats:hard">
                 <div className="flex justify-between text-xs font-bold mb-1.5">
                   <span className="text-[#0A1A3F]">HARD</span>
                   <span className="text-[#0A0A0A]">{leetcodeHard} solved</span>
@@ -267,7 +267,7 @@ export const CodingDashboard: React.FC = () => {
 
       {/* Flat Milestone Badges */}
       <div>
-        <div className="flex items-center justify-between mb-6 border-b-2 border-[#0A0A0A] pb-3">
+        <div data-robot-anchor="stats:badges" className="flex items-center justify-between mb-6 border-b-2 border-[#0A0A0A] pb-3">
           <h3 className="font-display font-black text-xl sm:text-2xl uppercase tracking-tight text-[#0A0A0A]">
             MILESTONE BADGES
           </h3>

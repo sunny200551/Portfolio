@@ -1,3 +1,4 @@
+import { robotStore } from '../robot/robotStore';
 import React, { useEffect, useRef, useState } from 'react';
 import { GraduationCap, Award, Code } from 'lucide-react';
 import gsap from 'gsap';
@@ -85,6 +86,85 @@ const StatCounter: React.FC<{ value: number; suffix?: string; label: string }> =
   );
 };
 
+
+const GradYearStatCounter: React.FC = () => {
+  const [displayYear, setDisplayYear] = useState<number | string>(2027);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const hasTriggered = useRef(false);
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    let t1: ReturnType<typeof setTimeout>;
+    let t2: ReturnType<typeof setTimeout>;
+    let t3: ReturnType<typeof setTimeout>;
+    let t4: ReturnType<typeof setTimeout>;
+    let t5: ReturnType<typeof setTimeout>;
+
+    const runGlitchSequence = () => {
+      // Step 1: Initial strange counter value
+      setDisplayYear(240);
+      
+      // Step 2: Glitches through 864 -> BOLT looks confused!
+      t1 = setTimeout(() => {
+        setDisplayYear(864);
+        robotStore.setAboutGradYearStage('glitch');
+
+        // Step 3: Glitches through 1492 -> BOLT facepalms!
+        t2 = setTimeout(() => {
+          setDisplayYear(1492);
+          robotStore.setAboutGradYearStage('facepalm');
+
+          // Step 4: Glitches through 1984
+          t3 = setTimeout(() => {
+            setDisplayYear(1984);
+
+            // Step 5: Settles on 2027 -> BOLT gives thumbs-up / cheer!
+            t4 = setTimeout(() => {
+              setDisplayYear(2027);
+              robotStore.setAboutGradYearStage('settled');
+
+              t5 = setTimeout(() => {
+                robotStore.setAboutGradYearStage('idle');
+              }, 2600);
+            }, 600);
+          }, 450);
+        }, 600);
+      }, 550);
+    };
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !hasTriggered.current) {
+        hasTriggered.current = true;
+        runGlitchSequence();
+      }
+    }, { threshold: 0.2 });
+
+    if (containerRef.current) observer.observe(containerRef.current);
+
+    return () => {
+      observer.disconnect();
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+      clearTimeout(t5);
+    };
+  }, []);
+
+  return (
+    <div ref={containerRef} className="text-center p-3 sm:p-4 bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] flex flex-col items-center justify-between">
+      <span className="text-2xl sm:text-3xl md:text-4xl font-black text-[#0047AB] font-mono">
+        {displayYear}
+      </span>
+      <span className="text-[10px] sm:text-xs text-[#0A0A0A] font-mono mt-1 font-bold uppercase tracking-wider text-center">
+        Expected graduation 2027
+      </span>
+    </div>
+  );
+};
+
 export const About: React.FC<{ profile?: GitHubProfile | null }> = ({ profile }) => {
   const headlineRef = useRef<HTMLDivElement>(null);
   const [publicReposCount, setPublicReposCount] = useState<number>(profile?.public_repos || 25);
@@ -154,7 +234,7 @@ export const About: React.FC<{ profile?: GitHubProfile | null }> = ({ profile })
       <div className="py-16 md:py-24 px-4 sm:px-6 max-w-6xl mx-auto">
         
         {/* Section Tag */}
-        <div className="flex items-center gap-3 mb-8">
+        <div data-robot-anchor="about:heading" data-robot-offset-x="-50" data-robot-offset-y="-20" className="flex items-center gap-3 mb-8">
           <span className="font-mono text-xs font-bold px-3 py-1 bg-[#0A0A0A] text-white border-2 border-[#0A0A0A]">
             02 // ABOUT
           </span>
@@ -222,7 +302,7 @@ export const About: React.FC<{ profile?: GitHubProfile | null }> = ({ profile })
           </div>
 
           {/* Stats Block */}
-          <div className="col-span-12 lg:col-span-4 bg-[#EEF2FA] border-2 border-[#0A0A0A] shadow-[6px_6px_0px_#0A0A0A] p-6 sm:p-8 flex flex-col justify-between">
+          <div data-robot-anchor="about:stats" data-robot-offset-x="-40" data-robot-offset-y="-25" className="col-span-12 lg:col-span-4 bg-[#EEF2FA] border-2 border-[#0A0A0A] shadow-[6px_6px_0px_#0A0A0A] p-6 sm:p-8 flex flex-col justify-between">
             <div className="border-b-2 border-[#0A0A0A] pb-3 mb-6">
               <h3 className="font-display font-extrabold text-base uppercase text-[#0A0A0A] flex items-center gap-2">
                 <Award size={18} className="text-[#0047AB]" />
@@ -238,14 +318,7 @@ export const About: React.FC<{ profile?: GitHubProfile | null }> = ({ profile })
               <StatCounter value={publicReposCount} label="GitHub Repos" />
 
               {/* Guaranteed Static Text: Expected graduation 2027 (Never counted) */}
-              <div className="text-center p-3 sm:p-4 bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] flex flex-col items-center justify-between">
-                <span className="text-2xl sm:text-3xl md:text-4xl font-black text-[#0047AB] font-mono">
-                  2027
-                </span>
-                <span className="text-[10px] sm:text-xs text-[#0A0A0A] font-mono mt-1 font-bold uppercase tracking-wider text-center">
-                  Expected graduation 2027
-                </span>
-              </div>
+              <GradYearStatCounter />
 
               {/* Real quantity: Projects */}
               <StatCounter value={6} label="Web Projects" />

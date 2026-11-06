@@ -4,6 +4,7 @@ import { Edges } from '@react-three/drei';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { HeroRobots } from '../../robot/HeroRobots';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -318,7 +319,11 @@ export const HeroPanes: React.FC = () => {
           size={[3.8, 2.8, 0.05]}
           color="#EEF2FA"
           outlineColor="#0A0A0A"
-        />
+        >
+          <HeroRobots />
+        </UIBlock>
+
+
       </group>
 
     </group>

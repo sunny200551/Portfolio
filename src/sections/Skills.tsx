@@ -1,3 +1,4 @@
+import { robotStore } from '../robot/robotStore';
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Layers, Box } from 'lucide-react';
@@ -53,9 +54,9 @@ export const Skills: React.FC = () => {
         
         {/* Section Tag & Segmented Toggle (3D | LIST) */}
         <div className="flex items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-3 flex-grow">
+          <div data-robot-anchor="skills:tag" data-robot-offset-x="-50" data-robot-offset-y="-20" className="flex items-center gap-3 flex-grow">
             <span className="font-mono text-xs font-bold px-3 py-1 bg-[#0A0A0A] text-white border-2 border-[#0A0A0A]">
-              04 // SKILLS
+              05 // SKILLS
             </span>
             <div className="h-0.5 flex-grow bg-[#0A0A0A]" />
           </div>
@@ -144,6 +145,8 @@ export const Skills: React.FC = () => {
                     <button
                       key={g.id}
                       onClick={() => setActiveGroup(g)}
+                      onMouseEnter={() => robotStore.setHoveredSlab({ index: skillsData.indexOf(g), name: g.category })}
+                      onMouseLeave={() => robotStore.setHoveredSlab(null)}
                       className={`px-2 py-0.5 border border-[#0A0A0A] font-bold cursor-pointer transition-colors ${
                         activeGroup.id === g.id
                           ? 'bg-[#FF5A1F] text-black'

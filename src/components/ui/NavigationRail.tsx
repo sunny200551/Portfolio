@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, FileText, Terminal, ArrowUpRight } from 'lucide-react';
+import { robotStore } from '../../robot/robotStore';
 
 interface NavigationRailProps {
   onOpenCommandPalette: () => void;
 }
 
-interface NavSection {
+export interface NavSection {
   id: string;
   num: string;
   label: string;
@@ -15,12 +16,13 @@ const NAV_SECTIONS: NavSection[] = [
   { id: 'home', num: '01', label: 'HOME' },
   { id: 'about', num: '02', label: 'ABOUT' },
   { id: 'work', num: '03', label: 'WORK' },
-  { id: 'skills', num: '04', label: 'SKILLS' },
-  { id: 'github', num: '05', label: 'GITHUB' },
-  { id: 'stats', num: '06', label: 'STATS' },
-  { id: 'events', num: '07', label: 'EVENTS' },
-  { id: 'journey', num: '08', label: 'JOURNEY' },
-  { id: 'contact', num: '09', label: 'CONTACT' },
+  { id: 'design', num: '04', label: 'DESIGN' },
+  { id: 'skills', num: '05', label: 'SKILLS' },
+  { id: 'github', num: '06', label: 'GITHUB' },
+  { id: 'stats', num: '07', label: 'STATS' },
+  { id: 'events', num: '08', label: 'EVENTS' },
+  { id: 'journey', num: '09', label: 'JOURNEY' },
+  { id: 'contact', num: '10', label: 'CONTACT' },
 ];
 
 export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPalette }) => {
@@ -39,6 +41,7 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPal
       // Force HOME active when near the top of the viewport
       if (scrollY < 180) {
         setActiveSection('home');
+        robotStore.setActiveSection('home');
         return;
       }
 
@@ -51,6 +54,7 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPal
           const rect = el.getBoundingClientRect();
           if (rect.top <= triggerY && rect.bottom > 0) {
             setActiveSection(item.id);
+            robotStore.setActiveSection(item.id);
             return;
           }
         }
@@ -165,7 +169,7 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPal
           style={{ height: `${(scrollProgress / 100) * (NAV_SECTIONS.length - 1) * 44}px` }}
         />
 
-        {/* 9 Numbered Nodes */}
+        {/* 10 Numbered Nodes */}
         <div className="flex flex-col gap-4">
           {NAV_SECTIONS.map((sec) => {
             const isActive = activeSection === sec.id;
@@ -229,7 +233,7 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPal
             </button>
           </div>
 
-          {/* Center Giant Section Links (01 to 09) */}
+          {/* Center Giant Section Links (01 to 10) */}
           <div className="py-8 my-auto max-w-4xl">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-8">
               {NAV_SECTIONS.map((sec, idx) => (

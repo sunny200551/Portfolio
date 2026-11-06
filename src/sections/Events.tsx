@@ -137,8 +137,7 @@ export const Events: React.FC = () => {
 
               {/* 3D Perspective container */}
               <div 
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-                style={{ perspective: '1200px' }}
+                data-robot-anchor="events:tickets" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" style={{ perspective: '1200px' }}
               >
                 {events.slice(0, 4).map((evt, idx) => {
                   const typeStyle = typeBadgeStyles[evt.type];

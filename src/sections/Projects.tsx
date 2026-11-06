@@ -1,3 +1,4 @@
+import { robotStore } from '../robot/robotStore';
 import React, { useState, useEffect, useRef } from 'react';
 import { ExternalLink, ArrowRight, X, Code, CheckCircle2 } from 'lucide-react';
 import gsap from 'gsap';
@@ -116,7 +117,7 @@ export const Projects: React.FC = () => {
       {/* Section Header */}
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 mb-6 shrink-0">
         <div className="flex items-center justify-between gap-4 mb-3">
-          <div className="flex items-center gap-3 flex-grow">
+          <div data-robot-anchor="work:header" data-robot-offset-x="-50" data-robot-offset-y="-20" className="flex items-center gap-3 flex-grow">
             <span className="font-mono text-xs font-bold px-3 py-1 bg-[#FF5A1F] text-black border-2 border-[#0A0A0A]">
               03 // WORK
             </span>
@@ -164,6 +165,18 @@ export const Projects: React.FC = () => {
               key={project.id}
               ref={(el) => { cardsRef.current[idx] = el; }}
               onClick={() => setSelectedProject(project)}
+              onMouseEnter={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                robotStore.setWorkCardHover({
+                  id: project.id,
+                  isTodoScreenshot: Boolean(project.isTodoScreenshot),
+                  screenX: rect.left + rect.width / 2,
+                  screenY: rect.top,
+                });
+              }}
+              onMouseLeave={() => {
+                robotStore.setWorkCardHover(null);
+              }}
               className={`flex-shrink-0 bg-white border-2 border-[#0A0A0A] shadow-[6px_6px_0px_#0A0A0A] hover:shadow-[10px_10px_0px_#0047AB] hover:-translate-y-1 transition-all cursor-pointer flex flex-col justify-between overflow-hidden ${
                 isMobile 
                   ? 'w-full min-h-[460px]' 

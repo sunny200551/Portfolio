@@ -1,3 +1,4 @@
+import { robotStore } from '../robot/robotStore';
 import React from 'react';
 import { Mail, ArrowUp, FileText } from 'lucide-react';
 import type { GitHubProfile } from '../hooks/useGitHubData';
@@ -10,6 +11,7 @@ const navLinks = [
   { id: 'home', label: 'HOME' },
   { id: 'about', label: 'ABOUT' },
   { id: 'work', label: 'WORK' },
+  { id: 'design', label: 'DESIGN' },
   { id: 'skills', label: 'SKILLS' },
   { id: 'github', label: 'GITHUB' },
   { id: 'stats', label: 'STATS' },
@@ -20,7 +22,11 @@ const navLinks = [
 
 export const Footer: React.FC<FooterProps> = ({ profile }) => {
   const scrollToTop = () => {
+    robotStore.setBackToTopFlying(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      robotStore.setBackToTopFlying(false);
+    }, 1800);
   };
 
   const scrollTo = (id: string) => {
@@ -31,7 +37,7 @@ export const Footer: React.FC<FooterProps> = ({ profile }) => {
   };
 
   return (
-    <footer className="border-t-2 border-[#0A0A0A] bg-[#0A1A3F] text-white py-16 px-4 sm:px-6 relative z-10 font-mono">
+    <footer data-robot-anchor="footer:sleep" className="border-t-2 border-[#0A0A0A] bg-[#0A1A3F] text-white py-16 px-4 sm:px-6 relative z-10 font-mono">
       <div className="max-w-6xl mx-auto flex flex-col gap-10">
         
         {/* Top Header Row: Identity + Resume + Back to Top */}
@@ -65,6 +71,7 @@ export const Footer: React.FC<FooterProps> = ({ profile }) => {
             </a>
 
             <button
+              data-robot-anchor="footer:top-btn"
               onClick={scrollToTop}
               className="flex items-center gap-1.5 px-3.5 py-2 bg-[#FF5A1F] text-black font-bold text-xs uppercase border border-white hover:bg-white transition-colors cursor-pointer"
               title="Scroll back to top"
