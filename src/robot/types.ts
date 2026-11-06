@@ -49,6 +49,7 @@ export interface RobotAccessories {
   jetpack?: boolean;
   hardHat?: boolean;
   hammer?: boolean;
+  magnifyingGlass?: boolean;
   zzzBubble?: boolean;
   paperRocket?: boolean;
   steam?: boolean;
@@ -65,6 +66,7 @@ export interface RobotProps {
   onClick?: () => void;
   isBlinking?: boolean;
   accessories?: RobotAccessories;
+  facing?: 1 | -1;
 }
 
 export interface RobotVariantConfig {

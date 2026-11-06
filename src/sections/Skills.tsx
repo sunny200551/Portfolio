@@ -1,248 +1,456 @@
+import React, { useState, useEffect, useRef, useTransition } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import {
+  skillsData,
+  SKILL_CATEGORIES,
+  type PeriodicSkill,
+  type SkillCategory,
+  type SkillTier,
+} from '../data/skills';
 import { robotStore } from '../robot/robotStore';
-import React, { useState, useEffect, useRef, Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { Layers, Box } from 'lucide-react';
-import { SkillsIsometricStack } from '../components/three/SkillsIsometricStack';
-import { skillsData, type SkillCategoryGroup, type SkillTier } from '../data/skills';
 
-const tierBadgeStyles: Record<SkillTier, { bg: string; text: string; label: string }> = {
-  Daily: {
-    bg: 'bg-[#FF5A1F]',
-    text: 'text-black',
-    label: 'Daily'
-  },
-  Comfortable: {
-    bg: 'bg-[#0047AB]',
-    text: 'text-white',
-    label: 'Comfortable'
-  },
-  Learning: {
-    bg: 'bg-[#EEF2FA]',
-    text: 'text-[#0A0A0A]',
-    label: 'Learning'
+gsap.registerPlugin(ScrollTrigger);
+
+// Tier badge icon helper
+const TierMarker: React.FC<{ tier: SkillTier; className?: string }> = ({ tier, className = '' }) => {
+  if (tier === 'Daily') {
+    return (
+      <span
+        title="Daily"
+        className={`inline-block w-2.5 h-2.5 bg-current border border-current shrink-0 ${className}`}
+      />
+    );
+  }
+  if (tier === 'Comfortable') {
+    return (
+      <span
+        title="Comfortable"
+        className={`inline-flex w-2.5 h-2.5 border border-current overflow-hidden shrink-0 ${className}`}
+      >
+        <span className="w-1/2 h-full bg-current" />
+        <span className="w-1/2 h-full bg-transparent" />
+      </span>
+    );
+  }
+  return (
+    <span
+      title="Learning"
+      className={`inline-block w-2.5 h-2.5 border-2 border-current bg-transparent shrink-0 ${className}`}
+    />
+  );
+};
+
+// Periodic category style configurations
+const getCategoryStyles = (category: SkillCategory, isDimmed: boolean) => {
+  if (isDimmed) {
+    return 'bg-[#EEF2FA] text-[#0A0A0A]/35 border-2 border-[#0A0A0A]/20 shadow-none pointer-events-none';
+  }
+
+  switch (category) {
+    case 'Frontend':
+      return 'bg-[#0047AB] text-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A]';
+    case 'Backend':
+      return 'bg-[#0A1A3F] text-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A]';
+    case 'Languages':
+      return 'bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A]';
+    case 'Database':
+      return 'bg-white text-[#0A0A0A] border-2 border-[#0047AB] shadow-[4px_4px_0px_#0A0A0A]';
+    case 'Blockchain':
+      return 'bg-[#0A0A0A] text-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A]';
+    case 'Tools':
+      return 'bg-white text-[#0047AB] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A]';
+    default:
+      return 'bg-white text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A]';
   }
 };
 
-export const Skills: React.FC = () => {
-  const [activeGroup, setActiveGroup] = useState<SkillCategoryGroup>(skillsData[0]); // Preselected Frontend
-  const [viewMode, setViewMode] = useState<'3D' | 'LIST'>('3D');
-  const [isInView, setIsInView] = useState(false);
-  const [isTabVisible, setIsTabVisible] = useState(true);
-  const canvasBoxRef = useRef<HTMLDivElement>(null);
+interface TileProps {
+  skill: PeriodicSkill;
+  isDimmed: boolean;
+  isFlipped: boolean;
+  onFlip: (id: string) => void;
+}
 
-  useEffect(() => {
-    const handleVisibility = () => setIsTabVisible(!document.hidden);
-    document.addEventListener('visibilitychange', handleVisibility);
+const PeriodicTile: React.FC<TileProps> = ({ skill, isDimmed, isFlipped, onFlip }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const hoverDwellTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsInView(entry.isIntersecting),
-      { threshold: 0.05 }
-    );
-    const el = canvasBoxRef.current;
-    if (el) observer.observe(el);
+  // Smooth DOM transform on mousemove without React re-renders
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isDimmed || isFlipped || !innerRef.current) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    // Max 8 degrees tilt following pointer
+    const rotateX = Math.max(-8, Math.min(8, ((y - centerY) / centerY) * -8));
+    const rotateY = Math.max(-8, Math.min(8, ((x - centerX) / centerX) * 8));
+    innerRef.current.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+  };
 
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibility);
-      if (el) observer.unobserve(el);
-      observer.disconnect();
-    };
-  }, []);
+  // 120ms hover dwell before committing target
+  const handleMouseEnter = () => {
+    if (isDimmed) return;
+    if (hoverDwellTimer.current) clearTimeout(hoverDwellTimer.current);
+    hoverDwellTimer.current = setTimeout(() => {
+      robotStore.setHoveredSlab({ index: skill.index, name: skill.name });
+    }, 120);
+  };
+
+  // 400ms leave delay before returning to gutter
+  const handleMouseLeave = () => {
+    if (hoverDwellTimer.current) {
+      clearTimeout(hoverDwellTimer.current);
+      hoverDwellTimer.current = null;
+    }
+    if (innerRef.current && !isFlipped) {
+      innerRef.current.style.transform = 'rotateX(0deg) rotateY(0deg) translateY(0px)';
+    }
+    setTimeout(() => {
+      if (robotStore.getState().hoveredSlab?.index === skill.index) {
+        robotStore.setHoveredSlab(null);
+      }
+    }, 400);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onFlip(skill.id);
+    }
+  };
+
+  const categoryStyle = getCategoryStyles(skill.category, isDimmed);
+  const formattedIndex = String(skill.index).padStart(2, '0');
 
   return (
-    <section id="skills" className="w-full bg-white text-[#0A0A0A] relative z-10 border-b-2 border-[#0A0A0A]">
-      <div className="py-16 md:py-24 px-4 sm:px-6 max-w-6xl mx-auto">
-        
-        {/* Section Tag & Segmented Toggle (3D | LIST) */}
-        <div className="flex items-center justify-between gap-4 mb-8">
-          <div data-robot-anchor="skills:tag" data-robot-offset-x="-50" data-robot-offset-y="-20" className="flex items-center gap-3 flex-grow">
-            <span className="font-mono text-xs font-bold px-3 py-1 bg-[#0A0A0A] text-white border-2 border-[#0A0A0A]">
-              04 // SKILLS
+    <div
+      ref={cardRef}
+      tabIndex={isDimmed ? -1 : 0}
+      role="button"
+      onClick={() => !isDimmed && onFlip(skill.id)}
+      onKeyDown={handleKeyDown}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      data-robot-react="skills:tile"
+      className="periodic-tile relative aspect-square select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]"
+      style={{
+        perspective: '800px',
+      }}
+    >
+      <div
+        ref={innerRef}
+        className="w-full h-full relative transition-transform duration-200"
+        style={{
+          transformStyle: 'preserve-3d',
+          transform: isFlipped ? 'rotateY(180deg)' : 'rotateX(0deg) rotateY(0deg) translateY(0px)',
+        }}
+      >
+        {/* FRONT FACE */}
+        <div
+          className={`absolute inset-0 w-full h-full p-2.5 sm:p-3 flex flex-col justify-between transition-colors ${categoryStyle}`}
+          style={{
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+          }}
+        >
+          {/* Top Row: Index + Tier Marker */}
+          <div className="flex items-center justify-between w-full">
+            <span className="font-mono text-[10px] sm:text-xs font-bold opacity-80">
+              {formattedIndex}
             </span>
-            <div className="h-0.5 flex-grow bg-[#0A0A0A]" />
+            <TierMarker tier={skill.tier} />
           </div>
 
-          {/* Segmented Toggle */}
-          <div className="flex items-center border-2 border-[#0A0A0A] bg-white shadow-[3px_3px_0px_#0A0A0A] font-mono text-xs font-bold shrink-0">
-            <button
-              onClick={() => setViewMode('3D')}
-              aria-label="3D View"
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 transition-colors cursor-pointer ${
-                viewMode === '3D'
-                  ? 'bg-[#FF5A1F] text-black font-extrabold'
-                  : 'text-[#0A0A0A] hover:bg-[#EEF2FA]'
-              }`}
-            >
-              <Box size={14} />
-              <span>3D</span>
-            </button>
-            <div className="w-[2px] h-6 bg-[#0A0A0A]" />
-            <button
-              onClick={() => setViewMode('LIST')}
-              aria-label="List View"
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 transition-colors cursor-pointer ${
-                viewMode === 'LIST'
-                  ? 'bg-[#FF5A1F] text-black font-extrabold'
-                  : 'text-[#0A0A0A] hover:bg-[#EEF2FA]'
-              }`}
-            >
-              <Layers size={14} />
-              <span>LIST</span>
-            </button>
+          {/* Center: Big 2-3 letter symbol */}
+          <div className="flex flex-col items-center justify-center my-auto">
+            <span className="font-display font-black text-2xl sm:text-3xl md:text-4xl tracking-tighter leading-none">
+              {skill.symbol}
+            </span>
+          </div>
+
+          {/* Bottom: Full Name */}
+          <div className="w-full text-center">
+            <span className="font-mono font-bold text-[10px] sm:text-[11px] truncate block w-full leading-tight">
+              {skill.name}
+            </span>
           </div>
         </div>
 
-        {/* Header */}
-        <div className="mb-10">
-          <h2 className="font-display font-black text-4xl sm:text-6xl uppercase tracking-tight text-[#0A0A0A] leading-none">
-            TECHNICAL SKILLS
+        {/* BACK FACE (Revealed on Flip) */}
+        <div
+          className="absolute inset-0 w-full h-full p-3 bg-white text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] flex flex-col justify-between text-left"
+          style={{
+            transform: 'rotateY(180deg)',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+          }}
+        >
+          <div className="flex items-center justify-between border-b border-[#0A0A0A]/20 pb-1">
+            <span className="font-mono text-[9px] font-black uppercase text-[#0047AB]">
+              {skill.category}
+            </span>
+            <span className="font-mono text-[9px] font-bold px-1.5 py-0.2 bg-[#FF5A1F] text-black border border-[#0A0A0A]">
+              {skill.tier}
+            </span>
+          </div>
+
+          <p className="font-mono text-[10px] sm:text-[11px] leading-tight text-[#0A0A0A] line-clamp-4 my-auto">
+            {skill.note}
+          </p>
+
+          <div className="text-[9px] font-mono text-[#0A0A0A]/60 flex items-center justify-between">
+            <span>#{formattedIndex}</span>
+            <span className="font-bold underline text-[#0047AB]">FLIP ↩</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const Skills: React.FC = () => {
+  const [activeCategory, setActiveCategory] = useState<string>('ALL');
+  const [viewMode, setViewMode] = useState<'TABLE' | 'LIST'>('TABLE');
+  const [flippedMap, setFlippedMap] = useState<Record<string, boolean>>({});
+  const [, startTransition] = useTransition();
+  const sectionRef = useRef<HTMLElement>(null);
+  const gridContainerRef = useRef<HTMLDivElement>(null);
+
+  // Staggered pop-in wave on scroll
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion || !sectionRef.current) return;
+
+    const ctx = gsap.context(() => {
+      const tiles = sectionRef.current?.querySelectorAll('.periodic-tile');
+      if (tiles && tiles.length > 0) {
+        gsap.fromTo(
+          tiles,
+          { scale: 0.9, y: 16 },
+          {
+            scale: 1,
+            y: 0,
+            duration: 0.4,
+            stagger: {
+              each: 0.02,
+              from: 'start',
+            },
+            ease: 'back.out(1.5)',
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: 'top 75%',
+              once: true,
+            },
+          }
+        );
+      }
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, [viewMode]);
+
+  const handleFilterClick = (cat: string) => {
+    startTransition(() => {
+      setActiveCategory(cat);
+    });
+  };
+
+  const handleTileFlip = (id: string) => {
+    setFlippedMap((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  return (
+    <section
+      id="skills"
+      ref={sectionRef}
+      className="w-full bg-white text-[#0A0A0A] relative z-10 border-b-2 border-[#0A0A0A] scroll-mt-24 sm:scroll-mt-28"
+    >
+      <div className="pt-20 pb-16 md:pt-28 md:pb-24 px-4 sm:px-6 max-w-6xl mx-auto">
+        
+        {/* Section Header 04 // SKILLS */}
+        <div className="flex items-center gap-3 mb-4">
+          <span
+            data-robot-anchor="skills:tag"
+            data-robot-offset-x="-50"
+            data-robot-offset-y="-20"
+            className="font-mono text-xs font-bold px-3 py-1 bg-[#0A0A0A] text-white border-2 border-[#0A0A0A]"
+          >
+            04 // SKILLS
+          </span>
+          <div className="h-0.5 flex-grow bg-[#0A0A0A]" />
+          <span className="hidden sm:inline-block font-mono text-xs font-bold text-[#0047AB]">
+            PERIODIC SKILL TABLE
+          </span>
+        </div>
+
+        <div className="mb-8">
+          <h2 data-adaptive className="font-display font-black text-4xl sm:text-6xl uppercase tracking-tight text-[#0A0A0A] leading-none">
+            SKILL TABLE
           </h2>
-          <p className="font-mono text-xs sm:text-sm text-[#0A0A0A]/70 mt-2 max-w-2xl">
-            Technologies and tools I work with across frontend, programming, and development.
+          <p data-adaptive className="font-mono text-xs sm:text-sm text-[#0A0A0A]/70 mt-2 max-w-2xl font-bold">
+            Technologies and tools I work with.
           </p>
         </div>
 
-        {/* Main Component Shell */}
-        <div className="bg-[#EEF2FA] border-2 border-[#0A0A0A] shadow-[8px_8px_0px_#0A0A0A] p-6 sm:p-8">
+        {/* Controls Row (Filters, Table/List Toggle, Tier Legend) */}
+        <div className="mb-8 p-3 sm:p-4 bg-[#EEF2FA] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           
-          {viewMode === '3D' ? (
-            <div className="grid grid-cols-12 gap-8">
-              
-              {/* 3D Canvas Column (Left) */}
-              <div 
-                ref={canvasBoxRef} 
-                className="col-span-12 lg:col-span-7 h-[360px] sm:h-[420px] bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] relative overflow-hidden flex flex-col justify-between"
+          {/* Left: Filter Chips */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => handleFilterClick('ALL')}
+              className={`px-3 py-1.5 font-mono text-xs font-bold border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] cursor-pointer transition-all ${
+                activeCategory === 'ALL'
+                  ? 'bg-[#FF5A1F] text-black translate-x-0.5 translate-y-0.5 shadow-none'
+                  : 'bg-white text-[#0A0A0A] hover:bg-[#EEF2FA]'
+              }`}
+            >
+              ALL ({skillsData.length})
+            </button>
+
+            {SKILL_CATEGORIES.map((cat) => {
+              const count = skillsData.filter((s) => s.category === cat).length;
+              const isActive = activeCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => handleFilterClick(cat)}
+                  className={`px-2.5 py-1.5 font-mono text-xs font-bold border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] cursor-pointer transition-all ${
+                    isActive
+                      ? 'bg-[#0047AB] text-white translate-x-0.5 translate-y-0.5 shadow-none'
+                      : 'bg-white text-[#0A0A0A] hover:bg-[#EEF2FA]'
+                  }`}
+                >
+                  {cat} ({count})
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right: Legend & TABLE | LIST Toggle */}
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 self-stretch lg:self-auto justify-between lg:justify-end border-t lg:border-t-0 pt-2 lg:pt-0 border-[#0A0A0A]/10">
+            {/* Tier Markers Legend */}
+            <div className="flex items-center gap-3 font-mono text-[11px] font-bold text-[#0A0A0A]/80">
+              <span className="flex items-center gap-1.5">
+                <TierMarker tier="Daily" className="text-[#0A0A0A]" />
+                <span>Daily</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <TierMarker tier="Comfortable" className="text-[#0A0A0A]" />
+                <span>Comfortable</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <TierMarker tier="Learning" className="text-[#0A0A0A]" />
+                <span>Learning</span>
+              </span>
+            </div>
+
+            {/* TABLE | LIST Segmented Toggle */}
+            <div className="flex items-center border-2 border-[#0A0A0A] bg-white shadow-[2px_2px_0px_#0A0A0A] font-mono text-xs font-bold shrink-0">
+              <button
+                onClick={() => setViewMode('TABLE')}
+                aria-label="Table View"
+                className={`px-3 py-1 cursor-pointer transition-colors ${
+                  viewMode === 'TABLE'
+                    ? 'bg-[#0A0A0A] text-white'
+                    : 'text-[#0A0A0A] hover:bg-[#EEF2FA]'
+                }`}
               >
-                {/* Helper text badge */}
-                <div className="absolute top-3 left-3 z-10 font-mono text-[11px] font-bold px-2.5 py-1 bg-white text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A]">
-                  Click a block
-                </div>
-
-                <Suspense fallback={
-                  <div className="flex items-center justify-center h-full font-mono text-xs text-[#0A0A0A] font-bold">
-                    LOADING 3D VIEW...
-                  </div>
-                }>
-                  <Canvas
-                    dpr={[1, 1.5]}
-                    camera={{ position: [4.6, 5.2, 5.4], fov: 38 }}
-                    gl={{ alpha: true, antialias: true }}
-                    frameloop={isInView && isTabVisible ? 'always' : 'never'}
-                  >
-                    <ambientLight intensity={1.1} />
-                    <directionalLight position={[6, 9, 5]} intensity={1.5} />
-                    <directionalLight position={[-5, -2, -4]} intensity={0.5} />
-                    
-                    <SkillsIsometricStack
-                      onSelectGroup={(group) => setActiveGroup(group)}
-                      selectedGroup={activeGroup}
-                    />
-                  </Canvas>
-                </Suspense>
-
-                {/* Keyboard accessible selector buttons */}
-                <div className="p-2 border-t-2 border-[#0A0A0A] bg-white flex flex-wrap gap-1.5 font-mono text-[10px]">
-                  {skillsData.map((g) => (
-                    <button
-                      key={g.id}
-                      onClick={() => setActiveGroup(g)}
-                      onMouseEnter={() => robotStore.setHoveredSlab({ index: skillsData.indexOf(g), name: g.category })}
-                      onMouseLeave={() => robotStore.setHoveredSlab(null)}
-                      className={`px-2 py-0.5 border border-[#0A0A0A] font-bold cursor-pointer transition-colors ${
-                        activeGroup.id === g.id
-                          ? 'bg-[#FF5A1F] text-black'
-                          : 'bg-[#EEF2FA] text-[#0A0A0A] hover:bg-white'
-                      }`}
-                    >
-                      {g.category}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Details Card (Right) */}
-              <div className="col-span-12 lg:col-span-5 flex flex-col justify-between bg-white border-2 border-[#0A0A0A] p-6 sm:p-7 shadow-[4px_4px_0px_#0A0A0A]">
-                <div className="flex flex-col gap-4">
-                  <div className="border-b-2 border-[#0A0A0A] pb-3">
-                    <span className="font-mono text-[10px] font-bold px-2 py-0.5 bg-[#FF5A1F] text-black border border-[#0A0A0A] uppercase">
-                      SELECTED CATEGORY
-                    </span>
-                    <h3 className="font-display font-black text-2xl uppercase tracking-tight text-[#0A0A0A] mt-2">
-                      {activeGroup.category}
-                    </h3>
-                    <p className="font-sans text-xs text-[#0A0A0A]/80 mt-1">
-                      {activeGroup.description}
-                    </p>
-                  </div>
-
-                  {/* Skills list inside active group */}
-                  <div className="flex flex-col gap-2 font-mono text-xs">
-                    {activeGroup.skills.map((skill) => {
-                      const badge = tierBadgeStyles[skill.tier];
-                      return (
-                        <div
-                          key={skill.name}
-                          className="flex items-center justify-between p-2.5 bg-[#EEF2FA] border border-[#0A0A0A]"
-                        >
-                          <span className="font-bold text-[#0A0A0A]">{skill.name}</span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 border border-[#0A0A0A] ${badge.bg} ${badge.text}`}>
-                            {badge.label}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-[#0A0A0A]/20 flex items-center justify-between font-mono text-[11px] text-[#0A0A0A]/70 mt-4">
-                  <span>{activeGroup.skills.length} skills listed</span>
-                  <span className="text-[#0047AB] font-bold">{activeGroup.category}</span>
-                </div>
-              </div>
-
+                TABLE
+              </button>
+              <div className="w-0.5 h-4 bg-[#0A0A0A]" />
+              <button
+                onClick={() => setViewMode('LIST')}
+                aria-label="List View"
+                className={`px-3 py-1 cursor-pointer transition-colors ${
+                  viewMode === 'LIST'
+                    ? 'bg-[#0A0A0A] text-white'
+                    : 'text-[#0A0A0A] hover:bg-[#EEF2FA]'
+                }`}
+              >
+                LIST
+              </button>
             </div>
-          ) : (
-            /* Full Categorized List View inside the SAME container */
-            <div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {skillsData.map((group) => (
-                  <div
-                    key={group.id}
-                    className="bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] p-5 flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between border-b-2 border-[#0A0A0A]/10 pb-2.5 mb-3">
-                        <h4 className="font-display font-black text-base uppercase text-[#0A0A0A]">
-                          {group.category}
-                        </h4>
-                        <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 bg-[#EEF2FA] border border-[#0A0A0A]">
-                          {group.skills.length} ITEMS
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col gap-1.5 font-mono text-xs">
-                        {group.skills.map((skill) => {
-                          const badge = tierBadgeStyles[skill.tier];
-                          return (
-                            <div
-                              key={skill.name}
-                              className="flex items-center justify-between p-2 bg-[#EEF2FA] border border-[#0A0A0A]"
-                            >
-                              <span className="font-bold text-[#0A0A0A]">{skill.name}</span>
-                              <span className={`text-[9px] font-bold px-2 py-0.5 border border-[#0A0A0A] ${badge.bg} ${badge.text}`}>
-                                {badge.label}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          </div>
 
         </div>
+
+        {/* Content Views */}
+        {viewMode === 'TABLE' ? (
+          /* TABLE VIEW: Responsive Square Periodic Tiles Grid */
+          <div
+            ref={gridContainerRef}
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4"
+          >
+            {skillsData.map((skill) => {
+              const isDimmed = activeCategory !== 'ALL' && skill.category !== activeCategory;
+              const isFlipped = Boolean(flippedMap[skill.id]);
+
+              return (
+                <PeriodicTile
+                  key={skill.id}
+                  skill={skill}
+                  isDimmed={isDimmed}
+                  isFlipped={isFlipped}
+                  onFlip={handleTileFlip}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          /* LIST VIEW: Compact Two-Column List Grouped by Category */
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {SKILL_CATEGORIES.filter(
+              (cat) => activeCategory === 'ALL' || cat === activeCategory
+            ).map((cat) => {
+              const catSkills = skillsData.filter((s) => s.category === cat);
+              return (
+                <div
+                  key={cat}
+                  className="bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] p-5 flex flex-col gap-4"
+                >
+                  <div className="flex items-center justify-between border-b-2 border-[#0A0A0A] pb-2">
+                    <h3 className="font-display font-black text-lg uppercase text-[#0A0A0A]">
+                      {cat}
+                    </h3>
+                    <span className="font-mono text-xs font-bold px-2 py-0.5 bg-[#EEF2FA] border border-[#0A0A0A]">
+                      {catSkills.length} SKILLS
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-2 font-mono text-xs">
+                    {catSkills.map((s) => (
+                      <div
+                        key={s.id}
+                        className="p-2.5 bg-[#EEF2FA] border border-[#0A0A0A] flex items-center justify-between gap-3 hover:bg-[#FF5A1F] hover:text-black transition-colors"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="font-black text-[#0047AB] w-6 shrink-0">
+                            {s.symbol}
+                          </span>
+                          <span className="font-bold truncate">{s.name}</span>
+                          
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <TierMarker tier={s.tier} />
+                          <span className="text-[11px] font-bold">{s.tier}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
       </div>
     </section>

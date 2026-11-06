@@ -20,6 +20,7 @@ interface RobotModelProps {
   headTrackCursor?: boolean;
   onClick?: () => void;
   accessories?: RobotAccessories;
+  facing?: 1 | -1;
 }
 
 export const RobotModel: React.FC<RobotModelProps> = ({
@@ -32,6 +33,7 @@ export const RobotModel: React.FC<RobotModelProps> = ({
   headTrackCursor = true,
   onClick,
   accessories,
+  facing = 1,
 }) => {
   const config = VARIANT_CONFIGS[variant];
   const finalScale = scale ?? config.scale;
@@ -198,6 +200,14 @@ export const RobotModel: React.FC<RobotModelProps> = ({
         <mesh position={[0, 0.44, 0]} visible={false}>
           <boxGeometry args={[0.7, 0.95, 0.5]} />
         </mesh>
+
+        {/* Facing and Gaze Debug Visualizers (?robotDebug=1) */}
+        {typeof window !== 'undefined' && (window.location.search.includes('robotDebug=1') || robotStore.getState().isDebug) && (
+          <group position={[0, 0.44, 0]}>
+            <primitive object={new THREE.ArrowHelper(new THREE.Vector3(facing, 0, 0.4).normalize(), new THREE.Vector3(0, 0, 0), 0.45, 0x00FFFF, 0.1, 0.06)} />
+            <primitive object={new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0.22, 0.15), 0.4, 0xFF00FF, 0.08, 0.05)} />
+          </group>
+        )}
 
         {/* 1. LOWER BODY: HIPS & CLEARLY VISIBLE LEGS */}
         {/* Left Leg Hip Pivot */}
@@ -545,6 +555,26 @@ export const RobotModel: React.FC<RobotModelProps> = ({
                 </mesh>
               </group>
             )}
+
+            {/* Magnifying Glass Accessory (Near hand when facing left) */}
+            {accessories?.magnifyingGlass && facing === -1 && (
+              <group position={[-0.05, -0.22, 0.08]} rotation={[0, 0, Math.PI / 6]}>
+                <mesh position={[0, -0.06, 0]}>
+                  <cylinderGeometry args={[0.014, 0.014, 0.14, 8]} />
+                  <meshToonMaterial color="#0A1A3F" />
+                  <Edges threshold={20} color="#0A0A0A" lineWidth={1.5} />
+                </mesh>
+                <mesh position={[0, 0.06, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                  <torusGeometry args={[0.06, 0.014, 8, 24]} />
+                  <meshToonMaterial color="#FF5A1F" />
+                  <Edges threshold={20} color="#0A0A0A" lineWidth={1.5} />
+                </mesh>
+                <mesh position={[0, 0.06, 0]}>
+                  <circleGeometry args={[0.056, 24]} />
+                  <meshBasicMaterial color="#EEF2FA" opacity={0.7} transparent />
+                </mesh>
+              </group>
+            )}
           </group>
 
           {/* Visible Right Horizontal Joint Connector Axle (Navy Cylinder) */}
@@ -706,6 +736,26 @@ export const RobotModel: React.FC<RobotModelProps> = ({
                 <mesh position={[0, -0.06, 0]} scale={[1.4, 0.5, 0.3]}>
                   <boxGeometry args={[0.14, 0.08, 0.02]} />
                   <meshBasicMaterial color="#FF5A1F" />
+                </mesh>
+              </group>
+            )}
+
+            {/* Magnifying Glass Accessory (Near hand when facing right) */}
+            {accessories?.magnifyingGlass && facing !== -1 && (
+              <group position={[0.05, -0.22, 0.08]} rotation={[0, 0, -Math.PI / 6]}>
+                <mesh position={[0, -0.06, 0]}>
+                  <cylinderGeometry args={[0.014, 0.014, 0.14, 8]} />
+                  <meshToonMaterial color="#0A1A3F" />
+                  <Edges threshold={20} color="#0A0A0A" lineWidth={1.5} />
+                </mesh>
+                <mesh position={[0, 0.06, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                  <torusGeometry args={[0.06, 0.014, 8, 24]} />
+                  <meshToonMaterial color="#FF5A1F" />
+                  <Edges threshold={20} color="#0A0A0A" lineWidth={1.5} />
+                </mesh>
+                <mesh position={[0, 0.06, 0]}>
+                  <circleGeometry args={[0.056, 24]} />
+                  <meshBasicMaterial color="#EEF2FA" opacity={0.7} transparent />
                 </mesh>
               </group>
             )}

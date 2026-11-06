@@ -33,18 +33,15 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPal
   const [activeLabelVisible, setActiveLabelVisible] = useState(false);
   const [hoveredSection, setHoveredSection] = useState<string | null>(null);
   const lastScrollY = useRef(0);
-  const labelTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isMac] = useState(() => typeof window !== 'undefined' && /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent || navigator.platform));
 
   // Trigger 1.5s label visibility on activeSection change
   useEffect(() => {
-    setActiveLabelVisible(true);
-    if (labelTimeoutRef.current) clearTimeout(labelTimeoutRef.current);
-    labelTimeoutRef.current = setTimeout(() => {
-      setActiveLabelVisible(false);
-    }, 1500);
+    const showTimer = setTimeout(() => setActiveLabelVisible(true), 0);
+    const hideTimer = setTimeout(() => setActiveLabelVisible(false), 1500);
     return () => {
-      if (labelTimeoutRef.current) clearTimeout(labelTimeoutRef.current);
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
     };
   }, [activeSection]);
 

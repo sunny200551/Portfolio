@@ -5,11 +5,14 @@ import { Robot } from './Robot';
 import { robotStore } from './robotStore';
 import { executeRoutine } from './routines';
 import type { RobotAnimation, RobotExpression, RobotAccessories } from './types';
+import { CanvasErrorBoundary } from '../components/three/CanvasBoundary';
 
 interface BoltInnerProps {
   isMobile: boolean;
   prefersReducedMotion: boolean;
 }
+
+type SideSwitchPhase = 'idle' | 'diving' | 'crossing' | 'surfacing';
 
 const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedMotion }) => {
   const { size } = useThree();
@@ -23,7 +26,6 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
   // Routine states
   const [aboutStage, setAboutStage] = useState(() => robotStore.getState().aboutGradYearStage);
   const [workHover, setWorkHover] = useState(() => robotStore.getState().workCardHover);
-  const [designStage, setDesignStage] = useState(() => robotStore.getState().designStage);
   const [hoveredSlab, setHoveredSlab] = useState(() => robotStore.getState().hoveredSlab);
 
   const [githubStage, setGithubStage] = useState(() => robotStore.getState().githubStage);
@@ -35,19 +37,79 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
   const [footerSleeping, setFooterSleeping] = useState(() => robotStore.getState().footerSleeping);
   const [backToTopFlying, setBackToTopFlying] = useState(() => robotStore.getState().backToTopFlying);
 
-  // Task 5 Player Interaction states
+  // Player Interaction states
   const [isOverheating, setIsOverheating] = useState(() => robotStore.getState().isOverheating);
   const [isIdleSleeping, setIsIdleSleeping] = useState(() => robotStore.getState().isIdleSleeping);
   const [isDanceParty, setIsDanceParty] = useState(() => robotStore.getState().isDanceParty);
   const [isSummonedFriends, setIsSummonedFriends] = useState(() => robotStore.getState().isSummonedFriends);
+  const [hoveredReact, setHoveredReact] = useState<string | null>(null);
+  const [facing, setFacing] = useState<1 | -1>(1);
 
-  // Position tracking & continuous organic flight arc state
-  const prevSectionRef = useRef(activeSection);
-  const currentPos = useRef(new THREE.Vector3(0, 0, 0));
-  const flightStartPos = useRef(new THREE.Vector3(0, 0, 0));
-  const flightTargetPos = useRef(new THREE.Vector3(0, 0, 0));
-  const flightTime = useRef(1); // 1 = landed, < 1 = in flight
-  const flightDuration = 0.75; // Smooth arc travel duration
+  // Position tracking & continuous physical inertia state (in 2D pixels)
+  const currentPixelPos = useRef({ x: 70, y: 120 });
+  const currentFacingRotY = useRef(0);
+  const currentFacingSign = useRef<1 | -1>(1);
+  const walkStepAccumulator = useRef(0);
+
+  // Part 5: Obstacle Keep-Out Map
+  const obstaclesRef = useRef<{ left: number; top: number; right: number; bottom: number }[]>([]);
+
+  // Side switching via bottom traversal state
+  const currentGutterSide = useRef<'left' | 'right' | 'center' | 'header'>('left');
+  const targetGutterSide = useRef<'left' | 'right' | 'center' | 'header'>('left');
+  const sideSwitchPhase = useRef<SideSwitchPhase>('idle');
+  const sideSwitchTimer = useRef(0);
+
+  // Update DOM obstacle keep-out map (header, rail, cards, text with 12px margin)
+  useEffect(() => {
+    const updateObstacles = () => {
+      const obstacles: { left: number; top: number; right: number; bottom: number }[] = [];
+      const addRect = (el: Element | null, margin = 12) => {
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+          obstacles.push({
+            left: r.left - margin,
+            top: r.top - margin,
+            right: r.right + margin,
+            bottom: r.bottom + margin,
+          });
+        }
+      };
+
+      addRect(document.querySelector('header'));
+      addRect(document.querySelector('nav.nav-rail'));
+      document.querySelectorAll('[data-robot-obstacle], #work [data-card], #journey [data-timeline-card], #about [data-stat-box]').forEach(el => addRect(el, 12));
+      obstaclesRef.current = obstacles;
+    };
+
+    window.addEventListener('scroll', updateObstacles, { passive: true });
+    window.addEventListener('resize', updateObstacles, { passive: true });
+    updateObstacles();
+    return () => {
+      window.removeEventListener('scroll', updateObstacles);
+      window.removeEventListener('resize', updateObstacles);
+    };
+  }, []);
+
+  // Throttled cursor tracking for elementFromPoint (Part 4)
+  useEffect(() => {
+    let rafId: number;
+    const handlePointerMove = (e: MouseEvent) => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        const reactTarget = el?.closest('[data-robot-react]')?.getAttribute('data-robot-react') || null;
+        setHoveredReact(reactTarget);
+      });
+    };
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      cancelAnimationFrame(rafId);
+    };
+  }, []);
 
   // Subscribe to store updates
   useEffect(() => {
@@ -59,7 +121,6 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
       setIsFastScrolling(state.isFastScrolling);
       setAboutStage(state.aboutGradYearStage);
       setWorkHover(state.workCardHover);
-      setDesignStage(state.designStage);
       setHoveredSlab(state.hoveredSlab);
 
       setGithubStage(state.githubStage);
@@ -79,289 +140,264 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
     return () => unsubscribe();
   }, []);
 
-  // When active section changes, initiate smooth arc flight across the site
+  // Trigger section routine when entering a section
   useEffect(() => {
-    if (activeSection !== prevSectionRef.current) {
-      prevSectionRef.current = activeSection;
-      flightStartPos.current.copy(currentPos.current);
-      flightTime.current = 0; // Trigger flight arc
+    executeRoutine(activeSection, {
+      setAnim: (newAnim) => robotStore.setBolt(newAnim, robotStore.getState().boltExpr),
+      setExpr: (newExpr) => robotStore.setBolt(robotStore.getState().boltAnim, newExpr),
+    });
+  }, [activeSection]);
 
-      if (!prefersReducedMotion) {
-        robotStore.setBolt('jump', 'excited');
-      }
-    }
-  }, [activeSection, prefersReducedMotion]);
-
-  // Frame loop for world position mapping, organic wandering, and smooth travel
-  useFrame((state, delta) => {
+  // Frame loop for continuous scroll-linked travel, gutter positioning, and walk cycle
+  useFrame((_, delta) => {
     if (!groupRef.current) return;
-    const tClock = state.clock.getElapsedTime();
 
     // Viewport dimensions in Three.js world units at Z=0
     const vFOV = (34 * Math.PI) / 180;
     const visibleHeight = 2 * Math.tan(vFOV / 2) * 7.5;
     const visibleWidth = visibleHeight * (size.width / size.height);
 
-    // Compute target screen coords based on section anchors and organic wandering
-    // Organic exploration offset: smoothly wanders left and right across open areas
-    const wanderX = prefersReducedMotion ? 0 : Math.sin(tClock * 0.4) * (size.width * 0.16);
-    const wanderY = prefersReducedMotion ? 0 : Math.cos(tClock * 0.6) * 14;
+    const windowW = size.width;
+    const windowH = size.height;
 
-    // Default: natural floating position in open safe margins (not stuck in top right)
-    let targetScreenX = (size.width * 0.5) + wanderX;
-    let targetScreenY = (size.height * 0.72) + wanderY;
+    // 1. Overall Continuous Scroll Progress (0.0 to 1.0)
+    const docScrollH = typeof document !== 'undefined'
+      ? Math.max(1, document.documentElement.scrollHeight - window.innerHeight)
+      : 1;
+    const scrollP = typeof window !== 'undefined'
+      ? Math.min(1, Math.max(0, window.scrollY / docScrollH))
+      : 0;
+
+    // Continuous vertical target: near top at page top, smoothly traveling down to near bottom
+    const continuousY = 110 + scrollP * (windowH - 220);
+
+    // 2. Safe Gutters Calculation (outside central content container)
+    // Central container is max-w-6xl (1152px) or max-w-7xl (1280px)
+    const contentMaxW = 1152;
+    const leftMargin = Math.max(0, (windowW - contentMaxW) / 2);
+    const rightMargin = leftMargin;
+
+    // Safe Left Gutter X (clear of content, clear of left edge)
+    const safeLeftX = Math.max(38, Math.min(leftMargin * 0.45, 120));
+
+    // Safe Right Gutter X (clear of content, safely left of the numbered rail at windowW - 75)
+    const safeRightX = windowW - Math.max(88, Math.min(rightMargin * 0.5, 140));
+
+    // Part 5: Obstacle Keep-Out Intersection Helper (12px margin around text/cards/header/rail)
+    const intersectsObstacle = (cx: number, cy: number, halfW = 35, halfH = 45) => {
+      const boxL = cx - halfW;
+      const boxR = cx + halfW;
+      const boxT = cy - halfH;
+      const boxB = cy + halfH;
+      return obstaclesRef.current.some(obs =>
+        boxL < obs.right && boxR > obs.left && boxT < obs.bottom && boxB > obs.top
+      );
+    };
+
+    // Candidate picker: Left gutter -> Right gutter -> Empty strips -> Docked bottom-left
+    let nextSide: 'left' | 'right' | 'center' | 'header';
+
+    if (activeSection === 'home') {
+      nextSide = 'left';
+    } else if (activeSection === 'work') {
+      nextSide = 'header'; // Park in empty strip beside header
+    } else if (activeSection === 'skills' && hoveredSlab) {
+      nextSide = 'center'; // Allowed exception: visits hovered slab
+    } else if (activeSection === 'journey') {
+      nextSide = 'center'; // Allowed exception: walks down timeline center gap
+    } else {
+      const leftClear = safeLeftX > 30 && !intersectsObstacle(safeLeftX, continuousY);
+      const rightClear = safeRightX < windowW - 40 && !intersectsObstacle(safeRightX, continuousY);
+
+      if (targetGutterSide.current === 'right' && rightClear) {
+        nextSide = 'right';
+      } else if (leftClear) {
+        nextSide = 'left';
+      } else if (rightClear) {
+        nextSide = 'right';
+      } else {
+        nextSide = 'left';
+      }
+    }
+
+    // Side switching state machine (travels under-screen when changing sides, never across content!)
+    if (nextSide !== targetGutterSide.current && nextSide !== 'center' && targetGutterSide.current !== 'center') {
+      if ((targetGutterSide.current === 'left' && nextSide === 'right') ||
+          (targetGutterSide.current === 'right' && nextSide === 'left')) {
+        // Begin under-screen traversal
+        sideSwitchPhase.current = 'diving';
+        sideSwitchTimer.current = 0;
+      }
+      targetGutterSide.current = nextSide;
+    }
+
+    // Compute target screen coords based on side & section exceptions
+    let targetX: number;
+    let targetY: number;
 
     if (backToTopFlying) {
-      // Rapid upward rocket flight toward hero
-      targetScreenX = size.width * 0.5;
-      targetScreenY = -120; // Rocket shoots above top of screen!
-    } else if (!isMobile) {
-      if (activeSection === 'home') {
-        // Platform front lip position on hero
-        const homePos = robotStore.getState().homePlatformPos;
-        if (homePos && homePos.x > 0) {
-          targetScreenX = homePos.x;
-          targetScreenY = homePos.y;
-        } else {
-          targetScreenX = size.width * 0.68;
-          targetScreenY = size.height * 0.62;
-        }
-      } else if (activeSection === 'about') {
-        // Sits on top of the stat boxes, gently inspecting left and right
-        const statsEl = document.querySelector('[data-robot-anchor="about:stats"]') || document.querySelector('[data-robot-anchor="about:heading"]');
-        if (statsEl) {
-          const rect = statsEl.getBoundingClientRect();
-          const sideShift = Math.sin(tClock * 0.5) * (rect.width * 0.35);
-          targetScreenX = rect.left + rect.width * 0.5 + sideShift;
-          targetScreenY = rect.top - 24;
-        }
-      } else if (activeSection === 'work') {
-        // Skateboard along top edge of project cards with scroll velocity
-        if (workHover && workHover.screenX > 0) {
-          targetScreenX = workHover.screenX;
-          targetScreenY = workHover.screenY - 20;
-        } else {
-          const workEl = document.querySelector('[data-robot-anchor="work:header"]') || document.getElementById('work');
-          if (workEl) {
-            const rect = workEl.getBoundingClientRect();
-            const scrollOffset = (robotStore.getState().scrollVelocity || 0) * 2;
-            const patrolX = Math.sin(tClock * 0.8) * 120;
-            targetScreenX = rect.left + 240 + scrollOffset + patrolX;
-            targetScreenY = rect.top + 70;
-          }
-        }
-      } else if (activeSection === 'design') {
-        // Moves to active stage card with 8px-grid snap feel
-        const stageEl = document.querySelector(`[data-robot-anchor="design:${designStage}"]`) || document.querySelector('[data-robot-anchor="design:header"]');
-        if (stageEl) {
-          const rect = stageEl.getBoundingClientRect();
-          const rawX = rect.left + rect.width * 0.5;
-          const rawY = rect.top - 25;
-          targetScreenX = Math.round(rawX / 8) * 8;
-          targetScreenY = Math.round(rawY / 8) * 8;
-        }
-      } else if (activeSection === 'skills') {
-        // Climbs slabs like stairs or hops onto hovered slab
-        const skillsEl = document.querySelector('[data-robot-anchor="skills:tag"]') || document.getElementById('skills');
-        if (skillsEl) {
-          const rect = skillsEl.getBoundingClientRect();
-          if (hoveredSlab) {
-            const slabCol = (hoveredSlab.index % 3) - 1;
-            const slabRow = Math.floor(hoveredSlab.index / 3);
-            targetScreenX = rect.left + 260 + slabCol * 90;
-            targetScreenY = rect.top + 210 + slabRow * 50;
-          } else {
-            const stairStep = Math.sin(tClock * 2.5) * 45;
-            const stairY = Math.abs(Math.cos(tClock * 2.5)) * 25;
-            targetScreenX = rect.left + 260 + stairStep;
-            targetScreenY = rect.top + 180 - stairY;
-          }
-        }
-      } else if (activeSection === 'github') {
-        // 06 // GITHUB: City tower hopping, flag planting, pushing box
-        const skylineEl = document.querySelector('[data-robot-anchor="github:skyline"]') || document.getElementById('github');
-        if (skylineEl) {
-          const rect = skylineEl.getBoundingClientRect();
-          if (githubStage === 'hopping') {
-            const hopProgress = (Math.sin(tClock * 2.5) + 1) * 0.5;
-            const hopY = Math.abs(Math.sin(tClock * 5)) * 35;
-            targetScreenX = rect.left + 160 + hopProgress * (rect.width - 320);
-            targetScreenY = rect.top + 160 - hopY;
-          } else if (githubStage === 'planting') {
-            targetScreenX = rect.left + rect.width * 0.60;
-            targetScreenY = rect.top + 120;
-          } else if (githubStage === 'pushing') {
-            targetScreenX = rect.left + rect.width * 0.78;
-            targetScreenY = rect.top + 150;
-          } else {
-            targetScreenX = rect.left + rect.width * 0.82;
-            targetScreenY = rect.top + 140;
-          }
-        }
-      } else if (activeSection === 'stats') {
-        // 07 // STATS: HARD dumbbell, milestone badges collection, locked shrug
-        if (statsStage === 'dumbbell') {
-          const hardEl = document.querySelector('[data-robot-anchor="stats:hard"]') || document.querySelector('[data-robot-anchor="stats:board"]');
-          if (hardEl) {
-            const rect = hardEl.getBoundingClientRect();
-            targetScreenX = rect.left + rect.width * 0.5;
-            targetScreenY = rect.top - 25;
-          }
-        } else if (statsStage === 'badges') {
-          const badgesEl = document.querySelector('[data-robot-anchor="stats:badges"]') || document.getElementById('stats');
-          if (badgesEl) {
-            const rect = badgesEl.getBoundingClientRect();
-            const badgeStep = Math.sin(tClock * 2.5) * 75;
-            targetScreenX = rect.left + 240 + badgeStep;
-            targetScreenY = rect.top + 60;
-          }
-        } else {
-          const badgesEl = document.querySelector('[data-robot-anchor="stats:badges"]') || document.getElementById('stats');
-          if (badgesEl) {
-            const rect = badgesEl.getBoundingClientRect();
-            targetScreenX = rect.left + rect.width * 0.75;
-            targetScreenY = rect.top + 60;
-          }
-        }
-      } else if (activeSection === 'events') {
-        // 08 // EVENTS: Ticket inspector stamping tickets, trophy & flat confetti pop
-        const ticketsEl = document.querySelector('[data-robot-anchor="events:tickets"]') || document.getElementById('events');
-        if (ticketsEl) {
-          const rect = ticketsEl.getBoundingClientRect();
-          if (eventsStage === 'inspecting') {
-            const inspectX = (Math.sin(tClock * 1.8) + 1) * 0.4 * rect.width;
-            targetScreenX = rect.left + 120 + inspectX;
-            targetScreenY = rect.top + 65;
-          } else {
-            targetScreenX = rect.left + 180;
-            targetScreenY = rect.top + 40;
-          }
-        }
-      } else if (activeSection === 'journey') {
-        // 09 // JOURNEY: Sits on active milestone node (2023, 2024, 2025, 2026)
-        const nodeEl = document.querySelector(`[data-robot-anchor="journey:node-${journeyYear}"]`) || document.querySelector('[data-robot-anchor="journey:timeline"]');
-        if (nodeEl) {
-          const rect = nodeEl.getBoundingClientRect();
-          targetScreenX = rect.left + rect.width * 0.5;
-          targetScreenY = rect.top - 20;
-        }
-      } else if (activeSection === 'contact') {
-        // 10 // CONTACT: Hard hat & hammer build letters, watches active input, rocket launch
-        if (contactAction === 'rocket') {
-          const btnEl = document.querySelector('[data-robot-anchor="contact:send-btn"]') || document.getElementById('contact');
-          if (btnEl) {
-            const rect = btnEl.getBoundingClientRect();
-            targetScreenX = rect.left + rect.width * 0.5;
-            targetScreenY = rect.top - 45;
-          }
-        } else if (contactInputFocus) {
-          const inputEl = document.querySelector(`[name="${contactInputFocus}"]`);
-          if (inputEl) {
-            const rect = inputEl.getBoundingClientRect();
-            targetScreenX = rect.right + 25;
-            targetScreenY = rect.top + rect.height * 0.5;
-          }
-        } else {
-          const headEl = document.querySelector('[data-robot-anchor="contact:headline"]') || document.getElementById('contact');
-          if (headEl) {
-            const rect = headEl.getBoundingClientRect();
-            const hammerStep = Math.sin(tClock * 2) * 55;
-            targetScreenX = rect.left + 220 + hammerStep;
-            targetScreenY = rect.top - 25;
-          }
-        }
-      } else if (activeSection === 'footer') {
-        // FOOTER: ZZZ sleep
-        const footEl = document.querySelector('[data-robot-anchor="footer:sleep"]') || document.querySelector('footer');
-        if (footEl) {
-          const rect = footEl.getBoundingClientRect();
-          targetScreenX = rect.right - 220;
-          targetScreenY = rect.top + 45;
-        }
+      targetX = windowW * 0.5;
+      targetY = -120;
+    } else if (windowW < 1024 || leftMargin < 65) {
+      // DOCKED IN BOTTOM-RIGHT CORNER ON SCREENS UNDER 1024PX OR NARROW GUTTERS
+      targetX = windowW - 55;
+      targetY = windowH - 55;
+    } else if (activeSection === 'home') {
+      // HERO PLATFORM: Allowed exception (Part 5)
+      const homePos = robotStore.getState().homePlatformPos;
+      if (homePos && homePos.x > 0) {
+        targetX = homePos.x;
+        targetY = homePos.y;
       } else {
-        const anchorEl = document.querySelector(`[data-robot-anchor^="${activeSection}:"]`);
-        if (anchorEl) {
-          const rect = anchorEl.getBoundingClientRect();
-          const offsetX = parseFloat(anchorEl.getAttribute('data-robot-offset-x') || '-65');
-          const offsetY = parseFloat(anchorEl.getAttribute('data-robot-offset-y') || '-20');
-          targetScreenX = rect.left + offsetX;
-          targetScreenY = rect.top + offsetY;
-        }
+        targetX = safeLeftX;
+        targetY = windowH * 0.45;
+      }
+    } else if (activeSection === 'work') {
+      // FULL-WIDTH HORIZONTAL GALLERY: Park in empty header strip beside heading (max 100px tall)
+      const workEl = document.getElementById('work');
+      if (workEl) {
+        const rect = workEl.getBoundingClientRect();
+        targetX = Math.max(safeLeftX, leftMargin + 60);
+        targetY = Math.max(80, Math.min(rect.top + 70, windowH - 120));
+      } else {
+        targetX = safeLeftX;
+        targetY = 90;
+      }
+    } else if (activeSection === 'skills' && hoveredSlab) {
+      // SKILLS INTERACTION: Allowed exception (Part 6) - walks to hovered slab in skills grid
+      const slabEl = document.querySelector(`[data-robot-react="skills:tile"]:nth-child(${hoveredSlab.index})`);
+      if (slabEl) {
+        const rect = slabEl.getBoundingClientRect();
+        targetX = rect.left + rect.width * 0.5;
+        targetY = rect.top + rect.height * 0.5 - 32;
+      } else {
+        targetX = safeRightX;
+        targetY = continuousY;
+      }
+    } else if (activeSection === 'journey') {
+      // JOURNEY TIMELINE: Allowed exception - walks down vertical timeline line (~70px wide gap)
+      const lineEl = document.getElementById('journey')?.querySelector('.relative.py-4');
+      if (lineEl) {
+        const rect = lineEl.getBoundingClientRect();
+        targetX = rect.left + rect.width * 0.5;
+        // Position along the timeline line linked to scroll progress through Journey section
+        const journeyScrollP = THREE.MathUtils.clamp((windowH * 0.5 - rect.top) / Math.max(1, rect.height), 0, 1);
+        targetY = THREE.MathUtils.clamp(rect.top + journeyScrollP * rect.height, 90, windowH - 90);
+      } else {
+        targetX = safeLeftX;
+        targetY = continuousY;
       }
     } else {
-      // Mobile (< 1280px): Docked in bottom right corner (never covers content)
-      targetScreenX = size.width - 55;
-      targetScreenY = size.height - 70;
+      // Standard safe gutter position (Left or Right)
+      if (targetGutterSide.current === 'right') {
+        targetX = safeRightX;
+      } else {
+        targetX = safeLeftX;
+      }
+      targetY = continuousY;
     }
 
-    // Convert target screen coords to Three.js world units at Z=0
-    const targetWorldX = ((targetScreenX / size.width) - 0.5) * visibleWidth;
-    const targetWorldY = -((targetScreenY / size.height) - 0.5) * visibleHeight;
-    flightTargetPos.current.set(targetWorldX, targetWorldY, 0);
-
-    // Arc flight interpolation across sections
-    if (flightTime.current < 1 && !prefersReducedMotion) {
-      flightTime.current += delta / flightDuration;
-      const t = Math.min(1, flightTime.current);
-      const easeT = t * t * (3 - 2 * t);
-
-      currentPos.current.x = THREE.MathUtils.lerp(
-        flightStartPos.current.x,
-        flightTargetPos.current.x,
-        easeT
-      );
-
-      const arcHeight = Math.max(0.6, Math.min(1.8, Math.abs(flightTargetPos.current.y - flightStartPos.current.y) * 0.35));
-      const arcLift = Math.sin(t * Math.PI) * arcHeight;
-
-      currentPos.current.y = THREE.MathUtils.lerp(
-        flightStartPos.current.y,
-        flightTargetPos.current.y,
-        easeT
-      ) + arcLift;
-
-      currentPos.current.z = Math.sin(t * Math.PI) * 0.4;
-      groupRef.current.rotation.z = Math.sin(t * Math.PI) * (flightTargetPos.current.x > flightStartPos.current.x ? -0.2 : 0.2);
-
-      if (t >= 1) {
-        groupRef.current.rotation.z = 0;
-        executeRoutine(activeSection, {
-          setAnim: (a) => robotStore.setBolt(a, robotStore.getState().boltExpr),
-          setExpr: (e) => robotStore.setBolt(robotStore.getState().boltAnim, e),
-        });
+    // Handle under-screen side-switching traversal
+    if (sideSwitchPhase.current === 'diving') {
+      // Dive below bottom of viewport
+      targetY = windowH + 130;
+      if (currentPixelPos.current.y > windowH + 80) {
+        // Jump horizontally while invisible below screen
+        currentPixelPos.current.x = targetX;
+        currentGutterSide.current = targetGutterSide.current;
+        sideSwitchPhase.current = 'surfacing';
       }
-    } else {
-      // Landed state: smoothly damp to target position
-      const dampSpeed = backToTopFlying ? 24 : 12;
-      currentPos.current.x = THREE.MathUtils.damp(currentPos.current.x, targetWorldX, dampSpeed, delta);
-      currentPos.current.y = THREE.MathUtils.damp(currentPos.current.y, targetWorldY, dampSpeed, delta);
-      currentPos.current.z = THREE.MathUtils.damp(currentPos.current.z, 0, 10, delta);
-      groupRef.current.rotation.z = THREE.MathUtils.damp(groupRef.current.rotation.z, 0, 10, delta);
-
-      if (activeSection === 'work' && !isMobile && !prefersReducedMotion) {
-        const vel = robotStore.getState().scrollVelocity;
-        const targetRotY = vel > 1 ? 0.35 : vel < -1 ? -0.35 : 0;
-        groupRef.current.rotation.y = THREE.MathUtils.damp(groupRef.current.rotation.y, targetRotY, 8, delta);
-      } else {
-        groupRef.current.rotation.y = THREE.MathUtils.damp(groupRef.current.rotation.y, 0, 8, delta);
+    } else if (sideSwitchPhase.current === 'surfacing') {
+      // Surface back to target Y on new side
+      if (Math.abs(currentPixelPos.current.y - targetY) < 25) {
+        sideSwitchPhase.current = 'idle';
       }
     }
 
-    groupRef.current.position.copy(currentPos.current);
+    // Physical Inertia: lag slightly behind scroll, then catch up smoothly
+    const posDamp = prefersReducedMotion ? 20 : 5.5;
+    const prevX = currentPixelPos.current.x;
+    const prevY = currentPixelPos.current.y;
 
-    // Update screen coordinates for 2D button and speech bubble
-    const screenX = ((currentPos.current.x / visibleWidth) + 0.5) * size.width;
-    const screenY = ((-currentPos.current.y / visibleHeight) + 0.5) * size.height;
-    robotStore.setBoltScreenPos(screenX, screenY, true);
+    currentPixelPos.current.x = THREE.MathUtils.damp(currentPixelPos.current.x, targetX, posDamp, delta);
+    currentPixelPos.current.y = THREE.MathUtils.damp(currentPixelPos.current.y, targetY, posDamp, delta);
+
+    // True Walk Cycle Physics (step in sync with distance moved, body bobs, direction facing)
+    const moveDx = currentPixelPos.current.x - prevX;
+    const moveDy = currentPixelPos.current.y - prevY;
+    const moveDist = Math.hypot(moveDx, moveDy);
+
+    let bodyBob = 0;
+    if (moveDist > 0.4 && !prefersReducedMotion) {
+      walkStepAccumulator.current += moveDist * 0.08;
+      bodyBob = Math.abs(Math.sin(walkStepAccumulator.current * 2)) * 0.035;
+    }
+
+    // PART 7 & FACING FIX: Single source of truth helper
+    const contentCenterX = windowW * 0.5;
+    const isWalking = moveDist > 0.4;
+    const velocityX = moveDx;
+
+    let facingSign: 1 | -1;
+    let targetRotY: number;
+
+    if (isWalking && Math.abs(velocityX) > 0.8) {
+      if (velocityX > 0) {
+        facingSign = 1;
+        targetRotY = Math.PI * 0.35; // Turn right to face travel direction
+      } else {
+        facingSign = -1;
+        targetRotY = -Math.PI * 0.35; // Turn left to face travel direction
+      }
+    } else {
+      // Stationary or vertical scroll: face inward toward content (no negative scale.x!)
+      if (currentPixelPos.current.x < contentCenterX) {
+        facingSign = 1;
+        targetRotY = Math.PI * 0.18; // In left gutter: face right toward content (+1)
+      } else {
+        facingSign = -1;
+        targetRotY = -Math.PI * 0.18; // In right gutter: face left toward content (-1)
+      }
+    }
+
+    if (currentFacingSign.current !== facingSign) {
+      currentFacingSign.current = facingSign;
+      setFacing(facingSign);
+    }
+    currentFacingRotY.current = THREE.MathUtils.damp(currentFacingRotY.current, targetRotY, 8, delta);
+
+    // Convert 2D pixel coordinates to 3D world coordinates
+    const worldX = ((currentPixelPos.current.x / windowW) - 0.5) * visibleWidth;
+    const worldY = (-(currentPixelPos.current.y / windowH) + 0.5) * visibleHeight + bodyBob;
+
+    groupRef.current.position.set(worldX, worldY, 0);
+    groupRef.current.rotation.y = currentFacingRotY.current;
+
+    // Report 2D screen coordinates for click button and speech bubble
+    robotStore.setBoltScreenPos(currentPixelPos.current.x, currentPixelPos.current.y, true);
   });
 
-  // Scale: large on desktop (0.88 -> ~105px), compact when docked on mobile (0.55 -> ~65px)
+  // Scale: small when docked (<1024px: ~48px tall), compact in Journey, full size in side gutters
+  const isNarrowGutter = size.width < 1280 && size.width >= 1024;
+  const isDockedCorner = size.width < 1024;
   const yearScaleMultiplier = (activeSection === 'journey' && journeyYear === '2023') ? 0.72 : 1.0;
-  const boltScale = (isMobile ? 0.55 : 0.88) * yearScaleMultiplier;
 
-  // Active expression & animation computation based on section routine & spontaneous interactions
-  let effectiveAnim = anim;
-  let effectiveExpr = expr;
+  let baseScale = 0.9;
+  if (isDockedCorner) {
+    baseScale = 0.52; // ~48px tall
+  } else if (isNarrowGutter) {
+    baseScale = 0.68;
+  } else if (activeSection === 'home') {
+    baseScale = 0.62; // Fit plain grey platform floor perfectly
+  } else if (activeSection === 'journey') {
+    baseScale = 0.58; // Scaled to fit neatly in the 4rem gap between cards without covering text
+  }
+
+  const boltScale = baseScale * yearScaleMultiplier;
+
+  // Active expression & animation computation (Part 4 Cursor Reactions + Routines)
+  let effectiveAnim: RobotAnimation = anim;
+  let effectiveExpr: RobotExpression = expr;
 
   if (prefersReducedMotion) {
     effectiveAnim = 'idle';
@@ -381,10 +417,44 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
   } else if (isFastScrolling) {
     effectiveAnim = 'dizzy';
     effectiveExpr = 'dizzy';
-  } else if (activeSection === 'about') {
+  }
+  // PART 4: Cursor-aware reactions (all happy / funny, zero sad)
+  else if (hoveredReact === 'work:card') {
+    effectiveAnim = 'idle';
+    effectiveExpr = 'curious';
+  } else if (hoveredReact === 'skills:slab') {
+    effectiveAnim = 'dance';
+    effectiveExpr = 'excited';
+  } else if (hoveredReact === 'github:skyline') {
+    effectiveAnim = 'jump';
+    effectiveExpr = 'happy';
+  } else if (hoveredReact === 'stats:badge') {
+    effectiveAnim = 'cheer';
+    effectiveExpr = 'excited';
+  } else if (hoveredReact === 'stats:card') {
+    effectiveAnim = 'flex';
+    effectiveExpr = 'grin';
+  } else if (hoveredReact === 'events:ticket') {
+    effectiveAnim = 'cheer';
+    effectiveExpr = 'excited';
+  } else if (hoveredReact === 'journey:node') {
+    effectiveAnim = 'jump';
+    effectiveExpr = 'happy';
+  } else if (hoveredReact === 'contact:send') {
+    effectiveAnim = 'cheer';
+    effectiveExpr = 'excited';
+  } else if (hoveredReact === 'contact:copy-email') {
+    effectiveAnim = 'salute';
+    effectiveExpr = 'grin';
+  } else if (hoveredReact === 'footer:back-to-top') {
+    effectiveAnim = 'jump';
+    effectiveExpr = 'excited';
+  }
+  // Section-specific routines
+  else if (activeSection === 'about') {
     if (aboutStage === 'glitch') {
       effectiveAnim = 'idle';
-      effectiveExpr = 'focused';
+      effectiveExpr = 'curious';
     } else if (aboutStage === 'facepalm') {
       effectiveAnim = 'facepalm';
       effectiveExpr = 'curious';
@@ -399,34 +469,18 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
         effectiveExpr = 'curious';
       } else {
         effectiveAnim = 'idle';
-        effectiveExpr = 'focused';
+        effectiveExpr = 'curious'; // Curious reaction, looking at hovered card
       }
-    }
-  } else if (activeSection === 'design') {
-    switch (designStage) {
-      case 'research':
-        effectiveAnim = 'idle';
-        effectiveExpr = 'focused';
-        break;
-      case 'wireframe':
-        effectiveAnim = 'dance';
-        effectiveExpr = 'focused';
-        break;
-      case 'prototype':
-        effectiveAnim = 'jump';
-        effectiveExpr = 'excited';
-        break;
-      case 'build':
-        effectiveAnim = 'walk';
-        effectiveExpr = 'happy';
-        break;
+    } else {
+      effectiveAnim = 'walk';
+      effectiveExpr = 'happy';
     }
   } else if (activeSection === 'skills') {
     if (hoveredSlab) {
       effectiveAnim = 'dance';
       effectiveExpr = 'excited';
     } else {
-      effectiveAnim = 'walk';
+      effectiveAnim = 'idle';
       effectiveExpr = 'happy';
     }
   } else if (activeSection === 'github') {
@@ -446,13 +500,13 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
   } else if (activeSection === 'stats') {
     if (statsStage === 'dumbbell') {
       effectiveAnim = 'jump';
-      effectiveExpr = 'focused'; // Hard problem solving face
+      effectiveExpr = 'focused';
     } else if (statsStage === 'badges') {
-      effectiveAnim = 'jump';
-      effectiveExpr = 'wink'; // Proud/shy receiving badges
+      effectiveAnim = 'cheer';
+      effectiveExpr = 'wink';
     } else if (statsStage === 'lockedFlex') {
-      effectiveAnim = 'walk';
-      effectiveExpr = 'silly';
+      effectiveAnim = 'flex';
+      effectiveExpr = 'grin'; // Comic flexing gag followed by grin!
     } else {
       effectiveAnim = 'shrug';
       effectiveExpr = 'curious';
@@ -468,15 +522,15 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
   } else if (activeSection === 'journey') {
     if (journeyYear === '2023') {
       effectiveAnim = 'walk';
-      effectiveExpr = 'wink';
+      effectiveExpr = 'curious';
     } else if (journeyYear === '2024') {
-      effectiveAnim = 'idle';
-      effectiveExpr = 'focused';
+      effectiveAnim = 'flex';
+      effectiveExpr = 'grin';
     } else if (journeyYear === '2025') {
-      effectiveAnim = 'walk';
+      effectiveAnim = 'salute';
       effectiveExpr = 'happy';
     } else {
-      effectiveAnim = 'jump';
+      effectiveAnim = 'jump'; // Victory finish pose at end of journey
       effectiveExpr = 'excited';
     }
   } else if (activeSection === 'contact') {
@@ -498,40 +552,36 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
     effectiveExpr = 'sleepy';
   }
 
-  // Active accessories
+  // Active accessories (with magnifying glass in near hand during Work hover)
   const accessories: RobotAccessories = {
-    skateboard: activeSection === 'work' && !isMobile,
-    figmaCursor: activeSection === 'design' && !isMobile,
-    ruler: activeSection === 'design' && !isMobile,
-    keyboard: activeSection === 'design' && designStage === 'build' && !isMobile,
-    dashedBox: activeSection === 'design' && designStage === 'wireframe' && !isMobile,
-
+    skateboard: activeSection === 'work' && !workHover && !isMobile,
+    magnifyingGlass: activeSection === 'work' && Boolean(workHover) && !isMobile,
     flag: activeSection === 'github' && (githubStage === 'planting' || githubStage === 'satisfied') && !isMobile,
     gitPushBox: activeSection === 'github' && githubStage === 'pushing' && !isMobile,
-    dumbbell: activeSection === 'stats' && statsStage === 'dumbbell' && !isMobile,
-    chestBadges: activeSection === 'stats' && (statsStage === 'badges' || statsStage === 'lockedFlex' || statsStage === 'shrug') && !isMobile,
+    dumbbell: (activeSection === 'stats' && statsStage === 'dumbbell' || hoveredReact === 'stats:card') && !isMobile,
+    chestBadges: (activeSection === 'stats' && (statsStage === 'badges' || statsStage === 'lockedFlex' || statsStage === 'shrug') || hoveredReact === 'stats:badge') && !isMobile,
     stamp: activeSection === 'events' && eventsStage === 'inspecting' && !isMobile,
     trophy: activeSection === 'events' && eventsStage === 'trophy' && !isMobile,
-    confetti: (activeSection === 'events' && eventsStage === 'trophy' || isDanceParty) && !isMobile,
+    confetti: ((activeSection === 'events' && eventsStage === 'trophy') || isDanceParty) && !isMobile,
     trainingWheels: activeSection === 'journey' && journeyYear === '2023' && !isMobile,
     backpack: activeSection === 'journey' && journeyYear === '2025' && !isMobile,
     jetpack: ((activeSection === 'journey' && journeyYear === '2026') || backToTopFlying) && !isMobile,
     hardHat: activeSection === 'contact' && !isMobile,
     hammer: activeSection === 'contact' && contactAction === 'building' && !isMobile,
-    paperRocket: activeSection === 'contact' && contactAction === 'rocket' && !isMobile,
+    paperRocket: (activeSection === 'contact' && contactAction === 'rocket' || hoveredReact === 'contact:send') && !isMobile,
     zzzBubble: (activeSection === 'footer' || footerSleeping || isIdleSleeping) && !isMobile && !backToTopFlying,
-
     steam: isOverheating && !isMobile,
   };
 
   return (
     <group ref={groupRef}>
-      {/* Main Traveling BOLT Robot */}
+      {/* Main Traveling BOLT Robot with single source of truth facing */}
       <Robot
         variant="bolt"
         animation={effectiveAnim}
         expression={effectiveExpr}
         scale={boltScale}
+        facing={facing}
         headTrackCursor={!prefersReducedMotion && !isFastScrolling && effectiveAnim !== 'facepalm' && effectiveAnim !== 'sleep' && !isOverheating}
         accessories={accessories}
       />
@@ -566,7 +616,7 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
 
 export const TravelingBolt: React.FC = () => {
   const [isMobile, setIsMobile] = useState(() => 
-    typeof window !== 'undefined' ? window.innerWidth < 1280 : false
+    typeof window !== 'undefined' ? window.innerWidth < 1024 : false
   );
   const [robotEnabled, setRobotEnabled] = useState(() => robotStore.getState().robotEnabled);
   const [speechBubble, setSpeechBubble] = useState(() => robotStore.getState().speechBubble);
@@ -584,13 +634,13 @@ export const TravelingBolt: React.FC = () => {
   // Window resize handler
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 1280);
+      setIsMobile(window.innerWidth < 1024);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Tab visibility: pause WebGL render loop when tab is hidden to save GPU/battery
+  // Tab visibility
   useEffect(() => {
     const handleVisibility = () => {
       setIsTabVisible(!document.hidden);
@@ -610,7 +660,6 @@ export const TravelingBolt: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // When robot is turned off, render nothing: 0 WebGL draw calls, 0 frames used!
   if (!robotEnabled) {
     return null;
   }
@@ -622,29 +671,31 @@ export const TravelingBolt: React.FC = () => {
         className="fixed inset-0 pointer-events-none z-25 overflow-hidden"
         aria-hidden="true"
       >
-        <Suspense fallback={null}>
-          <Canvas
-            className="pointer-events-none"
-            style={{ pointerEvents: 'none' }}
-            dpr={[1, 1.5]}
-            frameloop={isTabVisible ? 'always' : 'never'}
-            camera={{ position: [0, 0, 7.5], fov: 34 }}
-            gl={{
-              alpha: true,
-              antialias: true,
-              powerPreference: 'high-performance',
-            }}
-          >
-            <ambientLight intensity={0.9} color="#FFFFFF" />
-            <directionalLight position={[6, 9, 7]} intensity={1.4} color="#FFFFFF" />
-            <directionalLight position={[-5, -4, -3]} intensity={0.4} color="#EEF2FA" />
+        <CanvasErrorBoundary fallback={null}>
+          <Suspense fallback={null}>
+            <Canvas
+              className="pointer-events-none"
+              style={{ pointerEvents: 'none' }}
+              dpr={[1, 1.5]}
+              frameloop={isTabVisible ? 'always' : 'never'}
+              camera={{ position: [0, 0, 7.5], fov: 34 }}
+              gl={{
+                alpha: true,
+                antialias: true,
+                powerPreference: 'high-performance',
+              }}
+            >
+              <ambientLight intensity={0.9} color="#FFFFFF" />
+              <directionalLight position={[6, 9, 7]} intensity={1.4} color="#FFFFFF" />
+              <directionalLight position={[-5, -4, -3]} intensity={0.4} color="#EEF2FA" />
 
-            <BoltTravelingMesh isMobile={isMobile} prefersReducedMotion={prefersReducedMotion} />
-          </Canvas>
-        </Suspense>
+              <BoltTravelingMesh isMobile={isMobile} prefersReducedMotion={prefersReducedMotion} />
+            </Canvas>
+          </Suspense>
+        </CanvasErrorBoundary>
       </div>
 
-      {/* Real Interactive Button over BOLT with aria-label, tabIndex={-1} to preserve tab order */}
+      {/* Real Interactive Button over BOLT */}
       {boltPos.visible && boltPos.x > 0 && (
         <button
           onClick={() => {
@@ -654,10 +705,10 @@ export const TravelingBolt: React.FC = () => {
           aria-label="Interact with Bolt Robot"
           style={{
             position: 'fixed',
-            left: `${boltPos.x - (isMobile ? 30 : 45)}px`,
-            top: `${boltPos.y - (isMobile ? 45 : 65)}px`,
-            width: isMobile ? '60px' : '90px',
-            height: isMobile ? '90px' : '130px',
+            left: `${boltPos.x - (isMobile ? 25 : 35)}px`,
+            top: `${boltPos.y - (isMobile ? 35 : 55)}px`,
+            width: isMobile ? '50px' : '70px',
+            height: isMobile ? '70px' : '110px',
             cursor: 'pointer',
             zIndex: 30,
             background: 'transparent',
@@ -674,7 +725,7 @@ export const TravelingBolt: React.FC = () => {
           style={{
             position: 'fixed',
             left: `${boltPos.x}px`,
-            top: `${boltPos.y - (isMobile ? 70 : 88)}px`,
+            top: `${boltPos.y - (isMobile ? 55 : 75)}px`,
             transform: 'translate(-50%, -100%)',
             pointerEvents: 'none',
             zIndex: 40,
@@ -682,7 +733,6 @@ export const TravelingBolt: React.FC = () => {
           className="max-w-[280px] sm:max-w-[340px] px-3.5 py-2.5 bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] font-mono text-xs font-bold text-[#0A0A0A] text-center leading-snug"
         >
           <span>{speechBubble}</span>
-          {/* Downward triangle pointer pointing at BOLT's head */}
           <div 
             style={{
               position: 'absolute',

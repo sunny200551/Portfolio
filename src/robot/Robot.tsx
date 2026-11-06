@@ -12,6 +12,7 @@ export const Robot: React.FC<RobotProps> = ({
   headTrackCursor = true,
   onClick,
   accessories,
+  facing = 1,
 }) => {
   return (
     <RobotModel
@@ -24,6 +25,7 @@ export const Robot: React.FC<RobotProps> = ({
       headTrackCursor={headTrackCursor}
       onClick={onClick}
       accessories={accessories}
+      facing={facing}
     />
   );
 };
