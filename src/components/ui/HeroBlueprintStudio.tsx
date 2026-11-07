@@ -6,26 +6,16 @@ interface HeroBlueprintStudioProps {
   illustrationHeight?: number;
 }
 
-export const HeroBlueprintStudio: React.FC<HeroBlueprintStudioProps> = ({
-  illustrationWidth = 840,
-  illustrationHeight = 700,
-}) => {
+export const HeroBlueprintStudio: React.FC<HeroBlueprintStudioProps> = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0, visible: false });
   const [hasScrolled, setHasScrolled] = useState(false);
-  const [isTouch, setIsTouch] = useState(false);
+  const [isTouch] = useState(() => typeof window !== 'undefined' ? ('ontouchstart' in window || navigator.maxTouchPoints > 0) : false);
 
   const prefersReducedMotion = useMemo(() => {
     return typeof window !== 'undefined'
       ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
       : false;
-  }, []);
-
-  // Detect touch device
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0);
-    }
   }, []);
 
   // Scroll listener for parallax & scroll hint dismissal
@@ -181,66 +171,7 @@ export const HeroBlueprintStudio: React.FC<HeroBlueprintStudioProps> = ({
             <path d="M calc(100% - 24px) calc(100% - 12px) L calc(100% - 12px) calc(100% - 12px) L calc(100% - 12px) calc(100% - 24px)" className="blueprint-draw-line" strokeDasharray="30" />
           </g>
 
-          {/* Dimension Line along Left Edge */}
-          <g stroke="#0047AB" strokeWidth="1.2">
-            <line x1="22" y1="50" x2="22" y2="calc(100% - 70px)" strokeDasharray="4 3" />
-            <line x1="16" y1="50" x2="28" y2="50" />
-            <line x1="16" y1="calc(100% - 70px)" x2="28" y2="calc(100% - 70px)" />
-            <text
-              x="-240"
-              y="16"
-              transform="rotate(-90)"
-              fill="#0047AB"
-              fontFamily="monospace"
-              fontSize="9"
-              fontWeight="bold"
-              letterSpacing="0.08em"
-            >
-              DIM: {illustrationHeight}PX // 8PX GRID
-            </text>
-          </g>
-
-          {/* Dimension Line along Bottom Edge */}
-          <g stroke="#0047AB" strokeWidth="1.2">
-            <line x1="50" y1="calc(100% - 48px)" x2="calc(100% - 180px)" y2="calc(100% - 48px)" strokeDasharray="4 3" />
-            <line x1="50" y1="calc(100% - 54px)" x2="50" y2="calc(100% - 42px)" />
-            <line x1="calc(100% - 180px)" y1="calc(100% - 54px)" x2="calc(100% - 180px)" y2="calc(100% - 42px)" />
-            <text
-              x="60"
-              y="calc(100% - 34px)"
-              fill="#0047AB"
-              fontFamily="monospace"
-              fontSize="9"
-              fontWeight="bold"
-              letterSpacing="0.08em"
-            >
-              SPAN: {illustrationWidth}PX
-            </text>
-          </g>
-        </svg>
-
-        {/* Small Drawing Title Block in bottom-right corner of the stage */}
-        <div className="hidden sm:flex absolute bottom-3 right-3 border border-[#0A0A0A] bg-white px-2.5 py-1.5 flex-col gap-0.5 shadow-[2px_2px_0px_#0A0A0A] font-mono text-[9px] text-[#0A0A0A]">
-          <div className="flex items-center justify-between gap-3 font-bold border-b border-[#0A0A0A]/20 pb-0.5">
-            <span className="text-[#0047AB]">SHEET 01 // HERO</span>
-            <span>REV 2026</span>
-          </div>
-          {/* Palette Swatches Strip */}
-          <div className="flex items-center gap-1.5 pt-0.5">
-            <div className="flex items-center gap-1">
-              <span className="w-2.5 h-2.5 bg-[#FF5A1F] border border-[#0A0A0A]" />
-              <span className="text-[8px] text-[#0A0A0A]/70">#FF5A1F</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="w-2.5 h-2.5 bg-[#0047AB] border border-[#0A0A0A]" />
-              <span className="text-[8px] text-[#0A0A0A]/70">#0047AB</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="w-2.5 h-2.5 bg-[#0A1A3F] border border-[#0A0A0A]" />
-              <span className="text-[8px] text-[#0A0A0A]/70">#0A1A3F</span>
-            </div>
-          </div>
-        </div>
+          </svg>
 
         {/* Blueprint Callout Badges on the stage */}
         <div className="hidden lg:flex absolute top-4 left-6 items-center gap-1.5 px-2 py-0.5 bg-white border border-[#0A0A0A] font-mono text-[9px] font-bold text-[#0047AB] shadow-[2px_2px_0px_#0A0A0A]">
@@ -269,10 +200,6 @@ export const HeroBlueprintStudio: React.FC<HeroBlueprintStudioProps> = ({
         {/* Symbol 3: Monospace Hash */}
         <div className="blueprint-sticker absolute top-[76%] right-[38%] font-mono text-xs font-bold w-6 h-6 flex items-center justify-center bg-white text-[#0A1A3F] border border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A]">
           #
-        </div>
-        {/* Symbol 4: 0x Hex Badge */}
-        <div className="blueprint-sticker hidden sm:flex absolute top-[18%] right-[18%] font-mono text-[10px] font-bold px-1.5 py-0.5 bg-[#FF5A1F] text-black border border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A]">
-          0x
         </div>
         {/* Symbol 5: Plus Marker */}
         <div className="blueprint-sticker hidden sm:flex absolute bottom-[22%] right-[14%] font-mono text-xs font-bold w-5 h-5 items-center justify-center bg-[#EEF2FA] text-[#0047AB] border border-[#0A0A0A]">

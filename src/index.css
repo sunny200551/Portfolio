@@ -54,23 +54,26 @@ html.modal-open .fixed:not([role="dialog"]):not([role="dialog"] *) {
   }
 }
 
-/* Robot Lane Protected Content Shell - guarantees zero overlap with Steve and Rail */
+/* Robot & Rail Lane Protected Content Shell - 168px left, 96px right on >=1200px */
 .lane-padded {
   padding-left: clamp(16px, 4vw, 32px);
   padding-right: clamp(16px, 4vw, 32px);
 }
 
-@media (min-width: 1024px) {
-  .lane-padded {
-    padding-left: clamp(120px, 8.5vw, 150px);
-    padding-right: clamp(120px, 8.5vw, 150px);
-  }
-}
-
 @media (min-width: 1200px) {
   .lane-padded {
-    padding-left: clamp(120px, 8.5vw, 150px);
-    padding-right: calc(clamp(120px, 8.5vw, 150px) + 54px);
+    padding-left: 168px !important;
+    padding-right: 96px !important;
   }
 }
 
+/* Scrollbar suppression on Work gallery */
+#work, #work * {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+#work::-webkit-scrollbar, #work *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}

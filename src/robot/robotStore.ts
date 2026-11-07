@@ -85,9 +85,7 @@ function getStoredSteveQuiet(): boolean {
   try {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(QUIET_STORAGE_KEY) === 'true';
-  } catch (e) {
-    return false;
-  }
+  } catch { return false; }
 }
 
 function setStoredRobotEnabled(enabled: boolean): void {
@@ -301,7 +299,9 @@ class RobotStore {
       if (typeof window !== 'undefined') {
         localStorage.setItem(QUIET_STORAGE_KEY, String(quiet));
       }
-    } catch (e) {}
+    } catch {
+      // ignore
+    }
     if (quiet) {
       this.clearSpeechBubble();
     } else {

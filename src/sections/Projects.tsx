@@ -20,13 +20,13 @@ export const Projects: React.FC = () => {
 
   const [isPinnedEnabled, setIsPinnedEnabled] = useState(() => {
     if (typeof window === 'undefined') return true;
-    return window.innerWidth >= 1024 && window.innerHeight >= 740;
+    return window.innerWidth >= 1024;
   });
 
   // Responsive pinning detection
   useEffect(() => {
     const handleResize = () => {
-      const enabled = window.innerWidth >= 1024 && window.innerHeight >= 740;
+      const enabled = window.innerWidth >= 1024;
       setIsPinnedEnabled(enabled);
       ScrollTrigger.refresh();
     };
@@ -45,7 +45,7 @@ export const Projects: React.FC = () => {
     if (!container || !track) return;
 
     const ctx = gsap.context(() => {
-      const getScrollAmount = () => -(track.scrollWidth - window.innerWidth + 40);
+      const getScrollAmount = () => -(track.scrollWidth - window.innerWidth + 120);
 
       const scrollTween = gsap.to(track, {
         x: getScrollAmount,
@@ -193,8 +193,8 @@ export const Projects: React.FC = () => {
           style={
             isPinnedEnabled
               ? {
-                  paddingLeft: 'calc(clamp(72px, 5.5vw, 112px) + 16px)',
-                  paddingRight: 'calc(clamp(72px, 5.5vw, 112px) + 64px)',
+                  paddingLeft: 'clamp(168px, 12vw, 220px)',
+                  paddingRight: 'clamp(120px, 8vw, 160px)',
                 }
               : undefined
           }

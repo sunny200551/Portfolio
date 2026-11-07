@@ -152,7 +152,7 @@ export const Skills: React.FC = () => {
             SKILL LOADOUT
           </h2>
           <p className="font-mono text-xs sm:text-sm text-[#0A0A0A]/80 max-w-2xl leading-relaxed">
-            Technologies and tools I work with daily, comfortably, and actively exploring. Chips are organized on tiered loadout shelves.
+            Technologies and tools I work with daily, comfortably, and actively exploring.
           </p>
         </div>
 

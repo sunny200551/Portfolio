@@ -34,7 +34,7 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
       {/* Background Blueprint Studio (L1-L6 layers: grid, stage, annotations, stickers, cursor crosshair, scroll hint) */}
       <HeroBlueprintStudio />
 
-      <div className="w-full max-w-[2200px] mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-6 lg:gap-8 xl:gap-12 items-center">
+      <div className="w-full max-w-[2200px] mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-8 lg:gap-12 xl:gap-16 items-center">
         
         {/* Left Column: Clear, Protected Text & Identity Zone */}
         <div className="flex flex-col items-start text-left gap-6 z-20 min-w-0 max-w-full">
@@ -84,12 +84,12 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
           </div>
 
           {/* Static Tagline: single line with flex-wrap and neat separator spacing */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm font-mono font-bold text-[#0A0A0A] mt-1 max-w-full">
-            <span>Computer Science Student</span>
-            <span className="w-2 h-2 bg-[#FF5A1F] border border-[#0A0A0A] shrink-0" aria-hidden="true" />
-            <span>Frontend Developer</span>
-            <span className="w-2 h-2 bg-[#FF5A1F] border border-[#0A0A0A] shrink-0" aria-hidden="true" />
-            <span>Blockchain Enthusiast</span>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs sm:text-sm font-mono font-bold text-[#0A0A0A] mt-1 max-w-full">
+            <span className="whitespace-nowrap">Computer Science Student</span>
+            <span className="w-2 h-2 bg-[#FF5A1F] border border-[#0A0A0A] shrink-0 hidden sm:inline-block" aria-hidden="true" />
+            <span className="whitespace-nowrap">Frontend Developer</span>
+            <span className="w-2 h-2 bg-[#FF5A1F] border border-[#0A0A0A] shrink-0 hidden sm:inline-block" aria-hidden="true" />
+            <span className="whitespace-nowrap">Blockchain Enthusiast</span>
           </div>
 
           {/* Action CTAs */}

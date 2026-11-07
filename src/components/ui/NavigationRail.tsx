@@ -224,7 +224,7 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPal
       {/* (C) Fixed Vertical Section Rail on Right Edge (Compact squares <= 40px, hidden below 1200px, fades in Work section) */}
       <nav 
         className={`nav-rail fixed right-3 top-1/2 -translate-y-1/2 z-40 w-10 flex-col items-center select-none transition-opacity duration-300 ${
-          activeSection === 'work' ? 'opacity-20 hover:opacity-100' : 'opacity-100'
+          menuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
         aria-label="Section Navigation"
       >

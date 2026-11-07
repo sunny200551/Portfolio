@@ -17,12 +17,14 @@ import { Footer } from './sections/Footer';
 import { useGitHubData } from './hooks/useGitHubData';
 
 import { SessionLoader } from './components/ui/SessionLoader';
+import { useSteveHandoff } from './hooks/useSteveHandoff';
 
 // Lazy-load fixed gutter mascot so text is instantly readable
 const FixedGutterSteve = lazy(() => import('./robot/FixedGutterSteve'));
 const RobotShowcase = lazy(() => import('./robot/RobotShowcase'));
 
 function App() {
+  useSteveHandoff();
   const { profile, repos } = useGitHubData();
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const isRobotShowcase = typeof window !== 'undefined' && window.location.search.includes('robot-showcase');
