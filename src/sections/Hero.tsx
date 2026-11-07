@@ -28,12 +28,12 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
     <section 
       ref={heroRef}
       id="home" 
-      className="relative min-h-[90svh] flex items-center justify-center lane-padded pt-20 pb-12 sm:pt-28 sm:pb-20 z-10 bg-transparent text-[#0A0A0A] w-full overflow-visible"
+      className="relative min-h-[90svh] flex items-center justify-center lane-padded pt-20 pb-12 sm:pt-24 sm:pb-16 z-10 bg-transparent text-[#0A0A0A] w-full overflow-visible"
     >
-      <div className="w-full max-w-[2000px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+      <div className="w-full max-w-[2200px] mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-6 lg:gap-8 xl:gap-12 items-center">
         
-        {/* Left Column: Clear, Protected Text & Identity Zone (~55-58%) */}
-        <div className="lg:col-span-7 flex flex-col items-start text-left gap-6 z-20 min-w-0 max-w-full">
+        {/* Left Column: Clear, Protected Text & Identity Zone */}
+        <div className="flex flex-col items-start text-left gap-6 z-20 min-w-0 max-w-full">
           
           {/* Available for Opportunities Chip with ample spacing */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] text-xs font-mono font-bold uppercase tracking-wider mb-1">
@@ -176,12 +176,12 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
 
         </div>
 
-        {/* Right Column: Flat Crisp Neo-Brutalist SVG Workspace Stage with Platform, Panels & Steve Anchor (~42-45%) */}
+        {/* Right Column: Flat Crisp Neo-Brutalist SVG Workspace Stage (~45-50% width on desktop, full width on mobile) */}
         <div 
           data-robot-anchor="home:platform" 
           data-robot-offset-x="0" 
           data-robot-offset-y="0" 
-          className="w-full lg:col-span-5 h-[380px] sm:h-[460px] lg:h-[520px] xl:h-[600px] max-w-[720px] mx-auto relative flex items-center justify-center pointer-events-auto min-w-0"
+          className="w-full h-[clamp(520px,78vh,860px)] max-w-[1020px] mx-auto relative flex items-center justify-center pointer-events-auto min-w-0"
         >
           <HeroSvgIllustration />
         </div>

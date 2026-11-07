@@ -160,7 +160,7 @@ export const HeroSvgIllustration: React.FC = () => {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="xMidYMid meet"
-        className="w-full h-full max-h-[640px] drop-shadow-sm"
+        className="w-full h-full drop-shadow-sm"
         style={{ overflow: 'visible' }}
         aria-label="Neo-Brutalist Isometric Developer Workspace Illustration"
       >
