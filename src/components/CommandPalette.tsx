@@ -109,6 +109,36 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       action: handleCopyEmail
     },
     {
+      id: 'steve-flirt',
+      name: 'steve: flirt (Drop a Flirty Tech Pickup Line)',
+      category: 'Actions',
+      icon: Heart,
+      action: () => {
+        robotStore.triggerFlirt();
+        onClose();
+      }
+    },
+    {
+      id: 'steve-middle',
+      name: 'steve: middle (Strut to Center Stage)',
+      category: 'Actions',
+      icon: Sparkles,
+      action: () => {
+        robotStore.triggerMiddleStrut();
+        onClose();
+      }
+    },
+    {
+      id: 'steve-showcase',
+      name: 'steve: showcase (Open Expressions & Poses Suite)',
+      category: 'Actions',
+      icon: Sparkles,
+      action: () => {
+        onClose();
+        window.open('/?robot-showcase=true', '_self');
+      }
+    },
+    {
       id: 'steve-dance',
       name: 'steve: dance (Dance Party)',
       category: 'Actions',

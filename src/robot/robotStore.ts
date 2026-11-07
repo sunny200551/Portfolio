@@ -98,6 +98,21 @@ function setStoredRobotEnabled(enabled: boolean): void {
   }
 }
 
+
+export const FLIRTY_LINES = [
+  "Are you CSS grid? You align everything in my life. 😉",
+  "Is your name Wi-Fi? Because I feel a strong connection. ✨",
+  "You must be an async function, I'd wait forever for you. ❤️",
+  "Zero merge conflicts between us, guaranteed. 😏",
+  "Are you responsive design? You look perfect in every viewport. 💅",
+  "Stop looking so good, my cooling fans are at 100%! 🔥",
+  "I'd never 404 on you, gorgeous. 🤖",
+  "You've got cleaner syntax than Sunny's code. ⚡",
+  "Are you an API? Because I can't stop calling you. 📱",
+  "Did it hurt when you fell from the cloud? ☁️✨",
+  "My heart has 100% test coverage for you. 💖"
+];
+
 const FUNNY_LINES = [
   "Looking for a frontend dev? I know a guy!",
   "It's not a bug, it's an undocumented feature.",
@@ -306,6 +321,31 @@ class RobotStore {
       this.clearSpeechBubble();
     } else {
       this.showSpeechBubble("Voice back online! Steve at your service. ✨", 3000);
+    }
+    this.notify();
+  }
+
+  
+  private flirtIndex = 0;
+
+  public triggerFlirt() {
+    if (!this.state.robotEnabled) return;
+    const line = FLIRTY_LINES[this.flirtIndex % FLIRTY_LINES.length];
+    this.flirtIndex++;
+    this.setSteve('salute', 'flirty');
+    this.showSpeechBubble(line, 3800);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('steve:flirt', { detail: { text: line } }));
+    }
+    this.notify();
+  }
+
+  public triggerMiddleStrut() {
+    if (!this.state.robotEnabled) return;
+    this.setSteve('dance', 'excited');
+    this.showSpeechBubble("Center stage! How do I look? ✨🕺", 3500);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('steve:middle'));
     }
     this.notify();
   }

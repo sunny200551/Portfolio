@@ -216,7 +216,7 @@ export const HeroSvgIllustration: React.FC = () => {
             {/* URL Pill */}
             <rect x="250" y="169" width="160" height="16" fill="#FFFFFF" stroke="#0A0A0A" strokeWidth="1.5" />
             <text x="258" y="181" fill="#0A0A0A" fontFamily="monospace" fontSize="8.5" fontWeight="bold">
-              sunnypasumarthi.dev
+              sunnypasumarthi.in
             </text>
 
             {/* Inner Content Status Banner */}

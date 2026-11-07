@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useMemo, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Robot } from './Robot';
 import { robotStore } from './robotStore';
@@ -7,7 +7,7 @@ import { CanvasErrorBoundary } from '../components/three/CanvasBoundary';
 import { steveState, type SteveState } from '../lib/steveState';
 import type { RobotAnimation, RobotExpression } from './types';
 
-// Section greeting lines - strictly <= 20 characters each
+// Section default greetings (under 20 characters for fast intro)
 const SECTION_GREETINGS: Record<string, { anim: RobotAnimation; expr: RobotExpression; text: string }> = {
   about: { anim: 'idle', expr: 'curious', text: 'Meet Sunny! 👋' },
   work: { anim: 'salute', expr: 'happy', text: 'Featured work! 🚀' },
@@ -23,13 +23,19 @@ export const FixedGutterSteve: React.FC = () => {
   const [currentSteveState, setCurrentSteveState] = useState<SteveState>(() => steveState.getState());
   const [activeSection, setActiveSection] = useState(() => robotStore.getState().activeSection);
   const [robotEnabled, setRobotEnabled] = useState(() => robotStore.getState().robotEnabled);
-  const [activeBubble, setActiveBubble] = useState<string | null>(null);
+  const [isQuiet, setIsQuiet] = useState(() => robotStore.getState().isQuiet);
+  const [storeBubble, setStoreBubble] = useState<string | null>(() => robotStore.getState().speechBubble);
+  const [storeAnim, setStoreAnim] = useState<RobotAnimation>(() => robotStore.getState().steveAnim);
+  const [storeExpr, setStoreExpr] = useState<RobotExpression>(() => robotStore.getState().steveExpr);
+  const [isCenterStage, setIsCenterStage] = useState(false);
   const [isTabVisible, setIsTabVisible] = useState(() => (typeof document !== 'undefined' ? !document.hidden : true));
   const [isSquashing, setIsSquashing] = useState(false);
   const [isLandingPuff, setIsLandingPuff] = useState(false);
   const [windowWidth, setWindowWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1440));
 
-  const bubbleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const centerStageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastHoverTimeRef = useRef(0);
+  const lastScrollVelocityRef = useRef(0);
   const visitedSectionsRef = useRef<Set<string>>(new Set());
 
   const prefersReducedMotion = useMemo(() => {
@@ -38,7 +44,7 @@ export const FixedGutterSteve: React.FC = () => {
       : false;
   }, []);
 
-  // Subscribe to Steve handoff state machine
+  // 1. Subscribe to Steve handoff state machine
   useEffect(() => {
     const unsub = steveState.subscribe((state) => {
       setCurrentSteveState(state);
@@ -52,51 +58,152 @@ export const FixedGutterSteve: React.FC = () => {
     return unsub;
   }, []);
 
-  // Track window width for 1200px breakpoint
-  useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize, { passive: true });
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Track tab visibility to pause Three.js loop
-  useEffect(() => {
-    const handleVisibility = () => setIsTabVisible(!document.hidden);
-    document.addEventListener('visibilitychange', handleVisibility);
-    return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, []);
-
-  // Track store activeSection changes & trigger max 1 short speech bubble per section
+  // 2. Subscribe to robotStore updates (commands, expressions, speech bubbles, animations)
   useEffect(() => {
     const unsub = robotStore.subscribe(() => {
       const state = robotStore.getState();
       setRobotEnabled(state.robotEnabled);
+      setIsQuiet(state.isQuiet);
+      setStoreAnim(state.steveAnim);
+      setStoreExpr(state.steveExpr);
+      setStoreBubble(state.speechBubble);
 
       if (state.activeSection !== activeSection) {
         setActiveSection(state.activeSection);
 
-        // If not visited this section yet and not home, trigger one 2.5s bubble
+        // First-time visit greeting per section
         if (state.activeSection !== 'home' && !visitedSectionsRef.current.has(state.activeSection)) {
           visitedSectionsRef.current.add(state.activeSection);
           const cfg = SECTION_GREETINGS[state.activeSection];
-          if (cfg) {
-            if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
-            setActiveBubble(cfg.text);
+          if (cfg && !state.isQuiet && !state.speechBubble) {
+            robotStore.showSpeechBubble(cfg.text, 2500);
             steveVoice.speak(('section_' + state.activeSection) as VoiceCategory);
-
-            bubbleTimerRef.current = setTimeout(() => {
-              setActiveBubble(null);
-            }, 2500);
           }
         }
       }
     });
+    return unsub;
+  }, [activeSection]);
+
+  // 3. Listen for Center Stage / Flirt Events
+  const triggerCenterMovement = useCallback((durationMs = 4000) => {
+    if (centerStageTimerRef.current) clearTimeout(centerStageTimerRef.current);
+    setIsCenterStage(true);
+    centerStageTimerRef.current = setTimeout(() => {
+      setIsCenterStage(false);
+    }, durationMs);
+  }, []);
+
+  useEffect(() => {
+    const handleMiddle = () => triggerCenterMovement(4500);
+    const handleFlirt = () => triggerCenterMovement(4000);
+    const handleShy = () => triggerCenterMovement(3500);
+
+    window.addEventListener('steve:middle', handleMiddle);
+    window.addEventListener('steve:flirt', handleFlirt);
+    window.addEventListener('steve:shy-mode', handleShy);
 
     return () => {
-      unsub();
-      if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
+      window.removeEventListener('steve:middle', handleMiddle);
+      window.removeEventListener('steve:flirt', handleFlirt);
+      window.removeEventListener('steve:shy-mode', handleShy);
+      if (centerStageTimerRef.current) clearTimeout(centerStageTimerRef.current);
     };
-  }, [activeSection]);
+  }, [triggerCenterMovement]);
+
+  // 4. Cursor-Aware Interactive Commentary (Throttled flirty element awareness)
+  useEffect(() => {
+    if (prefersReducedMotion || !robotEnabled || isQuiet) return;
+
+    const handleMouseOver = (e: MouseEvent) => {
+      const now = Date.now();
+      // At least 7 seconds between automatic cursor commentary
+      if (now - lastHoverTimeRef.current < 7000) return;
+
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      // Identify element by closest semantic markers
+      const el = target.closest('a, button, [data-robot-react], img, input, textarea, .shadow-\\[6px_6px_0px_\\#0A0A0A\\]');
+      if (!el) return;
+
+      const text = (el.textContent || '').toLowerCase();
+      const href = (el.getAttribute('href') || '').toLowerCase();
+      const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+
+      let reaction: { anim: RobotAnimation; expr: RobotExpression; text: string } | null = null;
+
+      if (href.includes('instagram') || ariaLabel.includes('instagram')) {
+        reaction = { anim: 'wave', expr: 'flirty', text: 'Insta DMs are Sunny’s fastest reply channel! 💬😉' };
+      } else if (href.includes('linkedin') || ariaLabel.includes('linkedin')) {
+        reaction = { anim: 'salute', expr: 'happy', text: 'Active on LinkedIn daily! Drop him a message! 💼✨' };
+      } else if (text.includes('resume') || href.includes('resume')) {
+        reaction = { anim: 'salute', expr: 'flirty', text: 'Checking his specs? Wait till you see mine! 📄😏' };
+      } else if (text.includes('get in touch') || text.includes('contact') || href.includes('mailto:')) {
+        reaction = { anim: 'cheer', expr: 'excited', text: 'Slide into his inbox! He replies super fast! 💌🔥' };
+      } else if (el.closest('#skills') || text.includes('react') || text.includes('typescript')) {
+        reaction = { anim: 'flex', expr: 'grin', text: 'React & TypeScript... high performance! My type. ⚡💅' };
+      } else if (el.closest('#github') || href.includes('github')) {
+        reaction = { anim: 'flex', expr: 'proud', text: 'Look at that green skyline! That’s commitment. 📊💚' };
+      } else if (el.closest('#work')) {
+        reaction = { anim: 'dance', expr: 'excited', text: 'These projects are hot, but your taste is hotter! 🚀🔥' };
+      }
+
+      if (reaction) {
+        lastHoverTimeRef.current = now;
+        robotStore.setSteve(reaction.anim, reaction.expr);
+        robotStore.showSpeechBubble(reaction.text, 3400);
+      }
+    };
+
+    window.addEventListener('mouseover', handleMouseOver, { passive: true });
+    return () => window.removeEventListener('mouseover', handleMouseOver);
+  }, [prefersReducedMotion, robotEnabled, isQuiet]);
+
+  // 5. Scroll velocity monitoring for funny speed reaction
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let lastTime = performance.now();
+
+    const checkVelocity = () => {
+      const now = performance.now();
+      const dt = Math.max(1, now - lastTime);
+      const dy = Math.abs(window.scrollY - lastY);
+      const velocity = dy / dt;
+
+      if (velocity > 2.2 && now - lastScrollVelocityRef.current > 12000 && !isQuiet) {
+        lastScrollVelocityRef.current = now;
+        robotStore.setSteve('spin', 'dizzy');
+        robotStore.showSpeechBubble('Whoa, speed demon! Hold on tight! 🏎️💨', 2800);
+      }
+
+      lastY = window.scrollY;
+      lastTime = now;
+    };
+
+    window.addEventListener('scroll', checkVelocity, { passive: true });
+    return () => window.removeEventListener('scroll', checkVelocity);
+  }, [isQuiet]);
+
+  // 6. Window resize and tab visibility
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    const handleVisibility = () => setIsTabVisible(!document.hidden);
+
+    window.addEventListener('resize', handleResize, { passive: true });
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, []);
+
+  // Steve click handler
+  const handleMascotClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    robotStore.handleSteveClick();
+  };
 
   // Below 1200px: dock Steve is completely hidden (menu is used)
   if (windowWidth < 1200) return null;
@@ -106,12 +213,32 @@ export const FixedGutterSteve: React.FC = () => {
 
   if (!robotEnabled) return null;
 
-  // Current animation and expression
+  // Compute live animation and expression
   const sectionConfig = SECTION_GREETINGS[activeSection] || SECTION_GREETINGS.about;
-  const anim: RobotAnimation = currentSteveState === 'LAUNCHING' ? 'wave' : sectionConfig.anim;
-  const expr: RobotExpression = currentSteveState === 'LAUNCHING' ? 'excited' : sectionConfig.expr;
+  const anim: RobotAnimation = storeAnim || (currentSteveState === 'LAUNCHING' ? 'wave' : sectionConfig.anim);
+  const expr: RobotExpression = storeExpr || (currentSteveState === 'LAUNCHING' ? 'excited' : sectionConfig.expr);
 
-  // Dimensions: Steve is ~130px wide, fits cleanly in the 168px left lane
+  // Compute X Position:
+  // - Default left edge dock: 16px (inside 168px lane)
+  // - Skills: steps out to 44px
+  // - Stats: 56px
+  // - Journey: stylish center-left strut (clamp(24px, 20vw, 300px))
+  // - Contact: 50px
+  // - Center Stage moment: middle of viewport (windowWidth / 2 - 80px)
+  let posX = 16;
+  if (isCenterStage) {
+    posX = Math.round(windowWidth / 2 - 80);
+  } else if (activeSection === 'skills') {
+    posX = 44;
+  } else if (activeSection === 'stats') {
+    posX = 56;
+  } else if (activeSection === 'journey') {
+    posX = Math.min(Math.round(windowWidth * 0.22), 300);
+  } else if (activeSection === 'contact') {
+    posX = 50;
+  }
+
+  // Canvas dimensions
   const canvasW = 160;
   const canvasH = 220;
 
@@ -119,37 +246,43 @@ export const FixedGutterSteve: React.FC = () => {
     <div
       id="robot-steve-dock"
       data-testid="dock-steve"
-      className="fixed z-40 select-none pointer-events-none transition-all duration-300"
+      onClick={handleMascotClick}
+      className="fixed z-40 select-none pointer-events-auto cursor-pointer"
       style={{
-        left: '16px',
+        left: `${posX}px`,
         top: '50%',
         transform: 'translateY(-50%)',
         width: `${canvasW}px`,
         height: `${canvasH}px`,
         opacity: currentSteveState === 'RETURNING' ? 0.3 : 1,
+        transition: isCenterStage
+          ? 'left 0.75s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s ease-out, transform 0.4s ease-out'
+          : 'left 0.6s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s ease-out, transform 0.4s ease-out',
       }}
+      title="Click me to chat with Steve! ✨"
       aria-label="Steve mascot dock"
     >
-      {/* Speech bubble: strictly ABOVE Steve's head inside the 168px lane, clamped >= 8px from viewport edge */}
-      {activeBubble && (
+      {/* Speech bubble: positioned strictly ABOVE Steve's head with downward tail */}
+      {storeBubble && !isQuiet && (
         <div
           data-testid="steve-speech-bubble"
-          className="absolute z-50 pointer-events-none bg-white border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] px-2.5 py-1.5 text-center font-mono text-[11px] font-bold text-[#0A0A0A] leading-tight"
+          className="absolute z-50 pointer-events-none bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] px-3 py-2 text-center font-mono text-[11px] font-bold text-[#0A0A0A] leading-tight"
           style={{
-            left: '0px',
+            left: isCenterStage ? '50%' : '0px',
+            transform: isCenterStage ? 'translateX(-50%)' : 'none',
             bottom: 'calc(100% - 10px)',
-            width: '146px',
-            maxWidth: '146px',
+            width: '170px',
+            maxWidth: '170px',
             wordBreak: 'break-word',
           }}
         >
           {/* Header */}
-          <div className="flex items-center justify-center gap-1 text-[9px] font-black uppercase text-[#FF5A1F] border-b border-[#0A0A0A]/20 pb-0.5 mb-1">
+          <div className="flex items-center justify-center gap-1.5 text-[9px] font-black uppercase text-[#FF5A1F] border-b border-[#0A0A0A]/20 pb-0.5 mb-1 tracking-wider">
             <span>STEVE</span>
-            <span>⚡</span>
+            <span>⚡😉</span>
           </div>
 
-          <span>{activeBubble}</span>
+          <span>{storeBubble}</span>
 
           {/* Downward tail pointing down toward Steve's head */}
           <div
