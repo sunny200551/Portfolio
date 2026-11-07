@@ -179,7 +179,7 @@ export const Projects: React.FC = () => {
               className={`flex-shrink-0 bg-white border-2 border-[#0A0A0A] shadow-[6px_6px_0px_#0A0A0A] hover:shadow-[10px_10px_0px_#0047AB] hover:-translate-y-1 transition-all cursor-pointer flex flex-col justify-between overflow-hidden ${
                 isMobile 
                   ? 'w-full min-h-[460px]' 
-                  : 'w-[min(560px,82vw)] h-[min(640px,calc(100vh-220px))]'
+                  : 'w-[min(560px,82vw)] h-[min(670px,calc(100vh-180px))] min-h-[560px]'
               }`}
             >
               {/* Card Top / Image Area with fixed aspect ratio */}
@@ -242,19 +242,24 @@ export const Projects: React.FC = () => {
                 </div>
 
                 {/* Card Action Footer */}
-                <div className="pt-3 border-t-2 border-[#0A0A0A]/10 flex items-center justify-between font-mono text-xs font-bold mt-auto">
-                  <span className="flex items-center gap-1.5 text-[#0047AB] hover:text-[#FF5A1F] transition-colors">
-                    <span>VIEW CASE STUDY</span>
-                    <ArrowRight size={13} />
-                  </span>
-
-                  <div className="flex items-center gap-3">
-                    {project.id === 'portfolio' ? (
-                      <span className="px-2 py-0.5 bg-[#FF5A1F] text-black font-mono text-[10px] font-black border border-[#0A0A0A] shadow-[1px_1px_0px_#0A0A0A]">
-                        YOU'RE HERE! 👀
+                <div className="pt-3 border-t-2 border-[#0A0A0A]/10 flex items-center justify-between font-mono text-xs font-bold mt-auto w-full">
+                  {project.id === 'portfolio' ? (
+                    <div className="w-full flex flex-col items-center justify-center py-2 px-3 bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] text-center select-none">
+                      <span className="font-mono text-[10px] sm:text-[11px] font-black uppercase tracking-tight">
+                        YOU ARE LITERALLY INSIDE THIS PROJECT RIGHT NOW
                       </span>
-                    ) : (
-                      <>
+                      <span className="font-mono text-[9px] font-bold text-black/80">
+                        (no link needed, look around)
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="flex items-center gap-1.5 text-[#0047AB] hover:text-[#FF5A1F] transition-colors">
+                        <span>VIEW CASE STUDY</span>
+                        <ArrowRight size={13} />
+                      </span>
+
+                      <div className="flex items-center gap-3">
                         {project.links.live && (
                           <span className="text-[#0A0A0A] hover:text-[#FF5A1F] flex items-center gap-1">
                             LIVE <ExternalLink size={11} />
@@ -265,9 +270,9 @@ export const Projects: React.FC = () => {
                             GITHUB ↗
                           </span>
                         )}
-                      </>
-                    )}
-                  </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

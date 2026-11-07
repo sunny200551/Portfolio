@@ -35,26 +35,47 @@ const UIBlock: React.FC<BlockProps> = ({
   );
 };
 
-// Scene Controller: Handles WebGL context recovery, scroll-back visibility, and entrance replay
+// Scene Controller: Ensures scene renders immediately within 1 frame upon return to top
 const HeroSceneController: React.FC<{ isHeroInView: boolean }> = ({ isHeroInView }) => {
   const { gl, invalidate } = useThree();
-  const entranceProgress = useRef(1);
+  const lastInView = useRef(isHeroInView);
 
+  // Immediate frame trigger
   useEffect(() => {
-    if (isHeroInView) {
-      invalidate();
-      // Replay entrance bounce
-      entranceProgress.current = 0.92;
+    invalidate();
+    if (isHeroInView && !lastInView.current) {
+      // Welcome back gag
+      robotStore.setBolt('wave', 'happy');
     }
+    lastInView.current = isHeroInView;
   }, [isHeroInView, invalidate]);
 
+  // Window scroll and navigation listener to guarantee frame on return-to-top
+  useEffect(() => {
+    const handleScrollOrNav = () => {
+      if (window.scrollY < 200) {
+        invalidate();
+      }
+    };
+    window.addEventListener('scroll', handleScrollOrNav, { passive: true });
+    window.addEventListener('scroll-to-top', handleScrollOrNav);
+    window.addEventListener('focus', handleScrollOrNav);
+
+    return () => {
+      window.removeEventListener('scroll', handleScrollOrNav);
+      window.removeEventListener('scroll-to-top', handleScrollOrNav);
+      window.removeEventListener('focus', handleScrollOrNav);
+    };
+  }, [invalidate]);
+
+  // WebGL context loss recovery
   useEffect(() => {
     const canvasEl = gl.domElement;
     if (!canvasEl) return;
 
     const handleContextLost = (e: Event) => {
       e.preventDefault();
-      console.warn('Hero 3D WebGL context lost. Waiting for restore...');
+      console.warn('Hero 3D WebGL context lost. Recovering...');
     };
 
     const handleContextRestored = () => {
@@ -71,12 +92,6 @@ const HeroSceneController: React.FC<{ isHeroInView: boolean }> = ({ isHeroInView
     };
   }, [gl, invalidate]);
 
-  useFrame((_, delta) => {
-    if (entranceProgress.current < 1) {
-      entranceProgress.current = Math.min(1, entranceProgress.current + delta * 2.5);
-    }
-  });
-
   return null;
 };
 
@@ -90,6 +105,9 @@ const HeroSceneContent: React.FC<HeroSceneContentProps> = ({ isMobile }) => {
 
   const [boltAnim, setBoltAnim] = useState(() => robotStore.getState().boltAnim);
   const [boltExpr, setBoltExpr] = useState(() => robotStore.getState().boltExpr);
+  const [nutAnim, setNutAnim] = useState(() => robotStore.getState().nutAnim);
+  const [chipAnim, setChipAnim] = useState(() => robotStore.getState().chipAnim);
+  const [chipExpr, setChipExpr] = useState(() => robotStore.getState().chipExpr);
   const [robotEnabled, setRobotEnabled] = useState(() => robotStore.getState().robotEnabled);
 
   useEffect(() => {
@@ -97,6 +115,9 @@ const HeroSceneContent: React.FC<HeroSceneContentProps> = ({ isMobile }) => {
       const s = robotStore.getState();
       setBoltAnim(s.boltAnim);
       setBoltExpr(s.boltExpr);
+      setNutAnim(s.nutAnim);
+      setChipAnim(s.chipAnim);
+      setChipExpr(s.chipExpr);
       setRobotEnabled(s.robotEnabled);
     });
     return () => unsub();
@@ -106,40 +127,40 @@ const HeroSceneContent: React.FC<HeroSceneContentProps> = ({ isMobile }) => {
     if (!groupRef.current) return;
     const t = state.clock.getElapsedTime();
 
-    // Subtle pointer parallax and gentle float
-    const targetParallaxX = pointer.x * 0.07;
-    const targetParallaxY = pointer.y * 0.05;
+    // Gentle pointer parallax
+    const targetParallaxX = pointer.x * 0.06;
+    const targetParallaxY = pointer.y * 0.04;
 
-    groupRef.current.position.y = Math.sin(t * 1.2) * 0.025;
+    groupRef.current.position.y = Math.sin(t * 1.2) * 0.02;
     groupRef.current.rotation.y = THREE.MathUtils.damp(
       groupRef.current.rotation.y,
-      -0.18 + Math.sin(t * 0.5) * 0.015 + targetParallaxX,
+      -0.16 + Math.sin(t * 0.4) * 0.015 + targetParallaxX,
       3,
       delta
     );
     groupRef.current.rotation.x = THREE.MathUtils.damp(
       groupRef.current.rotation.x,
-      0.30 - targetParallaxY * 0.25,
+      0.28 - targetParallaxY * 0.2,
       3,
       delta
     );
   });
 
   return (
-    <group ref={groupRef} position={[0.32, -0.15, 0]} rotation={[0.30, -0.18, 0]}>
-      {/* 1. Base Foundation Desk Slab: Fully contained inside stage, plain grey/ice-blue */}
+    <group ref={groupRef} position={[0.26, -0.14, 0]} rotation={[0.28, -0.16, 0]}>
+      {/* 1. Base Foundation Desk Slab: Plain grey/ice-blue with clear floor in front */}
       <UIBlock
         position={[0, 0, 0]}
         rotation={[0, 0, 0]}
-        size={[3.7, 0.12, 2.4]}
+        size={[3.8, 0.12, 2.5]}
         color="#EEF2FA"
         outlineColor="#0A0A0A"
       />
 
-      {/* 2. Standing Architectural Panes as Backdrop (Smaller, Behind the Robots) */}
+      {/* 2. Standing Architectural Panes toward the BACK and RIGHT */}
       
-      {/* Main Cobalt UI Pane (#0047AB) */}
-      <group position={[0.60, 0.65, -0.42]} rotation={[0, -0.18, 0]}>
+      {/* Blue Window Panel (#0047AB) in background */}
+      <group position={[0.55, 0.62, -0.42]} rotation={[0, -0.18, 0]}>
         <UIBlock
           position={[0, 0, 0]}
           rotation={[0, 0, 0]}
@@ -166,8 +187,8 @@ const HeroSceneContent: React.FC<HeroSceneContentProps> = ({ isMobile }) => {
         </UIBlock>
       </group>
 
-      {/* Top Bar Pane (#FFFFFF) */}
-      <group position={[0.60, 1.28, -0.42]} rotation={[0, -0.18, 0]}>
+      {/* Grey Top Bar Pane (#FFFFFF) */}
+      <group position={[0.55, 1.24, -0.42]} rotation={[0, -0.18, 0]}>
         <UIBlock
           position={[0, 0, 0]}
           rotation={[0, 0, 0]}
@@ -189,8 +210,8 @@ const HeroSceneContent: React.FC<HeroSceneContentProps> = ({ isMobile }) => {
         </UIBlock>
       </group>
 
-      {/* Navy Terminal Pane (#0A1A3F) */}
-      <group position={[1.18, 0.46, 0.15]} rotation={[0, -0.38, 0]}>
+      {/* Navy Panel (#0A1A3F) on right */}
+      <group position={[1.12, 0.44, 0.14]} rotation={[0, -0.38, 0]}>
         <UIBlock
           position={[0, 0, 0]}
           rotation={[0, 0, 0]}
@@ -220,8 +241,8 @@ const HeroSceneContent: React.FC<HeroSceneContentProps> = ({ isMobile }) => {
         </UIBlock>
       </group>
 
-      {/* Orange Accent Pill (#FF5A1F) */}
-      <group position={[0.78, 0.16, 0.55]} rotation={[0, -0.15, 0]}>
+      {/* Orange Bar Accent (#FF5A1F) */}
+      <group position={[0.74, 0.16, 0.54]} rotation={[0, -0.15, 0]}>
         <UIBlock
           position={[0, 0, 0]}
           rotation={[0, 0, 0]}
@@ -239,42 +260,42 @@ const HeroSceneContent: React.FC<HeroSceneContentProps> = ({ isMobile }) => {
         </UIBlock>
       </group>
 
-      {/* 3. Focal Robots Standing Upright on Floor: Large, Prominent, Front-Facing */}
+      {/* 3. Three Robots Standing on Clear Grey Floor Area in Front */}
       {robotEnabled && (
         <group position={[0, 0.06, 0]}>
-          {/* Main Hero BOLT (Center, ~250px tall, Waving, Eyes following pointer) */}
-          <group position={[-0.10, 0, 0.35]} rotation={[0, 0.18, 0]}>
+          {/* Main Hero BOLT (Center-Front, ~170-200px tall at 1920px, facing visitor & Sunny) */}
+          <group position={[-0.15, 0, 0.38]} rotation={[0, 0.18, 0]}>
             <Robot
               variant="bolt"
               animation={boltAnim === 'jump' ? 'jump' : 'wave'}
               expression={boltExpr}
               position={[0, 0, 0]}
-              scale={1.30}
+              scale={1.08}
               headTrackCursor={true}
             />
           </group>
 
-          {/* Left BOLT / Companion (Standing left, Facing viewer & Sunny text) */}
-          <group position={[-0.92, 0, 0.10]} rotation={[0, 0.32, 0]}>
+          {/* NUT: Front-Left on clear floor (~110-130px tall, lively, facing right/forward) */}
+          <group position={[-0.92, 0, 0.16]} rotation={[0, 0.32, 0]}>
             <Robot
-              variant="bolt"
-              animation="salute"
+              variant="nut"
+              animation={nutAnim}
               expression="focused"
               position={[0, 0, 0]}
-              scale={1.12}
+              scale={0.72}
               headTrackCursor={true}
             />
           </group>
 
-          {/* Right BOLT (Desktop Only: 3rd Robot, cheerful, standing near orange block) */}
-          {!isMobile && (
-            <group position={[0.72, 0, 0.40]} rotation={[0, -0.15, 0]}>
+          {/* CHIP: Front-Right on clear floor (~110-130px tall, upright, desktop only on tight mobile) */}
+          {(!isMobile || window.innerWidth > 480) && (
+            <group position={[0.65, 0, 0.44]} rotation={[0, -0.18, 0]}>
               <Robot
-                variant="bolt"
-                animation="cheer"
-                expression="excited"
+                variant="chip"
+                animation={chipAnim}
+                expression={chipExpr}
                 position={[0, 0, 0]}
-                scale={1.05}
+                scale={0.70}
                 headTrackCursor={true}
               />
             </group>
@@ -313,7 +334,7 @@ export const HeroIllustration: React.FC<HeroIllustrationProps> = ({ isHeroInView
             antialias: true,
             powerPreference: 'high-performance',
           }}
-          frameloop={isHeroInView ? 'always' : 'never'}
+          frameloop="always"
         >
           <ambientLight intensity={1.1} color="#FFFFFF" />
           <directionalLight position={[5, 8, 6]} intensity={1.6} color="#FFFFFF" />

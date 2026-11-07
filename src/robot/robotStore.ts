@@ -275,7 +275,6 @@ class RobotStore {
   }
 
   public showSpeechBubble(text: string, durationMs = 2500) {
-    // Truncate to maximum 24 characters as required
     this.state.speechBubble = text.slice(0, 24);
     this.notify();
 
@@ -328,14 +327,10 @@ class RobotStore {
     if (this.state.isIdleSleeping || this.state.boltAnim === 'sleep') {
       this.state.isIdleSleeping = false;
       this.setBolt('idle', 'happy');
-      // Do NOT show unprompted "Back online!" over content
       this.notify();
     }
   }
 
-  /**
-   * Category reaction method for skills or other interactive elements
-   */
   public react(category: string) {
     if (!this.state.robotEnabled) return;
     const cat = category.toLowerCase();
@@ -352,7 +347,7 @@ class RobotStore {
         break;
       case 'blockchain':
       case 'web3':
-        this.setBolt('cheer', 'smug');
+        this.setBolt('cheer', 'excited');
         break;
       case 'tools':
         this.setBolt('wave', 'happy');

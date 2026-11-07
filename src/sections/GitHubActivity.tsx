@@ -239,21 +239,7 @@ export const GitHubActivity: React.FC<GitHubActivityProps> = () => {
           )}
 
           {/* Canvas with 16:7 on desktop, 4:3 on mobile with ErrorBoundary & 4s Timeout */}
-          <div className="w-full aspect-[4/3] md:aspect-[16/7] bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] relative overflow-hidden flex items-center justify-center cursor-grab active:cursor-grabbing">
-            {/* DOM Overlay Weekday Labels (Left edge) */}
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 flex flex-col justify-between h-24 font-mono text-[10px] font-bold text-[#0A0A0A]/70 pointer-events-none select-none z-20">
-              <span>MON</span>
-              <span>WED</span>
-              <span>FRI</span>
-            </div>
-
-            {/* DOM Overlay Month Labels (Bottom edge) */}
-            <div className="absolute bottom-2.5 left-12 right-6 flex justify-between font-mono text-[9px] font-bold text-[#0A0A0A]/70 pointer-events-none select-none z-20">
-              {['NOV', 'DEC', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV'].map((m, idx) => (
-                <span key={`${m}-${idx}`}>{m}</span>
-              ))}
-            </div>
-
+          <div className="w-full aspect-[4/3] md:aspect-[16/7] bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] relative overflow-hidden flex items-center justify-center">
             <CanvasErrorBoundary fallback={<Flat2DContributionGrid weeks={calendarWeeks} />}>
               <TimeoutSuspense 
                 timeoutMs={4000}

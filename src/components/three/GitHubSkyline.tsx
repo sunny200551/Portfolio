@@ -1,11 +1,8 @@
-import React, { useRef, useMemo, useEffect, useCallback } from 'react';
+import React, { useRef, useMemo, useState, useCallback } from 'react';
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { Edges, OrthographicCamera } from '@react-three/drei';
+import { Edges, Html } from '@react-three/drei';
 import * as THREE from 'three';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
+import { robotStore } from '../../robot/robotStore';
 
 export interface ContributionDay {
   date: string;
@@ -32,52 +29,31 @@ interface GitHubSkylineProps {
 
 const levelColorMap: Record<number, string> = {
   0: '#EEF2FA', // None
-  1: '#7BA4E8', // Light cobalt tint
+  1: '#7BA4E8', // Light cobalt
   2: '#0047AB', // Solid Cobalt
   3: '#0A1A3F', // Solid Navy
-  4: '#FF5A1F', // Solid Orange (Peak)
+  4: '#FF5A1F', // Orange Peak
 };
 
 const SPACING_X = 0.24;
 const SPACING_Z = 0.28;
-const MAX_ROTATION_DELTA = Math.PI / 6; // 30 degrees
 
-/**
- * Declarative component to auto-fit orthographic camera zoom based on container width.
- * True isometric (front-left, elevated) looking at the center of the skyline.
- */
-function AutoFitCamera() {
-  const { size, camera } = useThree();
-  const zoom = Math.min(38, Math.max(16, size.width / 28));
-
-  useEffect(() => {
-    camera.position.set(-10, 11, 10);
-    camera.lookAt(0, 0, 0);
-    camera.updateProjectionMatrix();
-  }, [camera]);
-
-  return <OrthographicCamera makeDefault position={[-10, 11, 10]} zoom={zoom} />;
-}
-
-export const GitHubSkyline: React.FC<GitHubSkylineProps> = ({ weeks, onHoverDay }) => {
+export const GitHubSkyline: React.FC<GitHubSkylineProps> = ({
+  weeks,
+  onHoverDay,
+}) => {
   const groupRef = useRef<THREE.Group>(null);
-  const barsRef = useRef<(THREE.Mesh | null)[]>([]);
+  const { invalidate } = useThree();
 
-  // Drag-rotation state
-  const isDraggingRef = useRef(false);
-  const startPointerXRef = useRef(0);
-  const dragRotationDeltaRef = useRef(0);
-  const targetRotationDeltaRef = useRef(0);
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
+  const lastInteractionTime = useRef(0);
+  const isUserInteracting = useRef(false);
 
-  // Use full 52 weeks or generate deterministic fallback
+  // Fallback 52 weeks generator
   const displayWeeks = useMemo(() => {
-    if (weeks && weeks.length >= 52) {
-      return weeks.slice(-52);
-    }
-    if (weeks && weeks.length > 0) {
-      return weeks;
-    }
-    // 52-week fallback
+    if (weeks && weeks.length >= 52) return weeks.slice(-52);
+    if (weeks && weeks.length > 0) return weeks;
+
     const fallbackWeeks: ContributionWeek[] = [];
     const now = new Date();
     for (let w = 51; w >= 0; w--) {
@@ -108,7 +84,7 @@ export const GitHubSkyline: React.FC<GitHubSkylineProps> = ({ weeks, onHoverDay 
   const offsetZ = (7 * SPACING_Z) / 2;
 
   // Flatten bars data
-  const { flatBars } = useMemo(() => {
+  const { flatBars, maxCount, monthAnchors } = useMemo(() => {
     const bars: {
       key: string;
       weekIdx: number;
@@ -119,7 +95,12 @@ export const GitHubSkyline: React.FC<GitHubSkylineProps> = ({ weeks, onHoverDay 
       color: string;
       date: string;
       count: number;
+      isToday: boolean;
     }[] = [];
+
+    let highest = 0;
+    const months: { name: string; x: number; z: number }[] = [];
+    let lastMonth = '';
 
     displayWeeks.forEach((week, wIdx) => {
       const x = wIdx * SPACING_X - offsetX;
@@ -141,10 +122,12 @@ export const GitHubSkyline: React.FC<GitHubSkylineProps> = ({ weeks, onHoverDay 
           numericLevel = Math.min(4, Math.ceil(day.contributionCount / 2));
         }
 
-        // Sunday at back (dIdx = 0), Saturday at front (dIdx = 6)
-        const z = dIdx * SPACING_Z - offsetZ;
         const count = day.contributionCount || 0;
-        const baseHeight = numericLevel === 0 ? 0.06 : 0.18 + numericLevel * 0.32;
+        if (count > highest) highest = count;
+
+        const z = dIdx * SPACING_Z - offsetZ;
+        const isToday = wIdx === numWeeks - 1 && dIdx === days.length - 1;
+        const baseHeight = numericLevel === 0 ? 0.04 : 0.16 + numericLevel * 0.35;
 
         bars.push({
           key: `${wIdx}-${dIdx}`,
@@ -156,136 +139,162 @@ export const GitHubSkyline: React.FC<GitHubSkylineProps> = ({ weeks, onHoverDay 
           color: levelColorMap[numericLevel] || '#EEF2FA',
           date: day.date,
           count,
+          isToday,
         });
-      });
-    });
 
-    return { flatBars: bars };
-  }, [displayWeeks, offsetX, offsetZ]);
-
-  // Pointer drag event handlers for interactive rotation
-  const handlePointerDown = useCallback((e: ThreeEvent<PointerEvent>) => {
-    isDraggingRef.current = true;
-    startPointerXRef.current = e.clientX;
-  }, []);
-
-  const handlePointerMove = useCallback((e: ThreeEvent<PointerEvent>) => {
-    if (!isDraggingRef.current) return;
-    const deltaX = e.clientX - startPointerXRef.current;
-    // Map drag distance to rotation angle clamped to +/- 30 degrees
-    const angle = (deltaX / 200) * MAX_ROTATION_DELTA;
-    targetRotationDeltaRef.current = Math.max(-MAX_ROTATION_DELTA, Math.min(MAX_ROTATION_DELTA, angle));
-  }, []);
-
-  const handlePointerUp = useCallback(() => {
-    isDraggingRef.current = false;
-    // Ease back to neutral rotation (0 delta)
-    targetRotationDeltaRef.current = 0;
-  }, []);
-
-  // Staggered rising animation on scroll
-  useEffect(() => {
-    const section = document.getElementById('github');
-    if (!section) return;
-
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) {
-      barsRef.current.forEach((bar) => {
-        if (bar) bar.scale.y = 1;
-      });
-      return;
-    }
-
-    const ctx = gsap.context(() => {
-      barsRef.current.forEach((bar, idx) => {
-        if (!bar) return;
-        const barItem = flatBars[idx];
-        const weekFraction = barItem ? barItem.weekIdx / numWeeks : 0;
-        gsap.fromTo(
-          bar.scale,
-          { y: 0.01 },
-          {
-            y: 1,
-            duration: 0.6,
-            ease: 'back.out(1.4)',
-            scrollTrigger: {
-              trigger: section,
-              start: 'top 75%',
-            },
-            delay: weekFraction * 0.7,
+        // Collect month boundary for 3D anchored month labels
+        if (dIdx === 0 && day.date) {
+          const mName = new Date(day.date).toLocaleString('en-US', { month: 'short' }).toUpperCase();
+          if (mName !== lastMonth) {
+            lastMonth = mName;
+            months.push({ name: mName, x, z: offsetZ + 0.35 });
           }
-        );
+        }
       });
     });
 
-    return () => ctx.revert();
-  }, [flatBars, numWeeks]);
+    return { flatBars: bars, maxCount: highest, monthAnchors: months };
+  }, [displayWeeks, offsetX, offsetZ, numWeeks]);
 
-  // Frame loop: ease drag rotation delta back towards target
+  // Gentle auto-rotate: pauses during user interaction, resumes after 4s idle
   useFrame((_, delta) => {
     if (!groupRef.current) return;
-    dragRotationDeltaRef.current = THREE.MathUtils.damp(
-      dragRotationDeltaRef.current,
-      targetRotationDeltaRef.current,
-      6,
-      delta
-    );
-    // Baseline isometric orientation around Y, offset by user drag
-    groupRef.current.rotation.y = dragRotationDeltaRef.current;
+
+    const now = Date.now();
+    const isIdle = !isUserInteracting.current && now - lastInteractionTime.current > 4000;
+
+    if (isIdle) {
+      groupRef.current.rotation.y += delta * 0.08;
+      invalidate();
+    }
   });
 
-  const basePlateWidth = numWeeks * SPACING_X + 0.8;
-  const basePlateDepth = 7 * SPACING_Z + 0.9;
+  const notifyUserActivity = useCallback(() => {
+    lastInteractionTime.current = Date.now();
+    isUserInteracting.current = true;
+    invalidate();
+  }, [invalidate]);
+
+  // Handle pointer hover on tower
+  const handlePointerOver = (e: ThreeEvent<PointerEvent>, bar: (typeof flatBars)[0]) => {
+    e.stopPropagation();
+    notifyUserActivity();
+    setHoveredKey(bar.key);
+
+    if (onHoverDay) {
+      onHoverDay({
+        date: bar.date,
+        count: bar.count,
+        clientX: e.clientX,
+        clientY: e.clientY,
+      });
+    }
+
+    // Funny BOLT reaction: cheer for peak tower, curious for others
+    if (bar.count > 0 && bar.count >= maxCount - 1) {
+      robotStore.setBolt('cheer', 'happy');
+    } else {
+      robotStore.setBolt('idle', 'curious');
+    }
+  };
+
+  const handlePointerOut = (e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    setHoveredKey(null);
+    if (onHoverDay) onHoverDay(null);
+    robotStore.setBolt('idle', 'happy');
+  };
+
+  const baseWidth = offsetX * 2 + 1.2;
+  const baseDepth = offsetZ * 2 + 1.1;
 
   return (
-    <>
-      <AutoFitCamera />
-      <group
-        ref={groupRef}
-        position={[0, -0.2, 0]}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
-      >
-        {/* Flat white base plate with black outline */}
-        <mesh position={[0, -0.06, 0]} receiveShadow>
-          <boxGeometry args={[basePlateWidth, 0.1, basePlateDepth]} />
-          <meshToonMaterial color="#FFFFFF" />
-          <Edges threshold={15} color="#0A0A0A" lineWidth={2} />
-        </mesh>
+    <group
+      ref={groupRef}
+      onPointerDown={() => {
+        isUserInteracting.current = true;
+        notifyUserActivity();
+      }}
+      onPointerUp={() => {
+        isUserInteracting.current = false;
+        lastInteractionTime.current = Date.now();
+      }}
+    >
+      {/* Thick Base Slab with Neo-brutalist Edge & Offset Shadow */}
+      <mesh position={[0, -0.12, 0]}>
+        <boxGeometry args={[baseWidth, 0.22, baseDepth]} />
+        <meshToonMaterial color="#EEF2FA" />
+        <Edges threshold={15} color="#0A0A0A" lineWidth={2.5} />
+      </mesh>
 
-        {/* Skyline Bars */}
-        {flatBars.map((bar, idx) => (
-          <mesh
-            key={bar.key}
-            ref={(el) => { barsRef.current[idx] = el; }}
-            position={[bar.x, bar.height / 2, bar.z]}
-            castShadow
-            receiveShadow
-            onPointerOver={(e) => {
-              e.stopPropagation();
-              onHoverDay?.({
-                date: bar.date,
-                count: bar.count,
-                clientX: e.clientX,
-                clientY: e.clientY,
-              });
-            }}
-            onPointerOut={(e) => {
-              e.stopPropagation();
-              onHoverDay?.(null);
-            }}
-          >
-            <boxGeometry args={[0.2, bar.height, 0.22]} />
-            <meshToonMaterial color={bar.color} />
-            <Edges threshold={15} color="#0A0A0A" lineWidth={1} />
-          </mesh>
-        ))}
+      {/* Base Plate Shadow Block */}
+      <mesh position={[0.15, -0.25, 0.15]}>
+        <boxGeometry args={[baseWidth, 0.06, baseDepth]} />
+        <meshBasicMaterial color="#0A0A0A" />
+      </mesh>
 
+      {/* Clean 3D Weekday Anchored Labels (along left edge) */}
+      <Html position={[-offsetX - 0.45, 0.1, -offsetZ + 0.28]} center>
+        <div className="font-mono text-[9px] font-bold text-[#0A0A0A] bg-white border border-[#0A0A0A] px-1 shadow-[1px_1px_0px_#0A0A0A] select-none pointer-events-none">
+          MON
+        </div>
+      </Html>
+      <Html position={[-offsetX - 0.45, 0.1, 0]} center>
+        <div className="font-mono text-[9px] font-bold text-[#0A0A0A] bg-white border border-[#0A0A0A] px-1 shadow-[1px_1px_0px_#0A0A0A] select-none pointer-events-none">
+          WED
+        </div>
+      </Html>
+      <Html position={[-offsetX - 0.45, 0.1, offsetZ - 0.28]} center>
+        <div className="font-mono text-[9px] font-bold text-[#0A0A0A] bg-white border border-[#0A0A0A] px-1 shadow-[1px_1px_0px_#0A0A0A] select-none pointer-events-none">
+          FRI
+        </div>
+      </Html>
 
-      </group>
-    </>
+      {/* Clean 3D Month Anchored Labels (along front edge) */}
+      {monthAnchors.slice(0, 12).map((m, idx) => (
+        <Html key={`${m.name}-${idx}`} position={[m.x, 0.08, offsetZ + 0.38]} center>
+          <div className="font-mono text-[8px] font-bold text-[#0A0A0A] bg-white border border-[#0A0A0A] px-1 shadow-[1px_1px_0px_#0A0A0A] select-none pointer-events-none whitespace-nowrap">
+            {m.name}
+          </div>
+        </Html>
+      ))}
+
+      {/* 52-Week Cel-Shaded Towers Array */}
+      {flatBars.map((bar) => {
+        const isHovered = hoveredKey === bar.key;
+        const towerColor = isHovered ? '#FF5A1F' : bar.color;
+
+        return (
+          <group key={bar.key} position={[bar.x, bar.height / 2, bar.z]}>
+            <mesh
+              onPointerOver={(e) => handlePointerOver(e, bar)}
+              onPointerOut={handlePointerOut}
+              scale={isHovered ? [1.15, 1.05, 1.15] : [1, 1, 1]}
+            >
+              <boxGeometry args={[0.20, bar.height, 0.22]} />
+              <meshToonMaterial color={towerColor} />
+              <Edges threshold={15} color="#0A0A0A" lineWidth={1.5} />
+            </mesh>
+
+            {/* Small Flag Marker on Today */}
+            {bar.isToday && (
+              <group position={[0, bar.height / 2 + 0.18, 0]}>
+                {/* Flag pole */}
+                <mesh position={[0, 0, 0]}>
+                  <cylinderGeometry args={[0.015, 0.015, 0.22, 6]} />
+                  <meshBasicMaterial color="#0A0A0A" />
+                </mesh>
+                {/* Orange triangle flag */}
+                <mesh position={[0.06, 0.06, 0]} rotation={[0, 0, -Math.PI / 2]}>
+                  <coneGeometry args={[0.06, 0.10, 3]} />
+                  <meshBasicMaterial color="#FF5A1F" />
+                </mesh>
+              </group>
+            )}
+          </group>
+        );
+      })}
+    </group>
   );
 };
 

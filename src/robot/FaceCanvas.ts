@@ -539,38 +539,45 @@ export class RobotFaceTexture {
       }
 
       case 'focused': {
-        // Determined sharp angled V-brows \ /
-        ctx.lineWidth = 7;
+        // Friendly determined face: flat or slightly raised gentle brows (never angry)
+        ctx.lineWidth = 6;
         ctx.beginPath();
-        ctx.moveTo(52, 40);
-        ctx.lineTo(94, 52);
-        ctx.moveTo(204, 40);
-        ctx.lineTo(162, 52);
+        ctx.moveTo(54, 42);
+        ctx.lineTo(94, 40);
+        ctx.moveTo(162, 40);
+        ctx.lineTo(202, 42);
         ctx.stroke();
 
-        // Determined sharp eyes
+        // Friendly bright round eyes with catchlights
         ctx.fillStyle = '#FFFFFF';
         ctx.beginPath();
-        ctx.roundRect(54, 64, 42, 22, 4);
+        ctx.arc(leftEyeX, eyeY, 20, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.roundRect(160, 64, 42, 22, 4);
+        ctx.arc(rightEyeX, eyeY, 20, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.fillStyle = '#051226';
         ctx.beginPath();
-        ctx.arc(leftEyeX + 4, eyeY + 1, 8, 0, Math.PI * 2);
+        ctx.arc(leftEyeX + 2, eyeY, 9, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(rightEyeX - 4, eyeY + 1, 8, 0, Math.PI * 2);
+        ctx.arc(rightEyeX + 2, eyeY, 9, 0, Math.PI * 2);
         ctx.fill();
 
-        // Firm determined line mouth
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(leftEyeX - 2, eyeY - 4, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(rightEyeX - 2, eyeY - 4, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Friendly small smile mouth
         ctx.lineWidth = 6;
         ctx.strokeStyle = '#FFFFFF';
         ctx.beginPath();
-        ctx.moveTo(112, 112);
-        ctx.lineTo(144, 112);
+        ctx.arc(128, 106, 16, 0.15 * Math.PI, 0.85 * Math.PI);
         ctx.stroke();
         break;
       }

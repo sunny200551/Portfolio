@@ -10,17 +10,12 @@ export const FixedGutterBolt: React.FC = () => {
   const [robotEnabled, setRobotEnabled] = useState(() => robotStore.getState().robotEnabled);
   const [speechBubble, setSpeechBubble] = useState(() => robotStore.getState().speechBubble);
   const [isTabVisible, setIsTabVisible] = useState(() => typeof document !== 'undefined' ? !document.hidden : true);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
-  const [leftGutter, setLeftGutter] = useState<number>(() => {
-    if (typeof window === 'undefined') return 300;
-    const w = window.innerWidth;
-    const containerW = Math.min(1280, w - 196);
-    return Math.max(0, (w - containerW) / 2);
-  });
-
-  const [isTooNarrow, setIsTooNarrow] = useState<boolean>(() => {
-    return typeof window !== 'undefined' ? window.innerWidth < 900 : false;
-  });
+  const [windowDimensions, setWindowDimensions] = useState(() => ({
+    w: typeof window !== 'undefined' ? window.innerWidth : 1440,
+    h: typeof window !== 'undefined' ? window.innerHeight : 900,
+  }));
 
   const prefersReducedMotion = useMemo(() => {
     return typeof window !== 'undefined'
@@ -28,19 +23,29 @@ export const FixedGutterBolt: React.FC = () => {
       : false;
   }, []);
 
-  // Window resize handler for gutter calculation
+  // Window resize handler
   useEffect(() => {
     const handleResize = () => {
-      const w = window.innerWidth;
-      setIsTooNarrow(w < 900);
-      const containerW = Math.min(1280, w - 196);
-      const gutter = Math.max(0, (w - containerW) / 2);
-      setLeftGutter(gutter);
+      setWindowDimensions({
+        w: window.innerWidth,
+        h: window.innerHeight,
+      });
     };
 
     window.addEventListener('resize', handleResize, { passive: true });
-    handleResize();
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Track gentle scroll drift (max +-15% viewport height)
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = scrollHeight > 0 ? window.scrollY / scrollHeight : 0;
+      setScrollProgress(progress);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Tab visibility
@@ -63,7 +68,41 @@ export const FixedGutterBolt: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // State Machine Section Reactions (deterministic, cheap, no travel)
+  // Gutter calculation: (windowWidth - contentWidth) / 2
+  const { leftGutter, isTooNarrow, isPeekMode, posX, posY } = useMemo(() => {
+    const { w, h } = windowDimensions;
+    const isNarrow = w < 900;
+    const contentW = Math.min(1280, w - 192);
+    const gutter = Math.max(0, (w - contentW) / 2);
+    const peek = activeSection === 'work' || gutter < 194;
+
+    // Horizontally centered in left gutter (canvas width is 200px)
+    let x: number;
+    if (peek) {
+      // Only head and one hand stick out (~56px visible)
+      x = -144;
+    } else {
+      x = Math.max(12, (gutter / 2) - 100);
+    }
+
+    // Vertical resting position at 50% viewport height + gentle drift (+-10% viewport height)
+    // Constrained with 24px viewport margin so Bolt is never cut off
+    const canvasHeight = 260;
+    const middleY = h * 0.5;
+    const driftY = (scrollProgress - 0.5) * (h * 0.20);
+    const targetY = middleY + driftY;
+    const clampedY = Math.max(24 + (canvasHeight / 2), Math.min(h - 24 - (canvasHeight / 2), targetY));
+
+    return {
+      leftGutter: gutter,
+      isTooNarrow: isNarrow,
+      isPeekMode: peek,
+      posX: x,
+      posY: clampedY,
+    };
+  }, [windowDimensions, activeSection, scrollProgress]);
+
+  // State Machine Section Reactions (friendly and cheerful only)
   const { currentAnim, currentExpr } = useMemo<{
     currentAnim: RobotAnimation;
     currentExpr: RobotExpression;
@@ -78,18 +117,17 @@ export const FixedGutterBolt: React.FC = () => {
       case 'about':
         return { currentAnim: 'salute', currentExpr: 'focused' };
       case 'work':
-        // Peek mode: curious expression
         return { currentAnim: 'idle', currentExpr: 'curious' };
       case 'skills':
         return { currentAnim: 'wave', currentExpr: 'happy' };
       case 'github':
-        return { currentAnim: 'idle', currentExpr: 'focused' };
+        return { currentAnim: 'idle', currentExpr: 'curious' };
       case 'stats':
         return { currentAnim: 'salute', currentExpr: 'focused' };
       case 'events':
         return { currentAnim: 'cheer', currentExpr: 'excited' };
       case 'journey':
-        return { currentAnim: 'walk', currentExpr: 'happy' }; // Walk-in-place
+        return { currentAnim: 'walk', currentExpr: 'happy' };
       case 'contact':
         return { currentAnim: 'wave', currentExpr: 'happy' };
       default:
@@ -102,12 +140,12 @@ export const FixedGutterBolt: React.FC = () => {
   useEffect(() => {
     if (activeSection && activeSection !== lastSectionRef.current) {
       lastSectionRef.current = activeSection;
-      if (leftGutter >= 340 && activeSection !== 'work' && activeSection !== 'home') {
+      if (leftGutter >= 300 && activeSection !== 'work' && activeSection !== 'home') {
         const SECTION_LINES: Record<string, string> = {
           about: 'B.Tech CS scholar!',
-          skills: 'Stack inspection!',
+          skills: 'Inspect stack below!',
           github: 'Code telemetry!',
-          stats: 'Problem solving!',
+          stats: 'Problem solver!',
           events: 'Hackathon spirit!',
           journey: 'Evolving journey!',
           contact: "Let's build together!",
@@ -122,35 +160,69 @@ export const FixedGutterBolt: React.FC = () => {
     }
   }, [activeSection, leftGutter]);
 
-  // Peek mode: active when gutter < 194px OR always in the pinned Work gallery
-  const isPeekMode = activeSection === 'work' || leftGutter < 194;
-
   // Hide Bolt below 900px wide or when disabled
   if (isTooNarrow || !robotEnabled) {
     return null;
   }
 
-  // Small Canvas size: 220x280
   const canRender3D = isTabVisible;
 
   return (
     <div
-      className="fixed left-0 top-1/2 z-30 select-none pointer-events-none"
+      className="fixed z-35 select-none pointer-events-none"
       style={{
-        transform: isPeekMode ? 'translate(-124px, -50%)' : 'translate(10px, -50%)',
-        transition: 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)',
-        width: '220px',
-        height: '280px',
+        left: `${posX}px`,
+        top: `${posY}px`,
+        transform: 'translateY(-50%)',
+        transition: 'left 0.45s cubic-bezier(0.16, 1, 0.3, 1), top 0.2s ease-out',
+        width: '200px',
+        height: '260px',
       }}
       aria-hidden="true"
     >
-      {/* Small, Low-Overhead WebGL Canvas (220x280) */}
+      {/* Speech bubble: strictly ABOVE Bolt's head with downward tail, never over face or body */}
+      {!isPeekMode && leftGutter >= 240 && speechBubble && speechBubble.length <= 24 && (
+        <div
+          className="absolute -top-12 left-1/2 -translate-x-1/2 max-w-[170px] px-3 py-1.5 bg-white border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] font-mono text-[11px] font-bold text-[#0A0A0A] leading-tight z-40 pointer-events-none text-center whitespace-normal"
+        >
+          <span>{speechBubble}</span>
+          {/* Downward tail pointing to Bolt's antenna/head */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '6px solid transparent',
+              borderRight: '6px solid transparent',
+              borderTop: '6px solid #0A0A0A',
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              top: 'calc(100% - 2px)',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '4px solid transparent',
+              borderRight: '4px solid transparent',
+              borderTop: '4px solid #FFFFFF',
+            }}
+          />
+        </div>
+      )}
+
+      {/* Small, Low-Overhead WebGL Canvas (200x260) */}
       <div className="w-full h-full relative">
         <CanvasErrorBoundary fallback={null}>
           <Suspense fallback={null}>
             <Canvas
               className="pointer-events-none"
-              style={{ pointerEvents: 'none', width: '220px', height: '280px' }}
+              style={{ pointerEvents: 'none', width: '200px', height: '260px' }}
               dpr={[1, 1.5]}
               frameloop={canRender3D ? 'always' : 'never'}
               camera={{ position: [0, 0, 3.4], fov: 32 }}
@@ -169,7 +241,7 @@ export const FixedGutterBolt: React.FC = () => {
                   variant="bolt"
                   animation={currentAnim}
                   expression={currentExpr}
-                  scale={1.22}
+                  scale={1.20}
                   facing={1}
                   headTrackCursor={!isPeekMode && !prefersReducedMotion}
                 />
@@ -178,45 +250,6 @@ export const FixedGutterBolt: React.FC = () => {
           </Suspense>
         </CanvasErrorBoundary>
       </div>
-
-      {/* Speech bubble: strictly inside gutter beside Bolt's head when gutter >= 340px, never over content */}
-      {!isPeekMode && leftGutter >= 340 && speechBubble && speechBubble.length <= 24 && (
-        <div
-          className="absolute left-[175px] top-[30px] max-w-[150px] px-3 py-2 bg-white border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] font-mono text-[11px] font-bold text-[#0A0A0A] leading-tight z-40 pointer-events-none animate-in fade-in zoom-in-95 duration-200"
-          style={{
-            animationDuration: '200ms',
-          }}
-        >
-          <span>{speechBubble}</span>
-          {/* Arrow pointing to Bolt's head on the left */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '-7px',
-              transform: 'translateY(-50%)',
-              width: 0,
-              height: 0,
-              borderTop: '6px solid transparent',
-              borderBottom: '6px solid transparent',
-              borderRight: '7px solid #0A0A0A',
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '-4px',
-              transform: 'translateY(-50%)',
-              width: 0,
-              height: 0,
-              borderTop: '4px solid transparent',
-              borderBottom: '4px solid transparent',
-              borderRight: '5px solid #FFFFFF',
-            }}
-          />
-        </div>
-      )}
     </div>
   );
 };

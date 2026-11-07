@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { GraduationCap, Award, Code } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -30,7 +30,9 @@ const StatCounter: React.FC<{
     if (!isAvailable) return;
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion) {
+      return;
+    }
 
     let frameId: number;
     let startTime: number | null = null;
@@ -95,9 +97,7 @@ const StatCounter: React.FC<{
 };
 
 export const About: React.FC<{ profile?: GitHubProfile | null }> = ({ profile }) => {
-  const sectionRef = useRef<HTMLElement>(null);
   const headlineRef = useRef<HTMLDivElement>(null);
-  const cardsRef = useRef<HTMLDivElement>(null);
   const githubData = useGithubData();
   const { stats: codingStats } = useCodingStats();
 
@@ -107,55 +107,32 @@ export const About: React.FC<{ profile?: GitHubProfile | null }> = ({ profile })
   const leetcodeSolved = codingStats?.leetcode?.solved?.all ?? null;
   const computedProjectsCount = projectsData.length;
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
 
     const ctx = gsap.context(() => {
-      // Headline lines slide up
       const lines = headlineRef.current?.querySelectorAll('.reveal-line');
       if (lines && lines.length > 0) {
         gsap.fromTo(
           lines,
-          { y: 28, opacity: 0 },
+          { y: 20 },
           {
-            y: 0,
             opacity: 1,
-            duration: 0.7,
-            stagger: 0.15,
-            ease: 'power3.out',
-            immediateRender: false,
+            y: 0,
+            duration: 0.8,
+            stagger: 0.25,
+            ease: 'power2.out',
             scrollTrigger: {
               trigger: headlineRef.current,
-              start: 'top 85%',
-              once: true,
+              start: 'top 75%',
+              end: 'bottom 40%',
+              scrub: 1,
             },
           }
         );
       }
-
-      // Cards staggered rise
-      const cards = cardsRef.current?.querySelectorAll('.about-card');
-      if (cards && cards.length > 0) {
-        gsap.fromTo(
-          cards,
-          { y: 32, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.7,
-            stagger: 0.12,
-            ease: 'power2.out',
-            immediateRender: false,
-            scrollTrigger: {
-              trigger: cardsRef.current,
-              start: 'top 82%',
-              once: true,
-            },
-          }
-        );
-      }
-    }, sectionRef);
+    }, headlineRef);
 
     return () => ctx.revert();
   }, []);
@@ -167,62 +144,58 @@ export const About: React.FC<{ profile?: GitHubProfile | null }> = ({ profile })
   ];
 
   return (
-    <section 
-      ref={sectionRef}
-      id="about" 
-      className="py-20 sm:py-28 px-4 sm:px-6 lg:px-12 bg-transparent text-[#0A0A0A] relative z-10 scroll-mt-24"
-    >
-      <div className="max-w-7xl mx-auto flex flex-col gap-12 sm:gap-16">
+    <section id="about" className="w-full bg-white text-[#0A0A0A] relative z-10 border-b-2 border-[#0A0A0A]">
+      <div className="py-16 md:py-24 px-4 sm:px-6 max-w-6xl mx-auto">
         
-        {/* Section Heading Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-2 border-[#0A0A0A] pb-3 gap-2">
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 bg-[#0A0A0A] text-white font-mono text-xs font-bold tracking-wider uppercase">
-              02 // ABOUT
-            </span>
-          </div>
-          <span className="font-mono text-xs text-[#0047AB] font-bold uppercase tracking-wider">
+        {/* Section Tag */}
+        <div
+          data-robot-anchor="about:heading"
+          data-robot-offset-x="-50"
+          data-robot-offset-y="-20"
+          className="flex items-center gap-3 mb-8"
+        >
+          <span className="font-mono text-xs font-bold px-3 py-1 bg-[#0A0A0A] text-white border-2 border-[#0A0A0A]">
+            02 // ABOUT
+          </span>
+          <div className="h-0.5 flex-grow bg-[#0A0A0A]" />
+          <span className="font-mono text-xs font-bold text-[#0047AB]">
             BACKGROUND & EDUCATION
           </span>
         </div>
 
-        {/* Big Editorial Headline */}
-        <div ref={headlineRef} className="space-y-1 sm:space-y-2 overflow-hidden sm:pl-6 lg:pl-8">
+        {/* Pinned Scroll Headline Reveal */}
+        <div ref={headlineRef} className="mb-12 flex flex-col gap-1 sm:gap-2">
           {headlineLines.map((line, idx) => (
-            <div key={idx} className="overflow-hidden">
-              <h2 className="reveal-line font-display font-black text-3xl sm:text-5xl md:text-6xl uppercase tracking-tighter text-[#0A0A0A] leading-[1.02]">
-                {line}
-              </h2>
+            <div
+              key={idx}
+              className="reveal-line font-display font-black text-3xl sm:text-5xl md:text-6xl uppercase tracking-tight text-[#0A0A0A] leading-[1.08] transition-opacity"
+            >
+              {line}
             </div>
           ))}
         </div>
 
-        {/* Content Bento Grid */}
-        <div ref={cardsRef} className="grid grid-cols-12 gap-6 lg:gap-8 items-stretch">
+        {/* Main Grid */}
+        <div className="grid grid-cols-12 gap-6 sm:gap-8">
           
-          {/* Main Bio Card */}
-          <div
-            data-robot-anchor="about:bio"
-            data-robot-offset-x="-50"
-            data-robot-offset-y="-10"
-            className="about-card col-span-12 lg:col-span-7 bg-white border-2 border-[#0A0A0A] shadow-[6px_6px_0px_#0A0A0A] p-6 sm:p-8 flex flex-col justify-between gap-6"
-          >
-            <div className="space-y-4">
+          {/* Intro Biography Block */}
+          <div className="col-span-12 lg:col-span-7 bg-white border-2 border-[#0A0A0A] shadow-[6px_6px_0px_#0A0A0A] p-6 sm:p-8 flex flex-col justify-between gap-6">
+            <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-[#FF5A1F] border-2 border-[#0A0A0A] flex items-center justify-center font-mono font-bold text-black text-sm">
-                  &lt;&gt;
+                <div className="p-2.5 bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A]">
+                  <Code size={20} />
                 </div>
                 <div>
-                  <h3 className="font-display font-black text-lg uppercase tracking-tight text-[#0A0A0A]">
-                    SUNNY PASUMARTHI
-                  </h3>
-                  <span className="text-xs font-mono font-bold text-[#0047AB] uppercase">
+                  <h2 className="font-display font-extrabold text-xl uppercase tracking-tight text-[#0A0A0A]">
+                    Sunny Pasumarthi
+                  </h2>
+                  <span className="font-mono text-xs text-[#0047AB] font-bold">
                     B.Tech Computer Science (2023 – 2027)
                   </span>
                 </div>
               </div>
 
-              <p className="text-sm sm:text-base text-[#0A0A0A]/90 leading-relaxed font-sans pt-2">
+              <p className="text-base sm:text-lg text-[#0A0A0A]/90 leading-relaxed font-sans">
                 I am a Computer Science Engineering student at NBKR Institute of Science & Technology, Andhra Pradesh, India. I enjoy building responsive, fast frontend web applications with React, TypeScript, and Tailwind CSS.
               </p>
 
@@ -252,13 +225,13 @@ export const About: React.FC<{ profile?: GitHubProfile | null }> = ({ profile })
             data-robot-anchor="about:stats"
             data-robot-offset-x="-40"
             data-robot-offset-y="-25"
-            className="about-card col-span-12 lg:col-span-5 bg-[#EEF2FA] border-2 border-[#0A0A0A] shadow-[6px_6px_0px_#0A0A0A] p-6 sm:p-8 flex flex-col justify-between gap-6"
+            className="col-span-12 lg:col-span-5 bg-[#EEF2FA] border-2 border-[#0A0A0A] shadow-[6px_6px_0px_#0A0A0A] p-6 sm:p-8 flex flex-col justify-between gap-6"
           >
             <div className="border-b-2 border-[#0A0A0A] pb-3">
-              <h3 className="font-display font-extrabold text-base uppercase text-[#0A0A0A] flex items-center gap-2">
+              <h2 className="font-display font-extrabold text-base uppercase text-[#0A0A0A] flex items-center gap-2">
                 <Award size={18} className="text-[#0047AB]" />
                 KEY MILESTONES
-              </h3>
+              </h2>
             </div>
 
             {/* 2x2 Numeric Grid from Real Data */}
@@ -269,10 +242,11 @@ export const About: React.FC<{ profile?: GitHubProfile | null }> = ({ profile })
                 label="Contributions"
               />
 
-              {/* 2. Current Daily Streak (clean numeral without inside text) */}
+              {/* 2. Current Daily Streak (Days) */}
               <StatCounter
                 value={currentStreak}
-                label="Day streak"
+                suffix=" Days"
+                label="Current Streak"
               />
 
               {/* 3. LeetCode Problems Solved */}
@@ -300,7 +274,7 @@ export const About: React.FC<{ profile?: GitHubProfile | null }> = ({ profile })
           </div>
 
           {/* Education Block */}
-          <div className="about-card col-span-12 md:col-span-6 bg-white border-2 border-[#0A0A0A] shadow-[6px_6px_0px_#0A0A0A] p-6 sm:p-8 flex flex-col justify-between">
+          <div className="col-span-12 md:col-span-6 bg-white border-2 border-[#0A0A0A] shadow-[6px_6px_0px_#0A0A0A] p-6 sm:p-8 flex flex-col justify-between">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 bg-[#0047AB] text-white border-2 border-[#0A0A0A]">
@@ -329,7 +303,7 @@ export const About: React.FC<{ profile?: GitHubProfile | null }> = ({ profile })
           </div>
 
           {/* Core Focus Block */}
-          <div className="about-card col-span-12 md:col-span-6 bg-white border-2 border-[#0A0A0A] shadow-[6px_6px_0px_#0A0A0A] p-6 sm:p-8 flex flex-col justify-between">
+          <div className="col-span-12 md:col-span-6 bg-white border-2 border-[#0A0A0A] shadow-[6px_6px_0px_#0A0A0A] p-6 sm:p-8 flex flex-col justify-between">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 bg-[#FF5A1F] text-black border-2 border-[#0A0A0A]">
