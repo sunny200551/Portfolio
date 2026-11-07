@@ -82,7 +82,7 @@ export const RobotModel: React.FC<RobotModelProps> = ({
   const rightArmGroupRef = useRef<THREE.Group>(null);
   const [hasCollision, setHasCollision] = useState(false);
   const [hipDetachViolation, setHipDetachViolation] = useState<number | null>(null);
-  const [shadowJumpProps, setShadowJumpProps] = useState({ scale: 1.0, opacity: 0.88 });
+  const [shadowJumpProps, setShadowJumpProps] = useState({ scale: 1.0, opacity: 0.88, z: 0.02 });
 
   useFrame((state) => {
     // Skip uninitialized first few frames
@@ -91,12 +91,21 @@ export const RobotModel: React.FC<RobotModelProps> = ({
     const isDebug = typeof window !== 'undefined' &&
       (window.location.search.includes('robotDebug=1') || robotStore.getState().isDebug);
 
-    // Compute dynamic ground shadow scaling and fading with jump elevation
+    // Compute dynamic ground shadow scaling, fading, and foot following
     if (bodyRef.current) {
       const jumpElevation = Math.max(0, bodyRef.current.position.y - RIG.TORSO.Y);
-      const s = Math.max(0.42, 1.0 - jumpElevation * 1.5);
-      const op = Math.max(0.20, 0.88 - jumpElevation * 1.7);
-      setShadowJumpProps(prev => (Math.abs(prev.scale - s) > 0.02 ? { scale: s, opacity: op } : prev));
+      const s = Math.max(0.35, 1.0 - jumpElevation * 1.6);
+      const op = Math.max(0.15, 0.88 - jumpElevation * 1.8);
+      let feetZ = 0.02;
+      if (leftLegRef.current && rightLegRef.current) {
+        const swing = (Math.sin(leftLegRef.current.rotation.x) + Math.sin(rightLegRef.current.rotation.x)) * 0.5;
+        feetZ = swing * RIG.LEG.L * 0.35 + 0.02;
+      }
+      setShadowJumpProps(prev => (
+        Math.abs(prev.scale - s) > 0.02 || Math.abs(prev.opacity - op) > 0.02 || Math.abs(prev.z - feetZ) > 0.01
+          ? { scale: s, opacity: op, z: feetZ }
+          : prev
+      ));
     }
 
     // Part 4 Assertion: Check hip socket to leg joint distance <= 0.05 in ?robotDebug=1
@@ -181,7 +190,7 @@ export const RobotModel: React.FC<RobotModelProps> = ({
       scale={[finalScale, finalScale, finalScale]}
     >
       {/* Flat hard offset shadow on ground plate (neo-brutalist rounded rectangle, zero blur) */}
-      <RobotHardShadow width={0.52 * shadowJumpProps.scale} depth={0.32 * shadowJumpProps.scale} radius={0.06 * shadowJumpProps.scale} offset={[0.04, -0.04]} opacity={shadowJumpProps.opacity} />
+      <RobotHardShadow width={0.52 * shadowJumpProps.scale} depth={0.32 * shadowJumpProps.scale} radius={0.06 * shadowJumpProps.scale} offset={[0.04, shadowJumpProps.z - 0.04]} opacity={shadowJumpProps.opacity} />
 
       {/* Skateboard Accessory (attached at ground level under feet) */}
       {accessories?.skateboard && (

@@ -29,21 +29,10 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPal
   const [menuOpen, setMenuOpen] = useState(false);
   const [isScrolledPast80, setIsScrolledPast80] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(true);
-  const [activeLabelVisible, setActiveLabelVisible] = useState(false);
   const [hoveredSection, setHoveredSection] = useState<string | null>(null);
   const lastScrollY = useRef(0);
   const fillLineRef = useRef<HTMLDivElement>(null);
   const [isMac] = useState(() => typeof window !== 'undefined' && /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent || navigator.platform));
-
-  // Trigger 1.5s label visibility on activeSection change
-  useEffect(() => {
-    const showTimer = setTimeout(() => setActiveLabelVisible(true), 0);
-    const hideTimer = setTimeout(() => setActiveLabelVisible(false), 1500);
-    return () => {
-      clearTimeout(showTimer);
-      clearTimeout(hideTimer);
-    };
-  }, [activeSection]);
 
   // Reliable, high-performance scroll spy
   useEffect(() => {
@@ -253,19 +242,28 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPal
           {NAV_SECTIONS.map((sec) => {
             const isActive = activeSection === sec.id;
             const isHovered = hoveredSection === sec.id;
-            const showLabel = (isActive && activeLabelVisible) || isHovered;
 
             return (
               <div 
                 key={sec.id} 
                 className="relative flex items-center justify-end"
-                onMouseEnter={() => setHoveredSection(sec.id)}
-                onMouseLeave={() => setHoveredSection(null)}
+                onMouseEnter={() => {
+                  setHoveredSection(sec.id);
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('rail:hover', { detail: { hovered: true, section: sec.id } }));
+                  }
+                }}
+                onMouseLeave={() => {
+                  setHoveredSection(null);
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('rail:hover', { detail: { hovered: false, section: null } }));
+                  }
+                }}
               >
-                {/* Section Name Pill: visible only for 1.5s on active change OR while hovered */}
+                {/* Section Name Tooltip: visible ONLY while directly hovered or focused */}
                 <div
-                  className={`absolute right-10 px-2 py-1 font-mono text-[11px] font-bold uppercase whitespace-nowrap transition-all duration-200 pointer-events-none border-2 border-[#0A0A0A] ${
-                    showLabel
+                  className={`absolute right-9 px-2 py-0.5 font-mono text-[10px] font-bold uppercase whitespace-nowrap transition-all duration-150 pointer-events-none border border-[#0A0A0A] ${
+                    isHovered
                       ? 'opacity-100 translate-x-0'
                       : 'opacity-0 translate-x-2'
                   } ${
@@ -274,13 +272,15 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPal
                       : 'bg-white text-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A]'
                   }`}
                 >
-                  <span className="text-[#FF5A1F] mr-1.5">{sec.num}</span>
+                  <span className="text-[#FF5A1F] mr-1">{sec.num}</span>
                   {sec.label}
                 </div>
 
                 {/* Node Button: Compact square (28x28 <= 40px) */}
                 <button
                   onClick={() => scrollTo(sec.id)}
+                  onFocus={() => setHoveredSection(sec.id)}
+                  onBlur={() => setHoveredSection(null)}
                   aria-label={`Jump to section ${sec.num} ${sec.label}`}
                   className={`w-7 h-7 flex items-center justify-center font-mono text-[10px] font-bold border-2 border-[#0A0A0A] transition-all cursor-pointer ${
                     isActive

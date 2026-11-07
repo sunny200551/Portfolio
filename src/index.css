@@ -62,15 +62,15 @@ html.modal-open .fixed:not([role="dialog"]):not([role="dialog"] *) {
 
 @media (min-width: 1024px) {
   .lane-padded {
-    padding-left: calc(clamp(72px, 5.5vw, 112px) + 12px);
-    padding-right: calc(clamp(72px, 5.5vw, 112px) + 24px);
+    padding-left: calc(clamp(88px, 6.5vw, 124px) + 12px);
+    padding-right: calc(clamp(88px, 6.5vw, 124px) + 24px);
   }
 }
 
 @media (min-width: 1200px) {
   .lane-padded {
-    padding-left: calc(clamp(72px, 5.5vw, 112px) + 12px);
-    padding-right: calc(clamp(72px, 5.5vw, 112px) + 54px);
+    padding-left: calc(clamp(88px, 6.5vw, 124px) + 12px);
+    padding-right: calc(clamp(88px, 6.5vw, 124px) + 54px);
   }
 }
 

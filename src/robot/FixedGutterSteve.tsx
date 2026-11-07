@@ -43,6 +43,16 @@ export const FixedGutterSteve: React.FC = () => {
   const [isCrossing, setIsCrossing] = useState(false);
   const [idleWaveActive, setIdleWaveActive] = useState(false);
   const [greetBubble, setGreetBubble] = useState<string | null>(null);
+  const [isRailHovered, setIsRailHovered] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const custom = e as CustomEvent<{ hovered: boolean }>;
+      setIsRailHovered(custom.detail?.hovered || false);
+    };
+    window.addEventListener('rail:hover', handler);
+    return () => window.removeEventListener('rail:hover', handler);
+  }, []);
 
   const prevSideRef = useRef<'left' | 'right'>('right');
   const lastScrollTime = useRef(0);
@@ -336,13 +346,12 @@ export const FixedGutterSteve: React.FC = () => {
     const { w, h } = windowDimensions;
 
     if (isMobileOrTablet) {
-      // Mobile & tablet companion: 76x96px docked in bottom corner, alternating per section
-      const mScale = 0.62;
-      const cW = 76;
-      const cH = 96;
-      const mY = h - 110;
+      // 72px for mobile head-and-shoulders companion
+      const cW = 150;
+      const cH = 200;
+      const mY = h - 90;
       const isLeft = currentConfig.side === 'left';
-      const mX = isLeft ? 16 : w - cW - 16;
+      const mX = isLeft ? 10 : w - cW - 10;
 
       return {
         posX: mX,
@@ -350,26 +359,26 @@ export const FixedGutterSteve: React.FC = () => {
         facing: (isLeft ? 1 : -1) as (1 | -1),
         canvasW: cW,
         canvasH: cH,
-        robotScale: mScale,
+        robotScale: 1.0,
       };
     }
 
     // Desktop (>= 1024px):
-    // Standard canvas: 110px wide x 150px tall (holds ~102px tall robot without any clipping)
-    const cW = 110;
-    const cH = 150;
-    const rScale = 0.95;
+    // Standard canvas: 260px wide x 370px tall (holds ~132px tall robot with ample padding on every side)
+    const cW = 260;
+    const cH = 370;
+    const rScale = 1.0;
 
     // Center vertically at 50% viewport with slight subtle scroll drift (+/- 36px)
     const restingMiddleY = h * 0.5;
     const driftY = (scrollProgress - 0.5) * 72;
-    const clampedY = Math.max(cH / 2 + 24, Math.min(h - cH / 2 - 24, restingMiddleY + driftY));
+    const clampedY = Math.max(cH / 2 + 10, Math.min(h - cH / 2 - 10, restingMiddleY + driftY));
 
     // Shy mode override
     if (shyModeActive) {
       if (shyStep === 2 || shyStep === 6) {
         return {
-          posX: currentConfig.side === 'left' ? -80 : w - 30,
+          posX: currentConfig.side === 'left' ? -120 : w - 40,
           posY: clampedY,
           facing: (currentConfig.side === 'left' ? 1 : -1) as (1 | -1),
           canvasW: cW,
@@ -381,25 +390,34 @@ export const FixedGutterSteve: React.FC = () => {
 
     // Hero plinth handoff: STEVE starts on the hero platform floor anchor!
     if (activeSection === 'home' && heroPlinthMode && homePlatformPos.x > 0) {
+      // Scale responsively in hero: ~220-260px tall at 1920px wide
+      const heroScaleFactor = Math.min(1.85, Math.max(1.3, (w / 1920) * 1.85));
+      const heroCW = Math.round(cW * heroScaleFactor);
+      const heroCH = Math.round(cH * heroScaleFactor);
       return {
-        posX: Math.max(16, Math.min(w - cW - 16, homePlatformPos.x - cW / 2)),
-        posY: Math.max(cH / 2 + 10, homePlatformPos.y - cH / 2),
+        posX: Math.max(16, Math.min(w - heroCW - 16, homePlatformPos.x - heroCW / 2)),
+        posY: Math.max(heroCH / 2 + 10, homePlatformPos.y - heroCH / 2),
         facing: -1 as const,
-        canvasW: cW,
-        canvasH: cH,
-        robotScale: rScale * 1.05,
+        canvasW: heroCW,
+        canvasH: heroCH,
+        robotScale: rScale,
       };
     }
 
     // Reserved lanes positioning:
     // Left lane: STEVE sits comfortably inside left margin [16px, laneWidth]
-    // Right lane: STEVE sits inside right lane [w - 56px - cW, w - 56px] (safely away from rail at w-52px)
+    // Right lane: STEVE sits inside right lane, strictly >= 12px to the left of the rail's left edge (rail at w-52px -> targetX <= w-64-cW)
     const isRight = currentConfig.side === 'right';
     let targetX: number;
 
     if (isRight) {
       const hasRail = w >= 1200;
-      targetX = hasRail ? w - 58 - cW : w - 20 - cW;
+      if (hasRail) {
+        // If rail tooltip is hovered, step aside further smoothly
+        targetX = isRailHovered ? w - 146 - cW : w - 64 - cW;
+      } else {
+        targetX = w - 20 - cW;
+      }
     } else {
       targetX = 16;
     }
@@ -412,7 +430,7 @@ export const FixedGutterSteve: React.FC = () => {
       canvasH: cH,
       robotScale: rScale,
     };
-  }, [windowDimensions, isMobileOrTablet, currentConfig, scrollProgress, shyModeActive, shyStep]);
+  }, [windowDimensions, isMobileOrTablet, currentConfig, scrollProgress, shyModeActive, shyStep, isRailHovered]);
 
   // Compute live animation and expression
   const { liveAnim, liveExpr } = useMemo<{ liveAnim: RobotAnimation; liveExpr: RobotExpression }>(() => {
@@ -536,15 +554,22 @@ export const FixedGutterSteve: React.FC = () => {
       )}
 
       {/* R3F Canvas Container */}
-      <div className="w-full h-full relative">
+      <div className="w-full h-full relative border-none outline-none bg-transparent">
         <CanvasErrorBoundary fallback={null}>
           <Suspense fallback={null}>
             <Canvas
               className="pointer-events-none"
-              style={{ pointerEvents: 'none', width: `${canvasW}px`, height: `${canvasH}px` }}
+              style={{
+                pointerEvents: 'none',
+                width: `${canvasW}px`,
+                height: `${canvasH}px`,
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+              }}
               dpr={[1, 1.5]}
               frameloop={isTabVisible ? 'always' : 'never'}
-              camera={{ position: [0, 0, 3.2], fov: 32 }}
+              camera={{ position: [0, 0.28, 3.5], fov: 42 }}
               gl={{
                 alpha: true,
                 antialias: true,
@@ -555,7 +580,7 @@ export const FixedGutterSteve: React.FC = () => {
               <directionalLight position={[4, 7, 5]} intensity={1.5} color="#FFFFFF" />
               <directionalLight position={[-3, -2, -2]} intensity={0.4} color="#EEF2FA" />
 
-              <group position={[0, -0.16, 0]}>
+              <group position={[0, -0.44, 0]}>
                 <Robot
                   variant="steve"
                   animation={liveAnim}
@@ -568,9 +593,6 @@ export const FixedGutterSteve: React.FC = () => {
             </Canvas>
           </Suspense>
         </CanvasErrorBoundary>
-
-        {/* Soft neo-brutalist floor shadow pill under STEVE's feet */}
-        <div className="w-14 h-2.5 bg-[#0A0A0A]/20 rounded-full mx-auto -mt-2.5 blur-[1px] pointer-events-none" />
       </div>
     </div>
   );
