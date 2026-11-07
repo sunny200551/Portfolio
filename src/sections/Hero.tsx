@@ -5,6 +5,7 @@ import type { GitHubProfile } from '../hooks/useGitHubData';
 import { robotStore } from '../robot/robotStore';
 import { RobotDebugOverlay } from '../robot/RobotDebugOverlay';
 import { HeroSvgIllustration } from '../components/ui/HeroSvgIllustration';
+import { HeroBlueprintStudio } from '../components/ui/HeroBlueprintStudio';
 import { steveVoice } from '../robot/steveVoice';
 
 interface HeroProps {
@@ -30,6 +31,9 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
       id="home" 
       className="relative min-h-[90svh] flex items-center justify-center lane-padded pt-20 pb-12 sm:pt-24 sm:pb-16 z-10 bg-transparent text-[#0A0A0A] w-full overflow-visible"
     >
+      {/* Background Blueprint Studio (L1-L6 layers: grid, stage, annotations, stickers, cursor crosshair, scroll hint) */}
+      <HeroBlueprintStudio />
+
       <div className="w-full max-w-[2200px] mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-6 lg:gap-8 xl:gap-12 items-center">
         
         {/* Left Column: Clear, Protected Text & Identity Zone */}
