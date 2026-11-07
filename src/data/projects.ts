@@ -28,11 +28,10 @@ export const projectsData: ProjectCaseStudy[] = [
     oneLiner: 'Light-themed interactive portfolio built with React 19, TypeScript, Tailwind CSS v4, and Three.js.',
     role: 'Frontend Developer',
     timeline: '2025 - Present',
-    stack: ['React 19', 'TypeScript', 'Tailwind CSS v4', 'Three.js / R3F', 'GSAP', 'Lenis', 'Firebase'],
+    stack: ['React 19', 'TypeScript', 'Tailwind CSS v4', 'Three.js', 'GSAP', 'Lenis'],
     imagePath: null,
     isTodoScreenshot: true,
     links: {
-      live: 'https://sunnypasumarthi.in',
       github: 'https://github.com/sunny200551/Portfolio'
     },
     caseStudy: {

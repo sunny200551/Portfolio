@@ -1,5 +1,5 @@
 import { robotStore } from '../robot/robotStore';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { ExternalLink, ArrowRight, X, Code, CheckCircle2 } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -30,7 +30,7 @@ export const Projects: React.FC = () => {
   }, []);
 
   // Desktop horizontal pin scrub
-  useEffect(() => {
+  useLayoutEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion || isMobile) return;
 
@@ -68,7 +68,7 @@ export const Projects: React.FC = () => {
   }, [isMobile]);
 
   // Mobile reveal animations
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isMobile) return;
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
@@ -249,15 +249,23 @@ export const Projects: React.FC = () => {
                   </span>
 
                   <div className="flex items-center gap-3">
-                    {project.links.live && (
-                      <span className="text-[#0A0A0A] hover:text-[#FF5A1F] flex items-center gap-1">
-                        LIVE <ExternalLink size={11} />
+                    {project.id === 'portfolio' ? (
+                      <span className="px-2 py-0.5 bg-[#FF5A1F] text-black font-mono text-[10px] font-black border border-[#0A0A0A] shadow-[1px_1px_0px_#0A0A0A]">
+                        YOU'RE HERE! 👀
                       </span>
-                    )}
-                    {project.links.github && (
-                      <span className="text-[#0A0A0A] hover:text-[#FF5A1F]">
-                        GITHUB ↗
-                      </span>
+                    ) : (
+                      <>
+                        {project.links.live && (
+                          <span className="text-[#0A0A0A] hover:text-[#FF5A1F] flex items-center gap-1">
+                            LIVE <ExternalLink size={11} />
+                          </span>
+                        )}
+                        {project.links.github && (
+                          <span className="text-[#0A0A0A] hover:text-[#FF5A1F]">
+                            GITHUB ↗
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -382,16 +390,23 @@ export const Projects: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="pt-6 border-t-2 border-[#0A0A0A] flex flex-wrap gap-4 font-mono text-xs font-bold">
-                {selectedProject.links.live && (
-                  <a
-                    href={selectedProject.links.live}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-6 py-3 bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] hover:bg-black hover:text-white transition-colors"
-                  >
-                    <span>OPEN LIVE SITE</span>
-                    <ExternalLink size={14} />
-                  </a>
+                {selectedProject.id === 'portfolio' ? (
+                  <div className="flex items-center gap-2 px-5 py-3 bg-[#EEF2FA] text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A]">
+                    <span className="w-2.5 h-2.5 bg-[#FF5A1F] border border-[#0A0A0A]" />
+                    <span>YOU'RE CURRENTLY EXPLORING THIS PORTFOLIO SITE! 👀</span>
+                  </div>
+                ) : (
+                  selectedProject.links.live && (
+                    <a
+                      href={selectedProject.links.live}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-6 py-3 bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] hover:bg-black hover:text-white transition-colors"
+                    >
+                      <span>OPEN LIVE SITE</span>
+                      <ExternalLink size={14} />
+                    </a>
+                  )
                 )}
                 {selectedProject.links.github && (
                   <a

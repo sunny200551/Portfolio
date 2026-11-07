@@ -16,9 +16,7 @@ import { Contact } from './sections/Contact';
 import { Footer } from './sections/Footer';
 import { useGitHubData } from './hooks/useGitHubData';
 
-
 // Lazy-load persistent 3D canvas so text is instantly readable
-
 const TravelingBolt = lazy(() => import('./robot/TravelingBolt'));
 const RobotShowcase = lazy(() => import('./robot/RobotShowcase'));
 
@@ -27,9 +25,6 @@ function App() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const isRobotShowcase = typeof window !== 'undefined' && window.location.search.includes('robot-showcase');
   const [mountedAfterPaint, setMountedAfterPaint] = useState(false);
-
-  // Monitor roaming 3D pane overlap and dynamically adapt contrast
-
 
   useEffect(() => {
     // Mount mascot module after initial DOM paint to prioritize critical content
@@ -50,6 +45,7 @@ function App() {
     <SmoothScroll>
       {/* Flat Custom Cursor */}
       <CustomCursor />
+      
       {/* Persistent Traveling BOLT Mascot Canvas (deferred after first paint) */}
       {mountedAfterPaint && (
         <Suspense fallback={null}>
@@ -62,13 +58,11 @@ function App() {
         </Suspense>
       )}
 
-
-
-      {/* Non-Navbar Modern Navigation: SP Logo + Controls + Vertical Section Rail + Fullscreen Menu */}
+      {/* Modern Navigation: SP Logo + Controls + Vertical Section Rail + Fullscreen Menu */}
       <NavigationRail onOpenCommandPalette={() => setCommandPaletteOpen(true)} />
 
-      {/* Main Page Layout Shell (Light Base) */}
-      <main className="w-full bg-transparent text-[#0A0A0A] relative z-10">
+      {/* Main Page Layout Shell: Reserved 100px left lane for BOLT & 96px right lane for Rail on >= 1200px */}
+      <main className="w-full bg-transparent text-[#0A0A0A] relative z-10 xl:pl-[100px] xl:pr-[96px]">
         {/* 01. Hero Section (#home) */}
         <Hero onContactClick={handleContactScroll} profile={profile} />
 
@@ -81,7 +75,6 @@ function App() {
         {/* 03. Featured Work / Projects Gallery (#work) */}
         <Projects />
 
-        
         {/* 04. Technical Stack & Skills (#skills) */}
         <Skills />
 
@@ -98,13 +91,13 @@ function App() {
         <Journey />
 
         {/* 09. Contact Form (#contact) */}
-        <Contact profile={profile} />
+        <Contact />
 
-        {/* Minimal Solid Navy Footer */}
-        <Footer profile={profile} />
+        {/* 10. Footer (#footer) */}
+        <Footer />
       </main>
 
-      {/* Accessible Command Palette (Ctrl+K) */}
+      {/* Keyboard Shortcut Command Palette (Ctrl+K / Cmd+K) */}
       <CommandPalette
         isOpen={commandPaletteOpen}
         onOpen={() => setCommandPaletteOpen(true)}

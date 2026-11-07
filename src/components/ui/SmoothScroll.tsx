@@ -1,6 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import Lenis from 'lenis';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { setGlobalLenis } from '../../lib/lenis';
+
+gsap.registerPlugin(ScrollTrigger);
 
 interface SmoothScrollProps {
   children: React.ReactNode;
@@ -26,15 +30,24 @@ export const SmoothScroll: React.FC<SmoothScrollProps> = ({ children }) => {
     lenisRef.current = lenis;
     setGlobalLenis(lenis);
 
-    function raf(time: number) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
+    // Synchronize Lenis with GSAP ScrollTrigger
+    lenis.on('scroll', ScrollTrigger.update);
 
-    const animFrame = requestAnimationFrame(raf);
+    const ticker = (time: number) => {
+      lenis.raf(time * 1000);
+    };
+
+    gsap.ticker.add(ticker);
+    gsap.ticker.lagSmoothing(0);
+
+    // Refresh ScrollTrigger once DOM and fonts are ready
+    const refreshTimer = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 150);
 
     return () => {
-      cancelAnimationFrame(animFrame);
+      clearTimeout(refreshTimer);
+      gsap.ticker.remove(ticker);
       lenis.destroy();
       lenisRef.current = null;
       setGlobalLenis(null);

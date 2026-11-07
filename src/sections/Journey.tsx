@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { Terminal, Globe, Code, Shield } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -57,7 +57,7 @@ export const Journey: React.FC = () => {
   const nodesRef = useRef<(HTMLDivElement | null)[]>([]);
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) {
       if (lineRef.current) lineRef.current.style.transform = 'scaleY(1)';
@@ -144,9 +144,11 @@ export const Journey: React.FC = () => {
             x: 0,
             duration: 0.6,
             ease: 'power3.out',
+            immediateRender: false,
             scrollTrigger: {
               trigger: card,
-              start: 'top 85%'
+              start: 'top 85%',
+              once: true
             }
           }
         );

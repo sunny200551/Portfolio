@@ -191,7 +191,8 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
       : 0;
 
     // Continuous vertical target: near top at page top, smoothly traveling down to near bottom
-    const continuousY = 110 + scrollP * (windowH - 220);
+    const continuousY = windowH * 0.5;
+    void scrollP;
 
     // 2. Safe Gutters Calculation (outside central content container)
     // Central container is max-w-6xl (1152px) or max-w-7xl (1280px)
@@ -200,7 +201,7 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
     const rightMargin = leftMargin;
 
     // Safe Left Gutter X (clear of content, clear of left edge)
-    const safeLeftX = Math.max(38, Math.min(leftMargin * 0.45, 120));
+    const safeLeftX = windowW >= 1200 ? 50 : Math.max(38, Math.min(leftMargin * 0.45, 120));
 
     // Safe Right Gutter X (clear of content, safely left of the numbered rail at windowW - 75)
     const safeRightX = windowW - Math.max(88, Math.min(rightMargin * 0.5, 140));
@@ -222,9 +223,7 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
     if (activeSection === 'home') {
       nextSide = 'left';
     } else if (activeSection === 'work') {
-      nextSide = 'header'; // Park in empty strip beside header
-    } else if (activeSection === 'skills' && hoveredSlab) {
-      nextSide = 'center'; // Allowed exception: visits hovered slab
+      nextSide = 'left';
     } else if (activeSection === 'journey') {
       nextSide = 'center'; // Allowed exception: walks down timeline center gap
     } else {
@@ -275,27 +274,8 @@ const BoltTravelingMesh: React.FC<BoltInnerProps> = ({ isMobile, prefersReducedM
         targetY = windowH * 0.45;
       }
     } else if (activeSection === 'work') {
-      // FULL-WIDTH HORIZONTAL GALLERY: Park in empty header strip beside heading (max 100px tall)
-      const workEl = document.getElementById('work');
-      if (workEl) {
-        const top = workEl.offsetTop - (window.scrollY || 0);
-        targetX = Math.max(safeLeftX, leftMargin + 60);
-        targetY = Math.max(80, Math.min(top + 70, windowH - 120));
-      } else {
-        targetX = safeLeftX;
-        targetY = 90;
-      }
-    } else if (activeSection === 'skills' && hoveredSlab) {
-      // SKILLS INTERACTION: Allowed exception (Part 6) - walks to hovered slab in skills grid
-      const slabEl = document.querySelector(`[data-robot-react="skills:tile"]:nth-child(${hoveredSlab.index})`) as HTMLElement | null;
-      if (slabEl) {
-        const top = slabEl.offsetTop - (window.scrollY || 0);
-        targetX = slabEl.offsetLeft + slabEl.offsetWidth * 0.5;
-        targetY = top + slabEl.offsetHeight * 0.5 - 32;
-      } else {
-        targetX = safeRightX;
-        targetY = continuousY;
-      }
+      targetX = safeLeftX;
+      targetY = continuousY;
     } else if (activeSection === 'journey') {
       // JOURNEY TIMELINE: Allowed exception - walks down vertical timeline line (~70px wide gap)
       const journeyEl = document.getElementById('journey');
@@ -752,8 +732,8 @@ export const TravelingBolt: React.FC = () => {
         <div
           style={{
             position: 'fixed',
-            left: `${boltPos.x}px`,
-            top: `${boltPos.y - (isMobile ? 55 : 75)}px`,
+            left: `${Math.max(180, Math.min(boltPos.x, (typeof window !== 'undefined' ? window.innerWidth : 1200) - 180))}px`,
+            top: `${boltPos.y - (isMobile ? 95 : 135)}px`,
             transform: 'translate(-50%, -100%)',
             pointerEvents: 'none',
             zIndex: 40,

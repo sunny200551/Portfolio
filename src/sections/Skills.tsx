@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef, useTransition } from 'react';
+import React, { useState, useLayoutEffect, useRef } from 'react';
+import { Layers, Server, Code2, Database, Cpu, Wrench } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   skillsData,
   SKILL_CATEGORIES,
-  type PeriodicSkill,
   type SkillCategory,
   type SkillTier,
 } from '../data/skills';
@@ -12,238 +12,120 @@ import { robotStore } from '../robot/robotStore';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Tier badge icon helper
-const TierMarker: React.FC<{ tier: SkillTier; className?: string }> = ({ tier, className = '' }) => {
+// Tier marker icon helper
+const TierBadge: React.FC<{ tier: SkillTier }> = ({ tier }) => {
   if (tier === 'Daily') {
     return (
-      <span
-        title="Daily"
-        className={`inline-block w-2.5 h-2.5 bg-current border border-current shrink-0 ${className}`}
-      />
+      <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-[#FF5A1F]">
+        <span className="w-2 h-2 bg-[#FF5A1F] border border-[#0A0A0A]" />
+        <span>DAILY</span>
+      </span>
     );
   }
   if (tier === 'Comfortable') {
     return (
-      <span
-        title="Comfortable"
-        className={`inline-flex w-2.5 h-2.5 border border-current overflow-hidden shrink-0 ${className}`}
-      >
-        <span className="w-1/2 h-full bg-current" />
-        <span className="w-1/2 h-full bg-transparent" />
+      <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-[#0047AB]">
+        <span className="w-2 h-2 bg-[#0047AB] border border-[#0A0A0A]" />
+        <span>COMFORTABLE</span>
       </span>
     );
   }
   return (
-    <span
-      title="Learning"
-      className={`inline-block w-2.5 h-2.5 border-2 border-current bg-transparent shrink-0 ${className}`}
-    />
+    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-[#0A0A0A]/70">
+      <span className="w-2 h-2 border-2 border-[#0A0A0A] bg-transparent" />
+      <span>LEARNING</span>
+    </span>
   );
 };
 
-// Periodic category style configurations
-const getCategoryStyles = (category: SkillCategory, isDimmed: boolean) => {
-  if (isDimmed) {
-    return 'bg-[#EEF2FA] text-[#0A0A0A]/35 border-2 border-[#0A0A0A]/20 shadow-none pointer-events-none';
+// Category config with neo-brutalist themes
+const CATEGORY_META: Record<
+  SkillCategory,
+  {
+    icon: React.ElementType;
+    headerBg: string;
+    headerText: string;
+    badgeBg: string;
+    badgeText: string;
+    description: string;
   }
-
-  switch (category) {
-    case 'Frontend':
-      return 'bg-[#0047AB] text-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A]';
-    case 'Backend':
-      return 'bg-[#0A1A3F] text-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A]';
-    case 'Languages':
-      return 'bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A]';
-    case 'Database':
-      return 'bg-white text-[#0A0A0A] border-2 border-[#0047AB] shadow-[4px_4px_0px_#0A0A0A]';
-    case 'Blockchain':
-      return 'bg-[#0A0A0A] text-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A]';
-    case 'Tools':
-      return 'bg-white text-[#0047AB] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A]';
-    default:
-      return 'bg-white text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A]';
-  }
-};
-
-interface TileProps {
-  skill: PeriodicSkill;
-  isDimmed: boolean;
-  isFlipped: boolean;
-  onFlip: (id: string) => void;
-}
-
-const PeriodicTile: React.FC<TileProps> = ({ skill, isDimmed, isFlipped, onFlip }) => {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const innerRef = useRef<HTMLDivElement>(null);
-  const hoverDwellTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Smooth DOM transform on mousemove without React re-renders
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (isDimmed || isFlipped || !innerRef.current) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    // Max 8 degrees tilt following pointer
-    const rotateX = Math.max(-8, Math.min(8, ((y - centerY) / centerY) * -8));
-    const rotateY = Math.max(-8, Math.min(8, ((x - centerX) / centerX) * 8));
-    innerRef.current.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
-  };
-
-  // 120ms hover dwell before committing target
-  const handleMouseEnter = () => {
-    if (isDimmed) return;
-    if (hoverDwellTimer.current) clearTimeout(hoverDwellTimer.current);
-    hoverDwellTimer.current = setTimeout(() => {
-      robotStore.setHoveredSlab({ index: skill.index, name: skill.name });
-    }, 120);
-  };
-
-  // 400ms leave delay before returning to gutter
-  const handleMouseLeave = () => {
-    if (hoverDwellTimer.current) {
-      clearTimeout(hoverDwellTimer.current);
-      hoverDwellTimer.current = null;
-    }
-    if (innerRef.current && !isFlipped) {
-      innerRef.current.style.transform = 'rotateX(0deg) rotateY(0deg) translateY(0px)';
-    }
-    setTimeout(() => {
-      if (robotStore.getState().hoveredSlab?.index === skill.index) {
-        robotStore.setHoveredSlab(null);
-      }
-    }, 400);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onFlip(skill.id);
-    }
-  };
-
-  const categoryStyle = getCategoryStyles(skill.category, isDimmed);
-  const formattedIndex = String(skill.index).padStart(2, '0');
-
-  return (
-    <div
-      ref={cardRef}
-      tabIndex={isDimmed ? -1 : 0}
-      role="button"
-      onClick={() => !isDimmed && onFlip(skill.id)}
-      onKeyDown={handleKeyDown}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      data-robot-react="skills:tile"
-      className="periodic-tile relative aspect-square select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A1F]"
-      style={{
-        perspective: '800px',
-      }}
-    >
-      <div
-        ref={innerRef}
-        className="w-full h-full relative transition-transform duration-200"
-        style={{
-          transformStyle: 'preserve-3d',
-          transform: isFlipped ? 'rotateY(180deg)' : 'rotateX(0deg) rotateY(0deg) translateY(0px)',
-        }}
-      >
-        {/* FRONT FACE */}
-        <div
-          className={`absolute inset-0 w-full h-full p-2.5 sm:p-3 flex flex-col justify-between transition-colors ${categoryStyle}`}
-          style={{
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-          }}
-        >
-          {/* Top Row: Index + Tier Marker */}
-          <div className="flex items-center justify-between w-full">
-            <span className="font-mono text-[10px] sm:text-xs font-bold opacity-80">
-              {formattedIndex}
-            </span>
-            <TierMarker tier={skill.tier} />
-          </div>
-
-          {/* Center: Big 2-3 letter symbol */}
-          <div className="flex flex-col items-center justify-center my-auto">
-            <span className="font-display font-black text-2xl sm:text-3xl md:text-4xl tracking-tighter leading-none">
-              {skill.symbol}
-            </span>
-          </div>
-
-          {/* Bottom: Full Name */}
-          <div className="w-full text-center">
-            <span className="font-mono font-bold text-[10px] sm:text-[11px] truncate block w-full leading-tight">
-              {skill.name}
-            </span>
-          </div>
-        </div>
-
-        {/* BACK FACE (Revealed on Flip) */}
-        <div
-          className="absolute inset-0 w-full h-full p-3 bg-white text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] flex flex-col justify-between text-left"
-          style={{
-            transform: 'rotateY(180deg)',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-          }}
-        >
-          <div className="flex items-center justify-between border-b border-[#0A0A0A]/20 pb-1">
-            <span className="font-mono text-[9px] font-black uppercase text-[#0047AB]">
-              {skill.category}
-            </span>
-            <span className="font-mono text-[9px] font-bold px-1.5 py-0.2 bg-[#FF5A1F] text-black border border-[#0A0A0A]">
-              {skill.tier}
-            </span>
-          </div>
-
-          <p className="font-mono text-[10px] sm:text-[11px] leading-tight text-[#0A0A0A] line-clamp-4 my-auto">
-            {skill.note}
-          </p>
-
-          <div className="text-[9px] font-mono text-[#0A0A0A]/60 flex items-center justify-between">
-            <span>#{formattedIndex}</span>
-            <span className="font-bold underline text-[#0047AB]">FLIP ↩</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+> = {
+  Frontend: {
+    icon: Layers,
+    headerBg: 'bg-[#0047AB]',
+    headerText: 'text-white',
+    badgeBg: 'bg-[#FF5A1F]',
+    badgeText: 'text-black',
+    description: 'Component architecture, responsive layouts, and performance.',
+  },
+  Backend: {
+    icon: Server,
+    headerBg: 'bg-[#0A1A3F]',
+    headerText: 'text-white',
+    badgeBg: 'bg-[#EEF2FA]',
+    badgeText: 'text-[#0A0A0A]',
+    description: 'RESTful endpoints, server-side logic, and microservices.',
+  },
+  Languages: {
+    icon: Code2,
+    headerBg: 'bg-[#FF5A1F]',
+    headerText: 'text-black',
+    badgeBg: 'bg-[#0A0A0A]',
+    badgeText: 'text-white',
+    description: 'Core syntax, type systems, and algorithmic problem-solving.',
+  },
+  Database: {
+    icon: Database,
+    headerBg: 'bg-white',
+    headerText: 'text-[#0A0A0A]',
+    badgeBg: 'bg-[#0047AB]',
+    badgeText: 'text-white',
+    description: 'Data models, schema design, and query optimization.',
+  },
+  Blockchain: {
+    icon: Cpu,
+    headerBg: 'bg-[#0A0A0A]',
+    headerText: 'text-white',
+    badgeBg: 'bg-[#FF5A1F]',
+    badgeText: 'text-black',
+    description: 'Smart contracts, web3 providers, and decentralized protocols.',
+  },
+  Tools: {
+    icon: Wrench,
+    headerBg: 'bg-[#EEF2FA]',
+    headerText: 'text-[#0A0A0A]',
+    badgeBg: 'bg-[#0A1A3F]',
+    badgeText: 'text-white',
+    description: 'Developer tooling, version control, and rapid build pipelines.',
+  },
 };
 
 export const Skills: React.FC = () => {
-  const [activeCategory, setActiveCategory] = useState<string>('ALL');
-  const [viewMode, setViewMode] = useState<'TABLE' | 'LIST'>('TABLE');
-  const [flippedMap, setFlippedMap] = useState<Record<string, boolean>>({});
-  const [, startTransition] = useTransition();
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const sectionRef = useRef<HTMLElement>(null);
-  const gridContainerRef = useRef<HTMLDivElement>(null);
+  const cardsContainerRef = useRef<HTMLDivElement>(null);
 
-  // Staggered pop-in wave on scroll
-  useEffect(() => {
+  // Scroll reveal with useLayoutEffect
+  useLayoutEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion || !sectionRef.current) return;
+    if (prefersReducedMotion) return;
 
     const ctx = gsap.context(() => {
-      const tiles = sectionRef.current?.querySelectorAll('.periodic-tile');
-      if (tiles && tiles.length > 0) {
+      const cards = cardsContainerRef.current?.querySelectorAll('.arsenal-category-card');
+      if (cards && cards.length > 0) {
         gsap.fromTo(
-          tiles,
-          { scale: 0.9, y: 16 },
+          cards,
+          { y: 32, opacity: 0 },
           {
-            scale: 1,
             y: 0,
-            duration: 0.4,
-            stagger: {
-              each: 0.02,
-              from: 'start',
-            },
-            ease: 'back.out(1.5)',
+            opacity: 1,
+            duration: 0.7,
+            stagger: 0.12,
+            ease: 'power2.out',
+            immediateRender: false,
             scrollTrigger: {
-              trigger: sectionRef.current,
-              start: 'top 75%',
+              trigger: cardsContainerRef.current,
+              start: 'top 82%',
               once: true,
             },
           }
@@ -252,80 +134,66 @@ export const Skills: React.FC = () => {
     }, sectionRef);
 
     return () => ctx.revert();
-  }, [viewMode]);
+  }, [selectedCategory]);
 
-  const handleFilterClick = (cat: string) => {
-    startTransition(() => {
-      setActiveCategory(cat);
-    });
-  };
-
-  const handleTileFlip = (id: string) => {
-    setFlippedMap((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
+  const filteredCategories =
+    selectedCategory === 'ALL'
+      ? SKILL_CATEGORIES
+      : SKILL_CATEGORIES.filter((cat) => cat === selectedCategory);
 
   return (
     <section
-      id="skills"
       ref={sectionRef}
-      className="w-full bg-white text-[#0A0A0A] relative z-10 border-b-2 border-[#0A0A0A] scroll-mt-24 sm:scroll-mt-28"
+      id="skills"
+      className="py-20 sm:py-28 px-4 sm:px-6 lg:px-12 bg-transparent text-[#0A0A0A] relative z-10 scroll-mt-24"
     >
-      <div className="pt-20 pb-16 md:pt-28 md:pb-24 px-4 sm:px-6 max-w-6xl mx-auto">
-        
-        {/* Section Header 04 // SKILLS */}
-        <div className="flex items-center gap-3 mb-4">
-          <span
-            data-robot-anchor="skills:tag"
-            data-robot-offset-x="-50"
-            data-robot-offset-y="-20"
-            className="font-mono text-xs font-bold px-3 py-1 bg-[#0A0A0A] text-white border-2 border-[#0A0A0A]"
-          >
-            04 // SKILLS
-          </span>
-          <div className="h-0.5 flex-grow bg-[#0A0A0A]" />
-          <span className="hidden sm:inline-block font-mono text-xs font-bold text-[#0047AB]">
-            PERIODIC SKILL TABLE
+      <div className="max-w-7xl mx-auto flex flex-col gap-10 sm:gap-14">
+        {/* Section Top Header Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-2 border-[#0A0A0A] pb-3 gap-2">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 bg-[#0A0A0A] text-white font-mono text-xs font-bold tracking-wider uppercase">
+              04 // ARSENAL
+            </span>
+          </div>
+          <span className="font-mono text-xs text-[#0047AB] font-bold uppercase tracking-wider">
+            TECHNICAL EXPERTISE & STACK
           </span>
         </div>
 
-        <div className="mb-8">
-          <h2 className="font-display font-black text-4xl sm:text-6xl uppercase tracking-tight text-[#0A0A0A] leading-none">
-            SKILL TABLE
+        {/* Section Title & Description */}
+        <div className="space-y-3 sm:pl-6 lg:pl-8">
+          <h2 className="font-display font-black text-4xl sm:text-6xl uppercase tracking-tighter text-[#0A0A0A] leading-none">
+            TECH ARSENAL & SKILLS
           </h2>
-          <p className="font-mono text-xs sm:text-sm text-[#0A0A0A]/70 mt-2 max-w-2xl font-bold">
-            Technologies and tools I work with.
+          <p className="font-mono text-xs sm:text-sm text-[#0A0A0A]/80 max-w-2xl leading-relaxed">
+            A comprehensive breakdown of frameworks, programming languages, databases, and development tools I use to build scalable web experiences.
           </p>
         </div>
 
-        {/* Controls Row (Filters, Table/List Toggle, Tier Legend) */}
-        <div className="mb-8 p-3 sm:p-4 bg-[#EEF2FA] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-          
-          {/* Left: Filter Chips */}
+        {/* Category Filter Pills & Tier Legend */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A]">
+          {/* Filter Pills */}
           <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={() => handleFilterClick('ALL')}
-              className={`px-3 py-1.5 font-mono text-xs font-bold border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] cursor-pointer transition-all ${
-                activeCategory === 'ALL'
-                  ? 'bg-[#FF5A1F] text-black translate-x-0.5 translate-y-0.5 shadow-none'
+              onClick={() => setSelectedCategory('ALL')}
+              className={`px-3 py-1.5 font-mono text-xs font-bold uppercase border-2 border-[#0A0A0A] transition-all cursor-pointer ${
+                selectedCategory === 'ALL'
+                  ? 'bg-[#FF5A1F] text-black shadow-[2px_2px_0px_#0A0A0A]'
                   : 'bg-white text-[#0A0A0A] hover:bg-[#EEF2FA]'
               }`}
             >
               ALL ({skillsData.length})
             </button>
-
             {SKILL_CATEGORIES.map((cat) => {
               const count = skillsData.filter((s) => s.category === cat).length;
-              const isActive = activeCategory === cat;
+              const isActive = selectedCategory === cat;
               return (
                 <button
                   key={cat}
-                  onClick={() => handleFilterClick(cat)}
-                  className={`px-2.5 py-1.5 font-mono text-xs font-bold border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] cursor-pointer transition-all ${
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1.5 font-mono text-xs font-bold uppercase border-2 border-[#0A0A0A] transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-[#0047AB] text-white translate-x-0.5 translate-y-0.5 shadow-none'
+                      ? 'bg-[#FF5A1F] text-black shadow-[2px_2px_0px_#0A0A0A]'
                       : 'bg-white text-[#0A0A0A] hover:bg-[#EEF2FA]'
                   }`}
                 >
@@ -335,123 +203,101 @@ export const Skills: React.FC = () => {
             })}
           </div>
 
-          {/* Right: Legend & TABLE | LIST Toggle */}
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6 self-stretch lg:self-auto justify-between lg:justify-end border-t lg:border-t-0 pt-2 lg:pt-0 border-[#0A0A0A]/10">
-            {/* Tier Markers Legend */}
-            <div className="flex items-center gap-3 font-mono text-[11px] font-bold text-[#0A0A0A]/80">
-              <span className="flex items-center gap-1.5">
-                <TierMarker tier="Daily" className="text-[#0A0A0A]" />
-                <span>Daily</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <TierMarker tier="Comfortable" className="text-[#0A0A0A]" />
-                <span>Comfortable</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <TierMarker tier="Learning" className="text-[#0A0A0A]" />
-                <span>Learning</span>
-              </span>
-            </div>
-
-            {/* TABLE | LIST Segmented Toggle */}
-            <div className="flex items-center border-2 border-[#0A0A0A] bg-white shadow-[2px_2px_0px_#0A0A0A] font-mono text-xs font-bold shrink-0">
-              <button
-                onClick={() => setViewMode('TABLE')}
-                aria-label="Table View"
-                className={`px-3 py-1 cursor-pointer transition-colors ${
-                  viewMode === 'TABLE'
-                    ? 'bg-[#0A0A0A] text-white'
-                    : 'text-[#0A0A0A] hover:bg-[#EEF2FA]'
-                }`}
-              >
-                TABLE
-              </button>
-              <div className="w-0.5 h-4 bg-[#0A0A0A]" />
-              <button
-                onClick={() => setViewMode('LIST')}
-                aria-label="List View"
-                className={`px-3 py-1 cursor-pointer transition-colors ${
-                  viewMode === 'LIST'
-                    ? 'bg-[#0A0A0A] text-white'
-                    : 'text-[#0A0A0A] hover:bg-[#EEF2FA]'
-                }`}
-              >
-                LIST
-              </button>
-            </div>
+          {/* Tier Legend */}
+          <div className="flex items-center gap-4 text-xs font-mono font-bold text-[#0A0A0A]/80 shrink-0 border-t lg:border-t-0 pt-3 lg:pt-0 border-[#0A0A0A]/10">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 bg-[#FF5A1F] border border-[#0A0A0A]" />
+              <span>Daily</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 bg-[#0047AB] border border-[#0A0A0A]" />
+              <span>Comfortable</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 border-2 border-[#0A0A0A]" />
+              <span>Learning</span>
+            </span>
           </div>
-
         </div>
 
-        {/* Content Views */}
-        {viewMode === 'TABLE' ? (
-          /* TABLE VIEW: Responsive Square Periodic Tiles Grid */
-          <div
-            ref={gridContainerRef}
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4"
-          >
-            {skillsData.map((skill) => {
-              const isDimmed = activeCategory !== 'ALL' && skill.category !== activeCategory;
-              const isFlipped = Boolean(flippedMap[skill.id]);
+        {/* Categorized Bento Grid */}
+        <div
+          ref={cardsContainerRef}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-start"
+        >
+          {filteredCategories.map((category) => {
+            const meta = CATEGORY_META[category];
+            const Icon = meta.icon;
+            const categorySkills = skillsData.filter((s) => s.category === category);
 
-              return (
-                <PeriodicTile
-                  key={skill.id}
-                  skill={skill}
-                  isDimmed={isDimmed}
-                  isFlipped={isFlipped}
-                  onFlip={handleTileFlip}
-                />
-              );
-            })}
-          </div>
-        ) : (
-          /* LIST VIEW: Compact Two-Column List Grouped by Category */
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {SKILL_CATEGORIES.filter(
-              (cat) => activeCategory === 'ALL' || cat === activeCategory
-            ).map((cat) => {
-              const catSkills = skillsData.filter((s) => s.category === cat);
-              return (
+            return (
+              <div
+                key={category}
+                className="arsenal-category-card bg-white border-2 border-[#0A0A0A] shadow-[6px_6px_0px_#0A0A0A] flex flex-col overflow-hidden transition-all hover:-translate-y-1 hover:shadow-[8px_8px_0px_#0A0A0A]"
+              >
+                {/* Card Category Header */}
                 <div
-                  key={cat}
-                  className="bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] p-5 flex flex-col gap-4"
+                  className={`px-5 py-4 border-b-2 border-[#0A0A0A] flex items-center justify-between ${meta.headerBg} ${meta.headerText}`}
                 >
-                  <div className="flex items-center justify-between border-b-2 border-[#0A0A0A] pb-2">
-                    <h3 className="font-display font-black text-lg uppercase text-[#0A0A0A]">
-                      {cat}
-                    </h3>
-                    <span className="font-mono text-xs font-bold px-2 py-0.5 bg-[#EEF2FA] border border-[#0A0A0A]">
-                      {catSkills.length} SKILLS
-                    </span>
+                  <div className="flex items-center gap-3">
+                    <div className="p-1.5 bg-white text-[#0A0A0A] border-2 border-[#0A0A0A]">
+                      <Icon size={18} />
+                    </div>
+                    <div>
+                      <h3 className="font-display font-black text-lg uppercase tracking-tight leading-none">
+                        {category}
+                      </h3>
+                      <span className="font-mono text-[10px] uppercase font-bold opacity-80">
+                        {categorySkills.length} Technologies
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col gap-2 font-mono text-xs">
-                    {catSkills.map((s) => (
-                      <div
-                        key={s.id}
-                        className="p-2.5 bg-[#EEF2FA] border border-[#0A0A0A] flex items-center justify-between gap-3 hover:bg-[#FF5A1F] hover:text-black transition-colors"
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="font-black text-[#0047AB] w-6 shrink-0">
-                            {s.symbol}
-                          </span>
-                          <span className="font-bold truncate">{s.name}</span>
-                          
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <TierMarker tier={s.tier} />
-                          <span className="text-[11px] font-bold">{s.tier}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <span
+                    className={`px-2 py-0.5 font-mono text-[11px] font-bold border border-[#0A0A0A] ${meta.badgeBg} ${meta.badgeText}`}
+                  >
+                    0{SKILL_CATEGORIES.indexOf(category) + 1}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-        )}
 
+                {/* Card Description */}
+                <div className="px-5 py-3 bg-[#EEF2FA] border-b border-[#0A0A0A]/10 font-mono text-xs text-[#0A0A0A]/75">
+                  {meta.description}
+                </div>
+
+                {/* Skill Items List */}
+                <div className="p-4 sm:p-5 flex flex-col gap-3 divide-y divide-[#0A0A0A]/10">
+                  {categorySkills.map((skill) => (
+                    <div
+                      key={skill.id}
+                      className="pt-3 first:pt-0 group flex flex-col gap-1.5 cursor-default transition-all"
+                      onMouseEnter={() => {
+                        // Cheer in place from edge gutter, never jumping to card
+                        robotStore.setBolt('cheer', 'happy');
+                      }}
+                      onMouseLeave={() => {
+                        robotStore.setBolt('idle', 'focused');
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-display font-bold text-sm uppercase text-[#0A0A0A] group-hover:text-[#0047AB] transition-colors">
+                            {skill.name}
+                          </span>
+                        </div>
+                        <TierBadge tier={skill.tier} />
+                      </div>
+
+                      <p className="font-mono text-[11px] text-[#0A0A0A]/70 leading-relaxed">
+                        {skill.note}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

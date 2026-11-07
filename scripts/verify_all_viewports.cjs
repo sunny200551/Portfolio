@@ -65,3 +65,4 @@ const VIEWPORTS = [
   await browser.close();
   console.log('All viewport verifications completed successfully!');
 })();
+

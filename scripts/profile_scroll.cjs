@@ -73,3 +73,4 @@ const { chromium } = require('playwright-core');
 
   await browser.close();
 })();
+

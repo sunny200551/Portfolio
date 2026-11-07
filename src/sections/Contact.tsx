@@ -1,5 +1,5 @@
 import type { GitHubProfile } from '../hooks/useGitHubData';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useLayoutEffect, useRef } from 'react';
 import { ArrowUpRight, Copy, Check, ExternalLink, MapPin } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -17,7 +17,7 @@ export const Contact: React.FC<ContactProps> = () => {
   const containerRef = useRef<HTMLElement>(null);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion || !containerRef.current) return;
 
@@ -33,6 +33,7 @@ export const Contact: React.FC<ContactProps> = () => {
             duration: 0.5,
             stagger: 0.1,
             ease: 'power2.out',
+            immediateRender: false,
             scrollTrigger: {
               trigger: containerRef.current,
               start: 'top 80%',
