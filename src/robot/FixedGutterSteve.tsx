@@ -371,9 +371,9 @@ export const FixedGutterSteve: React.FC = () => {
     }
 
     // Desktop (>= 1024px):
-    // Standard canvas: 260px wide x 370px tall (holds ~132px tall robot with ample padding on every side)
-    const cW = 260;
-    const cH = 370;
+    // Standard canvas: 200px wide x 360px tall (holds ~132px tall robot with zero clipping and tight lane footprint)
+    const cW = 200;
+    const cH = 360;
     const rScale = 1.0;
 
     // Center vertically at 50% viewport with slight subtle scroll drift (+/- 36px)
@@ -385,7 +385,7 @@ export const FixedGutterSteve: React.FC = () => {
     if (shyModeActive) {
       if (shyStep === 2 || shyStep === 6) {
         return {
-          posX: currentConfig.side === 'left' ? -120 : w - 40,
+          posX: currentConfig.side === 'left' ? -150 : w - 30,
           posY: clampedY,
           facing: (currentConfig.side === 'left' ? 1 : -1) as (1 | -1),
           canvasW: cW,
@@ -411,9 +411,22 @@ export const FixedGutterSteve: React.FC = () => {
       };
     }
 
+    // PEEK MODE during pinned Work gallery:
+    // Steve sits at the left edge: only head and one hand stick out ~56px
+    if (activeSection === 'work') {
+      return {
+        posX: -90,
+        posY: clampedY,
+        facing: 1 as const,
+        canvasW: cW,
+        canvasH: cH,
+        robotScale: rScale,
+      };
+    }
+
     // Reserved lanes positioning:
-    // Left lane: STEVE sits comfortably inside left margin [16px, laneWidth]
-    // Right lane: STEVE sits inside right lane, strictly >= 12px to the left of the rail's left edge (rail at w-52px -> targetX <= w-64-cW)
+    // Left lane: STEVE sits comfortably inside left margin (center at 60px)
+    // Right lane: STEVE sits inside right lane, strictly >= 12px to the left of the rail (rail at w-52px)
     const isRight = currentConfig.side === 'right';
     let targetX: number;
 
@@ -421,12 +434,12 @@ export const FixedGutterSteve: React.FC = () => {
       const hasRail = w >= 1200;
       if (hasRail) {
         // If rail tooltip is hovered, step aside further smoothly
-        targetX = isRailHovered ? w - 146 - cW : w - 64 - cW;
+        targetX = isRailHovered ? w - 280 : w - 210;
       } else {
-        targetX = w - 20 - cW;
+        targetX = w - 160;
       }
     } else {
-      targetX = 16;
+      targetX = -40;
     }
 
     return {
@@ -437,7 +450,7 @@ export const FixedGutterSteve: React.FC = () => {
       canvasH: cH,
       robotScale: rScale,
     };
-  }, [windowDimensions, isMobileOrTablet, currentConfig, scrollProgress, shyModeActive, shyStep, isRailHovered]);
+  }, [windowDimensions, isMobileOrTablet, currentConfig, scrollProgress, shyModeActive, shyStep, isRailHovered, activeSection, heroPlinthMode, homePlatformPos]);
 
   // Compute live animation and expression
   const { liveAnim, liveExpr } = useMemo<{ liveAnim: RobotAnimation; liveExpr: RobotExpression }>(() => {

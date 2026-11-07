@@ -449,3 +449,4 @@ export const HeroSvgIllustration: React.FC = () => {
 };
 
 export default HeroSvgIllustration;
+

@@ -40,3 +40,4 @@ const fs = require('fs');
   await browser.close();
   console.log('PART 1 VERIFICATION COMPLETED');
 })();
+

@@ -54,7 +54,7 @@ html.modal-open .fixed:not([role="dialog"]):not([role="dialog"] *) {
   }
 }
 
-/* Robot Lane Protected Content Shell */
+/* Robot Lane Protected Content Shell - guarantees zero overlap with Steve and Rail */
 .lane-padded {
   padding-left: clamp(16px, 4vw, 32px);
   padding-right: clamp(16px, 4vw, 32px);
@@ -62,15 +62,15 @@ html.modal-open .fixed:not([role="dialog"]):not([role="dialog"] *) {
 
 @media (min-width: 1024px) {
   .lane-padded {
-    padding-left: calc(clamp(88px, 6.5vw, 124px) + 12px);
-    padding-right: calc(clamp(88px, 6.5vw, 124px) + 24px);
+    padding-left: clamp(120px, 8.5vw, 150px);
+    padding-right: clamp(120px, 8.5vw, 150px);
   }
 }
 
 @media (min-width: 1200px) {
   .lane-padded {
-    padding-left: calc(clamp(88px, 6.5vw, 124px) + 12px);
-    padding-right: calc(clamp(88px, 6.5vw, 124px) + 54px);
+    padding-left: clamp(120px, 8.5vw, 150px);
+    padding-right: calc(clamp(120px, 8.5vw, 150px) + 54px);
   }
 }
 

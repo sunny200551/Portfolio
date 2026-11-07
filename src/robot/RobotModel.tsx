@@ -189,8 +189,8 @@ export const RobotModel: React.FC<RobotModelProps> = ({
       rotation={rotation}
       scale={[finalScale, finalScale, finalScale]}
     >
-      {/* Flat hard offset shadow on ground plate (neo-brutalist rounded rectangle, zero blur) */}
-      <RobotHardShadow width={0.52 * shadowJumpProps.scale} depth={0.32 * shadowJumpProps.scale} radius={0.06 * shadowJumpProps.scale} offset={[0.04, shadowJumpProps.z - 0.04]} opacity={shadowJumpProps.opacity} />
+      {/* Attached ground contact shadow (directly flush under feet soles, zero detached pill) */}
+      <RobotHardShadow width={0.34 * shadowJumpProps.scale} depth={0.16 * shadowJumpProps.scale} radius={0.03 * shadowJumpProps.scale} offset={[0, shadowJumpProps.z + 0.02]} opacity={shadowJumpProps.opacity} />
 
       {/* Skateboard Accessory (attached at ground level under feet) */}
       {accessories?.skateboard && (

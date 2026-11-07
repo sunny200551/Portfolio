@@ -41,14 +41,14 @@ export const RobotHardShadow: React.FC<{
 
   return (
     <mesh
-      position={[offset[0], -0.01, offset[1]]}
+      position={[offset[0], 0.002, offset[1]]}
       rotation={[-Math.PI / 2, 0, 0]}
     >
       <shapeGeometry args={[shadowShape]} />
       <meshBasicMaterial
         color="#0A0A0A"
         transparent
-        opacity={opacity}
+        opacity={opacity * 0.45}
         depthWrite={false}
       />
     </mesh>
