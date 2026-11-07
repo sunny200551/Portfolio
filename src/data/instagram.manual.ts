@@ -35,3 +35,4 @@ export const MANUAL_INSTAGRAM_STATS = {
   followers: undefined, // Filled via API or left undefined (never faked)
   reelCount: 0,
 };
+

@@ -30,6 +30,10 @@ export type VoiceCategory =
   | 'section_internship'
   | 'section_content'
   | 'internship_badge_hover'
+  | 'internship_ongoing_hover'
+  | 'internship_polylance_hover'
+  | 'internship_polylance_click'
+  | 'internship_completed_hover'
   | 'internship_cert_click'
   | 'content_scrub'
   | 'content_clip_click'
@@ -113,6 +117,26 @@ const VOICE_POOLS: Record<VoiceCategory, VoiceLine[]> = {
     { text: "Welcome to the Edit Bay. Popcorn not included.", anim: 'wave', expr: 'happy' },
     { text: "Rendering frames and turning caffeine into cuts.", anim: 'salute', expr: 'focused' },
     { text: "Multi-track magic in progress! Action!", anim: 'dance', expr: 'enjoying' },
+  ],
+  internship_ongoing_hover: [
+    { text: "Leading frontend AND Web3? Overachiever. I like it.", anim: 'idle', expr: 'thinking' },
+    { text: "Polygon builders move fast! 🚀", anim: 'salute', expr: 'excited' },
+    { text: "Decentralized freelancing... count me in!", anim: 'cheer', expr: 'happy' },
+  ],
+  internship_polylance_hover: [
+    { text: "Polygon, huh? I like a builder.", anim: 'salute', expr: 'curious' },
+    { text: "Polylance Zenith! Web3 in action. ⚡", anim: 'jump', expr: 'focused' },
+    { text: "Smart contracts & clean UI? Pure magic.", anim: 'wave', expr: 'happy' },
+  ],
+  internship_polylance_click: [
+    { text: "Go on, visit. Say Steve sent you.", anim: 'wave', expr: 'flirty', priority: 5 },
+    { text: "Off to Polylance? Tell them I said hi!", anim: 'cheer', expr: 'excited', priority: 5 },
+    { text: "Opening the mothership! 🌐", anim: 'salute', expr: 'proud', priority: 5 },
+  ],
+  internship_completed_hover: [
+    { text: "Flutter and Firebase? Fancy.", anim: 'idle', expr: 'curious' },
+    { text: "Cross-platform mobile apps! Super clean.", anim: 'salute', expr: 'happy' },
+    { text: "APSCHE collaboration! Solid fundamentals.", anim: 'cheer', expr: 'focused' },
   ],
   internship_badge_hover: [
     { text: "Official badge. Very official. Very handsome.", anim: 'salute', expr: 'proud' },

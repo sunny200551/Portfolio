@@ -76,6 +76,30 @@ const milestonesData: MilestoneItem[] = [
     status: 'CURRENT FOCUS',
   },
   {
+    id: 'm-2026-polylance',
+    year: 'APRIL 2026',
+    title: 'FRONTEND DEVELOPER AT POLYLANCE ZENITH (REMOTE)',
+    type: 'tech',
+    icon: Globe,
+    description: 'Leading frontend architecture, Web3 product development, UI/UX and marketing for a decentralized freelancing platform built on Polygon.',
+    skills: ['React', 'JavaScript', 'Web3.js', 'Polygon'],
+    status: 'ONGOING ROLE',
+    actionUrl: '#internship',
+    actionLabel: 'SEE INTERNSHIP ↗',
+  },
+  {
+    id: 'm-2026-datavalley',
+    year: 'MAY – JUNE 2026',
+    title: 'FLUTTER DEVELOPER INTERN AT DATAVALLEY (ONLINE)',
+    type: 'tech',
+    icon: Code,
+    description: 'Completed a two-month summer internship in Mobile Application Development (iOS & Android), in collaboration with APSCHE.',
+    skills: ['Flutter', 'Dart', 'Firebase', 'Mobile Development'],
+    status: 'COMPLETED INTERNSHIP',
+    actionUrl: '#internship',
+    actionLabel: 'SEE INTERNSHIP ↗',
+  },
+  {
     id: 'm-present-content',
     year: 'PRESENT',
     title: 'Active Multi-Track Production',
@@ -346,8 +370,15 @@ export const Journey: React.FC = () => {
                         {item.actionUrl && (
                           <a
                             href={item.actionUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            target={item.actionUrl.startsWith('#') ? undefined : '_blank'}
+                            rel={item.actionUrl.startsWith('#') ? undefined : 'noopener noreferrer'}
+                            onClick={item.actionUrl?.startsWith('#') ? (e) => {
+                              e.preventDefault();
+                              if (item.actionUrl) {
+                                const targetEl = document.querySelector(item.actionUrl);
+                                if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth' });
+                              }
+                            } : undefined}
                             className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FF5C00] text-black font-mono text-[11px] font-black uppercase border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] hover:bg-black hover:text-white transition-all whitespace-nowrap"
                           >
                             <span>{item.actionLabel}</span>

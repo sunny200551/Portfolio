@@ -6,7 +6,6 @@ import { steveVoice, type VoiceCategory } from './steveVoice';
 import { CanvasErrorBoundary } from '../components/three/CanvasBoundary';
 import { steveState, type SteveState } from '../lib/steveState';
 import type { RobotAnimation, RobotExpression, RobotAccessories } from './types';
-import { Sparkles, User, Heart, Shield, Check, X, Edit3 } from 'lucide-react';
 
 // Section default greetings (under 20 characters for fast intro)
 const SECTION_GREETINGS: Record<string, { anim: RobotAnimation; expr: RobotExpression; text: string }> = {
@@ -48,11 +47,7 @@ export const FixedGutterSteve: React.FC = () => {
   const [isInFooter, setIsInFooter] = useState(false);
 
   // Visitor identity state
-  const [visitorName, setVisitorName] = useState(() => robotStore.getState().visitorName);
   const [visitorGender, setVisitorGender] = useState<VisitorGender>(() => robotStore.getState().visitorGender);
-  const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
-  const [inputName, setInputName] = useState(() => robotStore.getState().visitorName);
-  const [inputGender, setInputGender] = useState<VisitorGender>(() => robotStore.getState().visitorGender === 'guest' ? 'woman' : robotStore.getState().visitorGender);
 
   // Dynamic scrolling states for stylish stunts
   const [scrollDirection, setScrollDirection] = useState<'idle' | 'down' | 'up'>('idle');
@@ -108,8 +103,7 @@ export const FixedGutterSteve: React.FC = () => {
       setStoreAnim(state.steveAnim);
       setStoreExpr(state.steveExpr);
       setStoreBubble(state.speechBubble);
-      setVisitorName(state.visitorName);
-      setVisitorGender(state.visitorGender);
+            setVisitorGender(state.visitorGender);
 
       if (state.activeSection !== activeSection) {
         setActiveSection(state.activeSection);
@@ -240,6 +234,10 @@ export const FixedGutterSteve: React.FC = () => {
         reaction = isWoman
           ? { anim: 'dance', expr: 'excited', text: `These projects are hot, ${effectiveName}, but your taste is hotter! 🔥✨` }
           : { anim: 'salute', expr: 'focused', text: `Handcrafted architecture, ${effectiveName}! Check out the live links! 🚀💻` };
+      } else if (el.closest('#internship')) {
+        reaction = isWoman
+          ? { anim: 'salute', expr: 'flirty', text: `Industry experience, ${effectiveName}! Building real Web3 protocols. 💼✨` }
+          : { anim: 'salute', expr: 'focused', text: `Verified internship & engineering contributions, ${effectiveName}! 💼🚀` };
       } else if (el.closest('#events')) {
         reaction = isWoman
           ? { anim: 'jump', expr: 'flirty', text: `Hackathon trophies! I love a winner, don't you, ${effectiveName}? 🏆😉` }
@@ -338,13 +336,7 @@ export const FixedGutterSteve: React.FC = () => {
     };
   }, []);
 
-  // Save Identity Modal
-  const handleSaveIdentity = (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    robotStore.setVisitorIdentity(inputName, inputGender);
-    setIsIdentityModalOpen(false);
-  };
+
 
   const handleMascotClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -367,6 +359,7 @@ export const FixedGutterSteve: React.FC = () => {
     sunglasses: scrollDirection !== 'idle' || isCenterStage,
     skateboard: scrollDirection === 'down' && scrollSpeedFast,
     jetpackFlames: scrollDirection === 'up' && scrollSpeedFast,
+    magnifyingGlass: activeSection === 'internship' && (storeExpr === 'thinking' || storeExpr === 'curious'),
   };
 
   // Compute live animation and expression
@@ -547,116 +540,6 @@ export const FixedGutterSteve: React.FC = () => {
             </Canvas>
           </Suspense>
         </CanvasErrorBoundary>
-      </div>
-
-      {/* ================================================================= */}
-      {/* VISITOR IDENTITY VIP PASS BADGE (Under Steve's feet)              */}
-      {/* Strictly Name + Emoji only (No mode labels like "Flirt" or "Bro")  */}
-      {/* ================================================================= */}
-      <div className="mt-1 flex flex-col items-center">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsIdentityModalOpen(prev => !prev);
-          }}
-          className="group flex items-center gap-1.5 px-3 py-1 bg-white border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] hover:bg-[#FF5A1F] hover:shadow-[1px_1px_0px_#0A0A0A] transition-all cursor-pointer font-mono text-[10px] font-bold text-[#0A0A0A]"
-          title="Tell Steve your name and preference!"
-        >
-          {visitorGender === 'woman' ? (
-            <Heart size={11} className="text-[#FF5A1F] group-hover:text-black fill-current" />
-          ) : visitorGender === 'man' ? (
-            <Shield size={11} className="text-[#0047AB] group-hover:text-black fill-current" />
-          ) : (
-            <User size={11} className="text-[#0A0A0A]" />
-          )}
-          <span>
-            {visitorName
-              ? (visitorGender === 'woman' ? `❤️ ${visitorName}` : visitorGender === 'man' ? `⚡ ${visitorName}` : `👤 ${visitorName}`)
-              : 'VIP PASS: Who are you?'}
-          </span>
-          <Edit3 size={10} className="opacity-60" />
-        </button>
-
-        {/* Expandable Neo-Brutalist Identity Form Modal / Popover */}
-        {isIdentityModalOpen && (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="absolute top-[230px] left-0 w-[240px] bg-white border-2 border-[#0A0A0A] shadow-[5px_5px_0px_#0A0A0A] p-3.5 z-50 font-mono text-xs text-[#0A0A0A] animate-in fade-in zoom-in-95 duration-150"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between border-b-2 border-[#0A0A0A] pb-1.5 mb-2.5">
-              <div className="flex items-center gap-1.5 font-black uppercase text-[10px] tracking-wider text-[#FF5A1F]">
-                <Sparkles size={12} />
-                <span>STEVE&apos;S VIP REGISTRY</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsIdentityModalOpen(false)}
-                className="p-0.5 hover:bg-black hover:text-white transition-colors cursor-pointer"
-              >
-                <X size={13} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveIdentity} className="flex flex-col gap-2.5">
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider mb-1">
-                  Your Name:
-                </label>
-                <input
-                  type="text"
-                  value={inputName}
-                  onChange={(e) => setInputName(e.target.value)}
-                  placeholder="e.g. Sarah / Alex"
-                  className="w-full px-2 py-1.5 border-2 border-[#0A0A0A] bg-[#EEF2FA] text-xs font-bold text-[#0A0A0A] outline-none focus:bg-white focus:border-[#FF5A1F]"
-                  autoFocus
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider mb-1">
-                  I Identify As:
-                </label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setInputGender('woman')}
-                    className={`p-1.5 border-2 border-[#0A0A0A] font-bold text-[10px] uppercase flex flex-col items-center gap-0.5 transition-all cursor-pointer ${
-                      inputGender === 'woman'
-                        ? 'bg-[#FF5A1F] text-black shadow-[2px_2px_0px_#0A0A0A]'
-                        : 'bg-white hover:bg-[#EEF2FA]'
-                    }`}
-                  >
-                    <span>👑 WOMAN</span>
-                    <span className="text-[8px] font-normal opacity-85">She / Her</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setInputGender('man')}
-                    className={`p-1.5 border-2 border-[#0A0A0A] font-bold text-[10px] uppercase flex flex-col items-center gap-0.5 transition-all cursor-pointer ${
-                      inputGender === 'man'
-                        ? 'bg-[#0047AB] text-white shadow-[2px_2px_0px_#0A0A0A]'
-                        : 'bg-white hover:bg-[#EEF2FA]'
-                    }`}
-                  >
-                    <span>⚡ MAN</span>
-                    <span className="text-[8px] font-normal opacity-85">He / Him</span>
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="mt-1 w-full py-1.5 bg-[#0A0A0A] text-white hover:bg-[#FF5A1F] hover:text-black font-black uppercase text-[10px] tracking-wider transition-colors border-2 border-[#0A0A0A] flex items-center justify-center gap-1.5 cursor-pointer shadow-[2px_2px_0px_#FF5A1F]"
-              >
-                <Check size={12} />
-                <span>SAVE &amp; MEET STEVE</span>
-              </button>
-            </form>
-          </div>
-        )}
       </div>
     </div>
   );

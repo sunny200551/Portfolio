@@ -59,3 +59,4 @@ export const SOCIAL_LIST = [
 ] as const;
 
 export default SOCIAL_LINKS;
+

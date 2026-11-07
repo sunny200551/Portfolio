@@ -119,6 +119,51 @@ export const Projects: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedProject, activeIndex, isPinnedEnabled]);
 
+  // Cross-link navigation to specific project card
+  useEffect(() => {
+    const handleGoToProject = (e: CustomEvent<string> | HashChangeEvent | Event) => {
+      let targetId = '';
+      if (e instanceof CustomEvent && e.detail) {
+        targetId = e.detail;
+      } else if (window.location.hash) {
+        targetId = window.location.hash.replace(/^#project-/, '').replace(/^#/, '');
+      }
+      if (!targetId) return;
+
+      const projectIndex = projectsData.findIndex(p => p.id === targetId || p.id.includes(targetId));
+      if (projectIndex === -1) return;
+
+      if (isPinnedEnabled) {
+        const container = containerRef.current;
+        if (!container) return;
+        const allTriggers = ScrollTrigger.getAll();
+        const pinTrigger = allTriggers.find(t => t.trigger === container);
+        if (pinTrigger) {
+          const progress = projectIndex / Math.max(1, projectsData.length - 1);
+          const targetScroll = pinTrigger.start + progress * (pinTrigger.end - pinTrigger.start);
+          const lenis = getLenis();
+          if (lenis) {
+            lenis.scrollTo(targetScroll, { duration: 1.2 });
+          } else {
+            window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+          }
+        }
+      } else {
+        const cardEl = cardsRef.current[projectIndex];
+        if (cardEl) {
+          cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    };
+
+    window.addEventListener('work:go-to-project', handleGoToProject as EventListener);
+    window.addEventListener('hashchange', handleGoToProject);
+    return () => {
+      window.removeEventListener('work:go-to-project', handleGoToProject as EventListener);
+      window.removeEventListener('hashchange', handleGoToProject);
+    };
+  }, [isPinnedEnabled]);
+
   const handleCardMouseEnter = useCallback(() => {
     steveVoice.speak('card_hover');
     robotStore.setSteve('idle', 'curious');
@@ -205,6 +250,7 @@ export const Projects: React.FC = () => {
             return (
               <div
                 key={project.id}
+                id={'project-' + project.id}
                 ref={(el) => { cardsRef.current[idx] = el; }}
                 onClick={() => setSelectedProject(project)}
                 onMouseEnter={handleCardMouseEnter}

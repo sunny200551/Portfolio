@@ -38,3 +38,4 @@ export interface ContentPayload {
   source: 'api' | 'rss' | 'snapshot' | 'manual';
   updatedAt: string;
 }
+

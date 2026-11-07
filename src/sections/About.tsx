@@ -190,7 +190,7 @@ export const About: React.FC<{ profile?: GitHubProfile | null }> = ({ profile })
               </div>
 
               <p className="text-base sm:text-lg text-[#0A0A0A]/90 leading-relaxed font-sans">
-                I am a Computer Science Engineering student at NBKR Institute of Science & Technology, Andhra Pradesh, India. My core engineering focus is on blockchain architectures, Web3 decentralized protocols, and continuous DSA problem-solving. Frontend development with React, TypeScript, and Tailwind CSS is the established craft I build with daily.
+                I am a Computer Science Engineering student at NBKR Institute of Science & Technology, Andhra Pradesh, India. My core engineering focus is on blockchain architectures, Web3 decentralized protocols, and continuous DSA problem-solving. Frontend development with React, TypeScript, and Tailwind CSS is the established craft I build with daily. I currently work as Frontend Developer at Polylance Zenith (remote), and completed a Flutter internship at Datavalley.
               </p>
 
               <p className="text-sm sm:text-base text-[#0A0A0A]/80 leading-relaxed font-sans">
