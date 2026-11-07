@@ -190,11 +190,11 @@ export const GitHubSkyline: React.FC<GitHubSkylineProps> = ({
       });
     }
 
-    // Funny BOLT reaction: cheer for peak tower, curious for others
+    // Funny STEVE reaction: cheer for peak tower, curious for others
     if (bar.count > 0 && bar.count >= maxCount - 1) {
-      robotStore.setBolt('cheer', 'happy');
+      robotStore.setSteve('cheer', 'happy');
     } else {
-      robotStore.setBolt('idle', 'curious');
+      robotStore.setSteve('idle', 'curious');
     }
   };
 
@@ -202,7 +202,7 @@ export const GitHubSkyline: React.FC<GitHubSkylineProps> = ({
     e.stopPropagation();
     setHoveredKey(null);
     if (onHoverDay) onHoverDay(null);
-    robotStore.setBolt('idle', 'happy');
+    robotStore.setSteve('idle', 'happy');
   };
 
   const baseWidth = offsetX * 2 + 1.2;

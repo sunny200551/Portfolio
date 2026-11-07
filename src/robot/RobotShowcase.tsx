@@ -39,7 +39,7 @@ export const RobotShowcase: React.FC = () => {
               ROBOT SYSTEM // VERIFICATION SUITE
             </div>
             <h1 className="text-2xl sm:text-3xl font-black font-display text-[#0A0A0A]">
-              BOLT, NUT & CHIP SHOWCASE
+              STEVE MASCOT SHOWCASE
             </h1>
           </div>
 
@@ -92,7 +92,7 @@ export const RobotShowcase: React.FC = () => {
                       <ambientLight intensity={1.2} />
                       <directionalLight position={[3, 5, 4]} intensity={1.5} />
                       <Robot
-                        variant="bolt"
+                        variant="steve"
                         expression={expr}
                         animation="idle"
                         position={[0, -0.34, 0]}
@@ -137,7 +137,7 @@ export const RobotShowcase: React.FC = () => {
                       <ambientLight intensity={1.2} />
                       <directionalLight position={[3, 5, 4]} intensity={1.5} />
                       <Robot
-                        variant="bolt"
+                        variant="steve"
                         expression={pose.expr}
                         animation={pose.anim}
                         position={[0, -0.32, 0]}
@@ -162,10 +162,10 @@ export const RobotShowcase: React.FC = () => {
         {activeTab === 'variants' && (
           <div>
             <h2 className="text-sm font-bold uppercase mb-4 text-[#0A0A0A]">
-              OFFICIAL MASCOT: BOLT (ORANGE, BLUE VISOR)
+              OFFICIAL MASCOT: STEVE (ORANGE, BLUE VISOR)
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {(['bolt'] as const).map((variant) => (
+              {(['steve'] as const).map((variant) => (
                 <div
                   key={variant}
                   data-testid={`variant-card-${variant}`}
@@ -204,7 +204,7 @@ export const RobotShowcase: React.FC = () => {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-bold uppercase text-[#0A0A0A]">
-                BOLT DESIGN SHEET // 4 VIEWS × 4 POSES (RIG STRUCTURE & PROPORTIONS)
+                STEVE DESIGN SHEET // 4 VIEWS × 4 POSES (RIG STRUCTURE & PROPORTIONS)
               </h2>
               <span className="text-xs font-bold px-2 py-0.5 bg-[#0047AB] text-white border border-[#0A0A0A]">
                 ZERO COLLISION DETECTED
@@ -258,7 +258,7 @@ export const RobotShowcase: React.FC = () => {
                           <ambientLight intensity={1.2} />
                           <directionalLight position={[3, 5, 4]} intensity={1.5} />
                           <Robot
-                            variant="bolt"
+                            variant="steve"
                             expression={section.expr}
                             animation={section.anim}
                             position={[0, -0.32, 0]}

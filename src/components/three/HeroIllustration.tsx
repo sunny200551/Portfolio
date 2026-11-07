@@ -42,7 +42,7 @@ const HeroSceneController: React.FC<{ isHeroInView: boolean }> = ({ isHeroInView
   useEffect(() => {
     invalidate();
     if (isHeroInView && !lastInView.current) {
-      robotStore.setBolt('wave', 'happy');
+      robotStore.setSteve('wave', 'happy');
     }
     lastInView.current = isHeroInView;
   }, [isHeroInView, invalidate]);

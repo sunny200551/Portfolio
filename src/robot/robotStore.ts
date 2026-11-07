@@ -26,10 +26,13 @@ export type JourneyYear = '2023' | '2024' | '2025' | '2026';
 export type ContactAction = 'building' | 'watching' | 'rocket' | 'cheer';
 
 export interface RobotState {
+  steveAnim: RobotAnimation;
+  steveExpr: RobotExpression;
+  steveScreenPos: { x: number; y: number; visible: boolean };
   boltAnim: RobotAnimation;
   boltExpr: RobotExpression;
-  cursor: { x: number; y: number };
   boltScreenPos: { x: number; y: number; visible: boolean };
+  cursor: { x: number; y: number };
   isDebug: boolean;
   activeSection: string;
   scrollVelocity: number;
@@ -53,6 +56,7 @@ export interface RobotState {
 
   // Task 5 Player Interaction states
   robotEnabled: boolean;
+  isQuiet: boolean;
   speechBubble: string | null;
   isOverheating: boolean;
   isIdleSleeping: boolean;
@@ -61,6 +65,7 @@ export interface RobotState {
 }
 
 const STORAGE_KEY = 'sunny_portfolio_robot_enabled';
+const QUIET_STORAGE_KEY = 'sunny_portfolio_steve_quiet';
 
 function getStoredRobotEnabled(): boolean {
   try {
@@ -70,6 +75,15 @@ function getStoredRobotEnabled(): boolean {
   } catch (e) {
     console.warn('Could not read robot state from localStorage:', e);
     return true;
+  }
+}
+
+function getStoredSteveQuiet(): boolean {
+  try {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem(QUIET_STORAGE_KEY) === 'true';
+  } catch (e) {
+    return false;
   }
 }
 
@@ -100,10 +114,13 @@ type Listener = () => void;
 
 class RobotStore {
   private state: RobotState = {
+    steveAnim: 'wave',
+    steveExpr: 'happy',
+    steveScreenPos: { x: 0, y: 0, visible: false },
     boltAnim: 'wave',
     boltExpr: 'happy',
-    cursor: { x: 0, y: 0 },
     boltScreenPos: { x: 0, y: 0, visible: false },
+    cursor: { x: 0, y: 0 },
     isDebug: typeof window !== 'undefined' && window.location.search.includes('robotDebug=1'),
     activeSection: 'home',
     scrollVelocity: 0,
@@ -127,6 +144,7 @@ class RobotStore {
 
     // Task 5 Player Interaction initial states
     robotEnabled: getStoredRobotEnabled(),
+    isQuiet: getStoredSteveQuiet(),
     speechBubble: null,
     isOverheating: false,
     isIdleSleeping: false,
@@ -221,11 +239,11 @@ class RobotStore {
   // -------------------------------------------------------------------------
 
   /**
-   * 1. Clicking BOLT:
+   * 1. Clicking STEVE:
    * Jump plus speech bubble with rotating funny lines.
-   * Clicking 5 times quickly (within 2s) makes BOLT overheat and spin with flat steam.
+   * Clicking 5 times quickly (within 2s) makes STEVE overheat and spin with flat steam.
    */
-  public handleBoltClick() {
+  public handleSteveClick() {
     if (!this.state.robotEnabled) return;
 
     // If asleep, wake up
@@ -246,35 +264,61 @@ class RobotStore {
     }
 
     // Normal click: jump + speech bubble
-    this.setBolt('jump', 'excited');
+    this.setSteve('jump', 'excited');
     const line = FUNNY_LINES[this.speechLineIndex % FUNNY_LINES.length];
     this.speechLineIndex++;
     this.showSpeechBubble(line, 3200);
   }
 
+  public handleBoltClick() {
+    this.handleSteveClick();
+  }
+
   public triggerOverheat() {
     this.state.isOverheating = true;
-    this.setBolt('spin', 'dizzy');
-    this.showSpeechBubble("🔥 OVERHEAT! COOLING DOWN... 🔥", 3000);
+    this.setSteve('spin', 'dizzy');
+    this.showSpeechBubble("Okay okay, I'm overheating! 🔥", 3000);
     this.notify();
 
     if (this.overheatTimer) clearTimeout(this.overheatTimer);
     this.overheatTimer = setTimeout(() => {
       this.state.isOverheating = false;
-      this.setBolt('idle', 'happy');
+      this.setSteve('idle', 'happy');
       this.showSpeechBubble("Ah, much better! ❄️", 2200);
       this.notify();
     }, 2600);
   }
 
-  public showSpeechBubble(text: string, durationMs = 2500) {
-    this.state.speechBubble = text.slice(0, 24);
+  public setQuiet(quiet: boolean) {
+    this.state.isQuiet = quiet;
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(QUIET_STORAGE_KEY, String(quiet));
+      }
+    } catch (e) {}
+    if (quiet) {
+      this.clearSpeechBubble();
+    } else {
+      this.showSpeechBubble("Voice back online! Steve at your service. ✨", 3000);
+    }
+    this.notify();
+  }
+
+  public triggerShyMode() {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('steve:shy-mode'));
+    }
+  }
+
+  public showSpeechBubble(text: string, durationMs = 3000) {
+    if (this.state.isQuiet) return;
+    this.state.speechBubble = text.slice(0, 60);
     this.notify();
 
     if (this.speechTimer) clearTimeout(this.speechTimer);
     this.speechTimer = setTimeout(() => {
       this.clearSpeechBubble();
-    }, Math.min(2500, durationMs));
+    }, Math.min(4500, Math.max(2000, durationMs)));
   }
 
   public clearSpeechBubble() {
@@ -286,7 +330,7 @@ class RobotStore {
 
   /**
    * 2. Idle for 10 seconds:
-   * BOLT yawns and sleeps. Any mouse move wakes it.
+   * STEVE yawns and sleeps. Any mouse move wakes it.
    */
   public resetIdleTimer() {
     // If sleeping from idle, wake up immediately on user activity
@@ -312,14 +356,14 @@ class RobotStore {
 
   public triggerIdleSleep() {
     this.state.isIdleSleeping = true;
-    this.setBolt('sleep', 'sleepy');
+    this.setSteve('sleep', 'sleepy');
     this.notify();
   }
 
   public triggerWake() {
-    if (this.state.isIdleSleeping || this.state.boltAnim === 'sleep') {
+    if (this.state.isIdleSleeping || this.state.steveAnim === 'sleep') {
       this.state.isIdleSleeping = false;
-      this.setBolt('idle', 'happy');
+      this.setSteve('idle', 'happy');
       this.notify();
     }
   }
@@ -329,24 +373,24 @@ class RobotStore {
     const cat = category.toLowerCase();
     switch (cat) {
       case 'frontend':
-        this.setBolt('cheer', 'happy');
+        this.setSteve('cheer', 'happy');
         break;
       case 'backend':
       case 'languages':
-        this.setBolt('salute', 'focused');
+        this.setSteve('salute', 'focused');
         break;
       case 'database':
-        this.setBolt('idle', 'curious');
+        this.setSteve('idle', 'curious');
         break;
       case 'blockchain':
       case 'web3':
-        this.setBolt('cheer', 'excited');
+        this.setSteve('cheer', 'excited');
         break;
       case 'tools':
-        this.setBolt('wave', 'happy');
+        this.setSteve('wave', 'happy');
         break;
       default:
-        this.setBolt('wave', 'happy');
+        this.setSteve('wave', 'happy');
     }
   }
 
@@ -356,7 +400,7 @@ class RobotStore {
    */
   public triggerDance() {
     if (!this.state.robotEnabled) return;
-    this.setBolt('dance', 'excited');
+    this.setSteve('dance', 'excited');
     this.showSpeechBubble("Let's dance! 🕺", 3000);
     this.notify();
   }
@@ -364,7 +408,7 @@ class RobotStore {
   public triggerSleep() {
     if (!this.state.robotEnabled) return;
     this.state.isIdleSleeping = true;
-    this.setBolt('sleep', 'sleepy');
+    this.setSteve('sleep', 'sleepy');
     this.showSpeechBubble("Powering down... ZZZ", 3000);
     this.notify();
   }
@@ -385,14 +429,14 @@ class RobotStore {
   public triggerKonamiParty(durationMs = 5000) {
     if (!this.state.robotEnabled) return;
     this.state.isDanceParty = true;
-    this.setBolt('dance', 'excited');
+    this.setSteve('dance', 'excited');
     this.showSpeechBubble("🎉 KONAMI CODE ACTIVATED! DANCE PARTY! 🎉", 4500);
     this.notify();
 
     if (this.dancePartyTimer) clearTimeout(this.dancePartyTimer);
     this.dancePartyTimer = setTimeout(() => {
       this.state.isDanceParty = false;
-      this.setBolt('idle', 'happy');
+      this.setSteve('idle', 'happy');
       this.notify();
     }, durationMs);
   }
@@ -424,13 +468,13 @@ class RobotStore {
 
   public handleAction(action: string) {
     if (action === 'jump') {
-      this.setBolt('jump', 'excited');
+      this.setSteve('jump', 'excited');
     } else if (action === 'salute') {
-      this.setBolt('salute', 'focused');
+      this.setSteve('salute', 'focused');
     } else if (action === 'cheer') {
-      this.setBolt('cheer', 'happy');
+      this.setSteve('cheer', 'happy');
     } else if (action === 'idle') {
-      this.setBolt('idle', 'happy');
+      this.setSteve('idle', 'happy');
     } else if (action === 'dance') {
       this.triggerDance();
     } else if (action === 'sleep') {
@@ -459,22 +503,33 @@ class RobotStore {
     this.listeners.forEach((l) => l());
   }
 
+  public setSteve(anim: RobotAnimation, expr: RobotExpression) {
+    if (this.state.steveAnim !== anim || this.state.steveExpr !== expr) {
+      this.state.steveAnim = anim;
+      this.state.steveExpr = expr;
+      this.state.steveAnim = anim;
+      this.state.steveExpr = expr;
+      this.notify();
+    }
+  }
+
   public setBolt(anim: RobotAnimation, expr: RobotExpression) {
-    if (this.state.boltAnim !== anim || this.state.boltExpr !== expr) {
-      this.state.boltAnim = anim;
-      this.state.boltExpr = expr;
+    this.setSteve(anim, expr);
+  }
+
+  public setSteveScreenPos(x: number, y: number, visible: boolean) {
+    const prev = this.state.steveScreenPos;
+    const moved = Math.hypot(prev.x - x, prev.y - y) > 3;
+    const visChanged = prev.visible !== visible;
+    if (moved || visChanged) {
+      this.state.steveScreenPos = { x, y, visible };
+      this.state.boltScreenPos = { x, y, visible };
       this.notify();
     }
   }
 
   public setBoltScreenPos(x: number, y: number, visible: boolean) {
-    const prev = this.state.boltScreenPos;
-    const moved = Math.hypot(prev.x - x, prev.y - y) > 3;
-    const visChanged = prev.visible !== visible;
-    if (moved || visChanged) {
-      this.state.boltScreenPos = { x, y, visible };
-      this.notify();
-    }
+    this.setSteveScreenPos(x, y, visible);
   }
 
   public setHomePlatformPos(x: number, y: number) {
@@ -577,11 +632,13 @@ class RobotStore {
 }
 
 export const robotStore = new RobotStore();
-export const bolt = {
+export const steve = {
   react: (category: string) => robotStore.react(category),
 };
+export const bolt = steve;
 
 if (typeof window !== 'undefined') {
   (window as unknown as { __ROBOT_STORE__: RobotStore }).__ROBOT_STORE__ = robotStore;
+  (window as unknown as { steve: typeof steve }).steve = steve;
   (window as unknown as { bolt: typeof bolt }).bolt = bolt;
 }

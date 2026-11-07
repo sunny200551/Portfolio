@@ -13,7 +13,7 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
   const fallbackAvatar = profile?.avatar_url || 'https://github.com/sunny200551.png';
-  const [boltScreen, setBoltScreen] = useState(() => robotStore.getState().boltScreenPos);
+  const [steveScreen, setSteveScreen] = useState(() => robotStore.getState().steveScreenPos);
   const [isHeroInView, setIsHeroInView] = useState(true);
   const heroRef = useRef<HTMLElement>(null);
 
@@ -32,7 +32,7 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
 
   useEffect(() => {
     const unsubscribe = robotStore.subscribe(() => {
-      setBoltScreen(robotStore.getState().boltScreenPos);
+      setSteveScreen(robotStore.getState().steveScreenPos);
     });
     return () => unsubscribe();
   }, []);
@@ -197,18 +197,18 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
 
       </div>
 
-      {/* DOM Hit-Area Button for Clicking BOLT (independent of pointer-events: none canvas) */}
-      {boltScreen.visible && boltScreen.x > 0 && (
+      {/* DOM Hit-Area Button for Clicking STEVE (independent of pointer-events: none canvas) */}
+      {steveScreen.visible && steveScreen.x > 0 && (
         <button
           onClick={() => {
-            const current = robotStore.getState().boltAnim;
-            robotStore.setBolt(current === 'jump' ? 'idle' : 'jump', 'excited');
+            const current = robotStore.getState().steveAnim;
+            robotStore.setSteve(current === 'jump' ? 'idle' : 'jump', 'excited');
           }}
-          aria-label="Interact with Bolt Robot"
+          aria-label="Interact with Steve Robot"
           style={{
             position: 'fixed',
-            left: `${boltScreen.x - 45}px`,
-            top: `${boltScreen.y - 65}px`,
+            left: `${steveScreen.x - 45}px`,
+            top: `${steveScreen.y - 65}px`,
             width: '90px',
             height: '130px',
             cursor: 'pointer',

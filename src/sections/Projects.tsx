@@ -119,11 +119,11 @@ export const Projects: React.FC = () => {
   }, [selectedProject, activeIndex, isPinnedEnabled]);
 
   const handleCardMouseEnter = useCallback(() => {
-    robotStore.setBolt('idle', 'curious');
+    robotStore.setSteve('idle', 'curious');
   }, []);
 
   const handleCardMouseLeave = useCallback(() => {
-    robotStore.setBolt('idle', 'happy');
+    robotStore.setSteve('idle', 'happy');
   }, []);
 
   return (

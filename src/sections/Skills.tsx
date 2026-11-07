@@ -93,7 +93,7 @@ export const Skills: React.FC = () => {
     );
   }, [activeSkill]);
 
-  // Hysteresis hover resolution for BOLT reaction (120ms commit, 600ms leave)
+  // Hysteresis hover resolution for STEVE reaction (120ms commit, 600ms leave)
   const handleChipMouseEnter = (skill: PeriodicSkill) => {
     if (leaveTimeoutRef.current) clearTimeout(leaveTimeoutRef.current);
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
@@ -103,11 +103,11 @@ export const Skills: React.FC = () => {
 
       // Funny level-based reaction without walking onto the chips
       if (skill.tier === 'Daily') {
-        robotStore.setBolt('cheer', 'happy');
+        robotStore.setSteve('cheer', 'happy');
       } else if (skill.tier === 'Comfortable') {
-        robotStore.setBolt('salute', 'focused');
+        robotStore.setSteve('salute', 'focused');
       } else {
-        robotStore.setBolt('idle', 'curious');
+        robotStore.setSteve('idle', 'curious');
       }
     }, 120);
   };
@@ -117,13 +117,13 @@ export const Skills: React.FC = () => {
 
     leaveTimeoutRef.current = setTimeout(() => {
       setHoveredSkill(null);
-      robotStore.setBolt('idle', 'happy');
+      robotStore.setSteve('idle', 'happy');
     }, 600);
   };
 
   const handleChipClick = (skill: PeriodicSkill) => {
     setPinnedSkill(skill);
-    robotStore.setBolt('salute', 'focused'); // Points at inspector
+    robotStore.setSteve('salute', 'focused'); // Points at inspector
   };
 
   return (

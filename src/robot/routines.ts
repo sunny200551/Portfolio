@@ -6,7 +6,7 @@ export interface RobotRoutineController {
   setExpr: (expr: RobotExpression) => void;
 }
 
-export type RobotRoutine = (bolt: RobotRoutineController) => (() => void) | void;
+export type RobotRoutine = (steve: RobotRoutineController) => (() => void) | void;
 
 const routines: Record<string, RobotRoutine> = {};
 let currentCleanup: (() => void) | null = null;
@@ -15,33 +15,33 @@ export function registerRoutine(sectionId: string, routine: RobotRoutine) {
   routines[sectionId] = routine;
 }
 
-export function executeRoutine(sectionId: string, bolt: RobotRoutineController) {
+export function executeRoutine(sectionId: string, steve: RobotRoutineController) {
   if (currentCleanup) {
     currentCleanup();
     currentCleanup = null;
   }
   const routine = routines[sectionId];
   if (routine) {
-    const cleanup = routine(bolt);
+    const cleanup = routine(steve);
     if (typeof cleanup === 'function') {
       currentCleanup = cleanup;
     }
   } else {
-    bolt.setAnim('idle');
-    bolt.setExpr('happy');
+    steve.setAnim('idle');
+    steve.setExpr('happy');
   }
 }
 
 // ---------------------------------------------------------------------------
 // 01 // HOME ROUTINE
 // ---------------------------------------------------------------------------
-registerRoutine('home', (bolt) => {
-  bolt.setAnim('wave');
-  bolt.setExpr('happy');
+registerRoutine('home', (steve) => {
+  steve.setAnim('wave');
+  steve.setExpr('happy');
   const timer = setTimeout(() => {
     if (robotStore.getState().activeSection === 'home') {
-      bolt.setAnim('idle');
-      bolt.setExpr('happy');
+      steve.setAnim('idle');
+      steve.setExpr('happy');
     }
   }, 2400);
 
@@ -51,40 +51,40 @@ registerRoutine('home', (bolt) => {
 // ---------------------------------------------------------------------------
 // 02 // ABOUT ROUTINE: Stat count up, glitch reaction, facepalm, thumbs-up
 // ---------------------------------------------------------------------------
-registerRoutine('about', (bolt) => {
+registerRoutine('about', (steve) => {
   // Sits on top of stat boxes
   const stage = robotStore.getState().aboutGradYearStage;
   if (stage === 'glitch') {
-    bolt.setAnim('idle');
-    bolt.setExpr('curious');
+    steve.setAnim('idle');
+    steve.setExpr('curious');
   } else if (stage === 'facepalm') {
-    bolt.setAnim('facepalm');
-    bolt.setExpr('curious');
+    steve.setAnim('facepalm');
+    steve.setExpr('curious');
   } else if (stage === 'settled') {
-    bolt.setAnim('cheer');
-    bolt.setExpr('excited');
+    steve.setAnim('cheer');
+    steve.setExpr('excited');
   } else {
-    bolt.setAnim('idle');
-    bolt.setExpr('focused');
+    steve.setAnim('idle');
+    steve.setExpr('focused');
   }
 });
 
 // ---------------------------------------------------------------------------
 // 03 // WORK ROUTINE: Skateboard, card peeking, screenshot pending shrug
 // ---------------------------------------------------------------------------
-registerRoutine('work', (bolt) => {
+registerRoutine('work', (steve) => {
   const hover = robotStore.getState().workCardHover;
   if (hover) {
     if (hover.isTodoScreenshot) {
-      bolt.setAnim('shrug');
-      bolt.setExpr('curious');
+      steve.setAnim('shrug');
+      steve.setExpr('curious');
     } else {
-      bolt.setAnim('idle');
-      bolt.setExpr('focused');
+      steve.setAnim('idle');
+      steve.setExpr('focused');
     }
   } else {
-    bolt.setAnim('idle');
-    bolt.setExpr('excited');
+    steve.setAnim('idle');
+    steve.setExpr('excited');
   }
 });
 
@@ -93,34 +93,34 @@ registerRoutine('work', (bolt) => {
 // ---------------------------------------------------------------------------
 // 05 // SKILLS ROUTINE: Stair climbing & slab hover dance
 // ---------------------------------------------------------------------------
-registerRoutine('skills', (bolt) => {
+registerRoutine('skills', (steve) => {
   const hovered = robotStore.getState().hoveredSlab;
   if (hovered) {
-    bolt.setAnim('dance');
-    bolt.setExpr('excited');
+    steve.setAnim('dance');
+    steve.setExpr('excited');
   } else {
-    bolt.setAnim('walk');
-    bolt.setExpr('happy');
+    steve.setAnim('walk');
+    steve.setExpr('happy');
   }
 });
 
 // ---------------------------------------------------------------------------
 // 06 // GITHUB ROUTINE: City tower hopping, flag planting, git push box drop
 // ---------------------------------------------------------------------------
-registerRoutine('github', (bolt) => {
+registerRoutine('github', (steve) => {
   const timers: ReturnType<typeof setTimeout>[] = [];
 
   // Stage 1: Hopping across skyline towers like a city
   robotStore.setGithubStage('hopping');
-  bolt.setAnim('jump');
-  bolt.setExpr('happy');
+  steve.setAnim('jump');
+  steve.setExpr('happy');
 
   // Stage 2: Lands on tallest tower and plants flag
   timers.push(setTimeout(() => {
     if (robotStore.getState().activeSection === 'github') {
       robotStore.setGithubStage('planting');
-      bolt.setAnim('salute');
-      bolt.setExpr('focused');
+      steve.setAnim('salute');
+      steve.setExpr('focused');
     }
   }, 2200));
 
@@ -128,8 +128,8 @@ registerRoutine('github', (bolt) => {
   timers.push(setTimeout(() => {
     if (robotStore.getState().activeSection === 'github') {
       robotStore.setGithubStage('pushing');
-      bolt.setAnim('walk');
-      bolt.setExpr('focused');
+      steve.setAnim('walk');
+      steve.setExpr('focused');
     }
   }, 4400));
 
@@ -137,8 +137,8 @@ registerRoutine('github', (bolt) => {
   timers.push(setTimeout(() => {
     if (robotStore.getState().activeSection === 'github') {
       robotStore.setGithubStage('satisfied');
-      bolt.setAnim('cheer');
-      bolt.setExpr('excited');
+      steve.setAnim('cheer');
+      steve.setExpr('excited');
     }
   }, 6400));
 
@@ -150,20 +150,20 @@ registerRoutine('github', (bolt) => {
 // ---------------------------------------------------------------------------
 // 07 // STATS ROUTINE: HARD dumbbell bicep curls, badge collection, locked shrug
 // ---------------------------------------------------------------------------
-registerRoutine('stats', (bolt) => {
+registerRoutine('stats', (steve) => {
   const timers: ReturnType<typeof setTimeout>[] = [];
 
   // Stage 1: Lifts dumbbell labelled HARD
   robotStore.setStatsStage('dumbbell');
-  bolt.setAnim('jump');
-  bolt.setExpr('focused');
+  steve.setAnim('jump');
+  steve.setExpr('focused');
 
   // Stage 2: Collects earned badges one by one onto chest
   timers.push(setTimeout(() => {
     if (robotStore.getState().activeSection === 'stats') {
       robotStore.setStatsStage('badges');
-      bolt.setAnim('jump');
-      bolt.setExpr('happy');
+      steve.setAnim('jump');
+      steve.setExpr('happy');
     }
   }, 2800));
 
@@ -171,8 +171,8 @@ registerRoutine('stats', (bolt) => {
   timers.push(setTimeout(() => {
     if (robotStore.getState().activeSection === 'stats') {
       robotStore.setStatsStage('lockedFlex');
-      bolt.setAnim('walk');
-      bolt.setExpr('silly');
+      steve.setAnim('walk');
+      steve.setExpr('silly');
     }
   }, 5600));
 
@@ -180,8 +180,8 @@ registerRoutine('stats', (bolt) => {
   timers.push(setTimeout(() => {
     if (robotStore.getState().activeSection === 'stats') {
       robotStore.setStatsStage('shrug');
-      bolt.setAnim('shrug');
-      bolt.setExpr('curious');
+      steve.setAnim('shrug');
+      steve.setExpr('curious');
     }
   }, 8200));
 
@@ -193,20 +193,20 @@ registerRoutine('stats', (bolt) => {
 // ---------------------------------------------------------------------------
 // 08 // EVENTS ROUTINE: Ticket inspector with rubber stamp & winner trophy
 // ---------------------------------------------------------------------------
-registerRoutine('events', (bolt) => {
+registerRoutine('events', (steve) => {
   const timers: ReturnType<typeof setTimeout>[] = [];
 
   // Stage 1: Inspects and stamps tickets
   robotStore.setEventsTicketStage('inspecting');
-  bolt.setAnim('dance');
-  bolt.setExpr('focused');
+  steve.setAnim('dance');
+  steve.setExpr('focused');
 
   // Stage 2: Winner or Finalist ticket cheer with trophy & flat confetti pop!
   timers.push(setTimeout(() => {
     if (robotStore.getState().activeSection === 'events') {
       robotStore.setEventsTicketStage('trophy');
-      bolt.setAnim('cheer');
-      bolt.setExpr('excited');
+      steve.setAnim('cheer');
+      steve.setExpr('excited');
     }
   }, 3600));
 
@@ -218,20 +218,20 @@ registerRoutine('events', (bolt) => {
 // ---------------------------------------------------------------------------
 // 09 // JOURNEY ROUTINE: Walks down timeline, evolves with each year
 // ---------------------------------------------------------------------------
-registerRoutine('journey', (bolt) => {
+registerRoutine('journey', (steve) => {
   const timers: ReturnType<typeof setTimeout>[] = [];
 
   // 2023: Training wheels
   robotStore.setJourneyYear('2023');
-  bolt.setAnim('walk');
-  bolt.setExpr('happy');
+  steve.setAnim('walk');
+  steve.setExpr('happy');
 
   // 2024: Normal robot
   timers.push(setTimeout(() => {
     if (robotStore.getState().activeSection === 'journey') {
       robotStore.setJourneyYear('2024');
-      bolt.setAnim('idle');
-      bolt.setExpr('focused');
+      steve.setAnim('idle');
+      steve.setExpr('focused');
     }
   }, 2500));
 
@@ -239,8 +239,8 @@ registerRoutine('journey', (bolt) => {
   timers.push(setTimeout(() => {
     if (robotStore.getState().activeSection === 'journey') {
       robotStore.setJourneyYear('2025');
-      bolt.setAnim('walk');
-      bolt.setExpr('happy');
+      steve.setAnim('walk');
+      steve.setExpr('happy');
     }
   }, 5000));
 
@@ -248,8 +248,8 @@ registerRoutine('journey', (bolt) => {
   timers.push(setTimeout(() => {
     if (robotStore.getState().activeSection === 'journey') {
       robotStore.setJourneyYear('2026');
-      bolt.setAnim('jump');
-      bolt.setExpr('excited');
+      steve.setAnim('jump');
+      steve.setExpr('excited');
     }
   }, 7500));
 
@@ -261,10 +261,10 @@ registerRoutine('journey', (bolt) => {
 // ---------------------------------------------------------------------------
 // 10 // CONTACT ROUTINE: Hard hat & hammer build letters, input watcher, rocket
 // ---------------------------------------------------------------------------
-registerRoutine('contact', (bolt) => {
+registerRoutine('contact', (steve) => {
   robotStore.setContactAction('building');
-  bolt.setAnim('dance');
-  bolt.setExpr('focused');
+  steve.setAnim('dance');
+  steve.setExpr('focused');
 
   return () => {
     robotStore.setContactInputFocus(null);
@@ -274,10 +274,10 @@ registerRoutine('contact', (bolt) => {
 // ---------------------------------------------------------------------------
 // FOOTER ROUTINE: ZZZ sleep & Back to top flight
 // ---------------------------------------------------------------------------
-registerRoutine('footer', (bolt) => {
+registerRoutine('footer', (steve) => {
   robotStore.setFooterSleeping(true);
-  bolt.setAnim('sleep');
-  bolt.setExpr('sleepy');
+  steve.setAnim('sleep');
+  steve.setExpr('sleepy');
 
   return () => {
     robotStore.setFooterSleeping(false);

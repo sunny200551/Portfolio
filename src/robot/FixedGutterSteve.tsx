@@ -22,7 +22,7 @@ const SHY_TECH_PICKUP_LINES = [
 // Alternate lanes by section:
 // Hero: right | About: left | Work: left | Skills: right | GitHub: left | Stats: right | Events: left | Journey: right | Contact: left
 const SECTION_CONFIG: Record<string, { anim: RobotAnimation; expr: RobotExpression; side: 'left' | 'right'; greeting: string }> = {
-  home: { anim: 'wave', expr: 'happy', side: 'right', greeting: "Hi! I'm BOLT, follow me! 👋" },
+  home: { anim: 'wave', expr: 'happy', side: 'right', greeting: "Hi, I'm Steve. Follow me!" },
   about: { anim: 'idle', expr: 'curious', side: 'left', greeting: "Welcome to About! ✨" },
   work: { anim: 'idle', expr: 'curious', side: 'left', greeting: "Check out these projects! 🚀" },
   skills: { anim: 'idle', expr: 'thinking', side: 'right', greeting: "Sunny's tech loadout! ⚡" },
@@ -33,7 +33,7 @@ const SECTION_CONFIG: Record<string, { anim: RobotAnimation; expr: RobotExpressi
   contact: { anim: 'wave', expr: 'happy', side: 'left', greeting: "Let's build something! ✉️" },
 };
 
-export const FixedGutterBolt: React.FC = () => {
+export const FixedGutterSteve: React.FC = () => {
   const [activeSection, setActiveSection] = useState(() => robotStore.getState().activeSection);
   const [robotEnabled, setRobotEnabled] = useState(() => robotStore.getState().robotEnabled);
   const [speechBubble, setSpeechBubble] = useState<string | null>(() => robotStore.getState().speechBubble);
@@ -379,7 +379,7 @@ export const FixedGutterBolt: React.FC = () => {
       }
     }
 
-    // Hero plinth handoff: BOLT starts on the hero platform floor anchor!
+    // Hero plinth handoff: STEVE starts on the hero platform floor anchor!
     if (activeSection === 'home' && heroPlinthMode && homePlatformPos.x > 0) {
       return {
         posX: Math.max(16, Math.min(w - cW - 16, homePlatformPos.x - cW / 2)),
@@ -392,8 +392,8 @@ export const FixedGutterBolt: React.FC = () => {
     }
 
     // Reserved lanes positioning:
-    // Left lane: BOLT sits comfortably inside left margin [16px, laneWidth]
-    // Right lane: BOLT sits inside right lane [w - 56px - cW, w - 56px] (safely away from rail at w-52px)
+    // Left lane: STEVE sits comfortably inside left margin [16px, laneWidth]
+    // Right lane: STEVE sits inside right lane [w - 56px - cW, w - 56px] (safely away from rail at w-52px)
     const isRight = currentConfig.side === 'right';
     let targetX: number;
 
@@ -465,12 +465,12 @@ export const FixedGutterBolt: React.FC = () => {
   // Handle tap on mobile companion
   const handleMobileCompanionTap = () => {
     if (isMobileOrTablet) {
-      robotStore.setBolt('cheer', 'happy');
+      robotStore.setSteve('cheer', 'happy');
       setGreetBubble("BEEP BOOP! ✨");
       if (greetingTimerRef.current) clearTimeout(greetingTimerRef.current);
       greetingTimerRef.current = setTimeout(() => {
         setGreetBubble(null);
-        robotStore.setBolt('idle', 'happy');
+        robotStore.setSteve('idle', 'happy');
       }, 2000);
     }
   };
@@ -481,8 +481,8 @@ export const FixedGutterBolt: React.FC = () => {
 
   return (
     <div
-      id="robot-bolt-container"
-      data-robot-instance="single-bolt"
+      id="robot-steve-container"
+      data-robot-instance="single-steve"
       className={`fixed z-35 select-none ${
         isMobileOrTablet ? 'pointer-events-auto cursor-pointer' : 'pointer-events-none'
       } ${isFastScrolling && isMobileOrTablet ? 'opacity-40' : 'opacity-100'} transition-opacity duration-200`}
@@ -497,9 +497,9 @@ export const FixedGutterBolt: React.FC = () => {
         height: `${canvasH}px`,
       }}
       onClick={handleMobileCompanionTap}
-      aria-label="BOLT - Interactive Portfolio Robot Mascot"
+      aria-label="STEVE - Interactive Portfolio Robot Mascot"
     >
-      {/* Speech bubble: strictly ABOVE Bolt's head/antenna, never over face or body */}
+      {/* Speech bubble: strictly ABOVE Steve's head/antenna, never over face or body */}
       {displayBubble && (
         <div
           className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 min-w-[130px] max-w-[220px] px-3.5 py-1.5 bg-white border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] font-mono text-[11px] font-bold text-[#0A0A0A] leading-snug z-40 pointer-events-none text-center"
@@ -557,7 +557,7 @@ export const FixedGutterBolt: React.FC = () => {
 
               <group position={[0, -0.16, 0]}>
                 <Robot
-                  variant="bolt"
+                  variant="steve"
                   animation={liveAnim}
                   expression={liveExpr}
                   scale={robotScale}
@@ -569,11 +569,11 @@ export const FixedGutterBolt: React.FC = () => {
           </Suspense>
         </CanvasErrorBoundary>
 
-        {/* Soft neo-brutalist floor shadow pill under BOLT's feet */}
+        {/* Soft neo-brutalist floor shadow pill under STEVE's feet */}
         <div className="w-14 h-2.5 bg-[#0A0A0A]/20 rounded-full mx-auto -mt-2.5 blur-[1px] pointer-events-none" />
       </div>
     </div>
   );
 };
 
-export default FixedGutterBolt;
+export default FixedGutterSteve;

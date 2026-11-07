@@ -1,5 +1,5 @@
 /**
- * Strict Rig Dimensions & Joint Limits for BOLT, NUT, and CHIP.
+ * Strict Rig Dimensions & Joint Limits for STEVE.
  * Complies with FIX ROUND 3 Part 2.
  */
 export const RIG = {

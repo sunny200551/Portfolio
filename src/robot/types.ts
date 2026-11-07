@@ -1,4 +1,4 @@
-export type RobotVariant = 'bolt';
+export type RobotVariant = 'steve';
 
 export type RobotExpression = 
   | 'happy' 
@@ -85,8 +85,8 @@ export interface RobotVariantConfig {
 }
 
 export const VARIANT_CONFIGS: Record<RobotVariant, RobotVariantConfig> = {
-  bolt: {
-    name: 'BOLT',
+  steve: {
+    name: 'STEVE',
     bodyColor: '#FF5A1F', // Orange
     visorBgColor: '#0047AB', // Royal Blue screen
     limbColor: '#0A1A3F', // Navy joints

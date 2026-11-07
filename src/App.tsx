@@ -19,7 +19,7 @@ import { useGitHubData } from './hooks/useGitHubData';
 import { SessionLoader } from './components/ui/SessionLoader';
 
 // Lazy-load fixed gutter mascot so text is instantly readable
-const FixedGutterBolt = lazy(() => import('./robot/FixedGutterBolt'));
+const FixedGutterSteve = lazy(() => import('./robot/FixedGutterSteve'));
 const RobotShowcase = lazy(() => import('./robot/RobotShowcase'));
 
 function App() {
@@ -51,10 +51,10 @@ function App() {
       {/* Flat Custom Cursor */}
       <CustomCursor />
       
-      {/* Fixed Gutter BOLT Mascot (deferred after first paint) */}
+      {/* Fixed Gutter STEVE Mascot (deferred after first paint) */}
       {mountedAfterPaint && (
         <Suspense fallback={null}>
-          <FixedGutterBolt />
+          <FixedGutterSteve />
         </Suspense>
       )}
       {isRobotShowcase && (

@@ -3,7 +3,7 @@ import type { RobotProps } from './types';
 import { RobotModel } from './RobotModel';
 
 export const Robot: React.FC<RobotProps> = ({
-  variant = 'bolt',
+  variant = 'steve',
   expression = 'happy',
   animation = 'idle',
   position = [0, 0, 0],

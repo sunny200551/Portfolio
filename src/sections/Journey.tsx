@@ -84,7 +84,7 @@ export const Journey: React.FC = () => {
         );
       }
 
-      // Colored walked trail following BOLT's journey down the timeline
+      // Colored walked trail following STEVE's journey down the timeline
       if (walkedTrailRef.current && containerRef.current) {
         gsap.fromTo(
           walkedTrailRef.current,
@@ -102,7 +102,7 @@ export const Journey: React.FC = () => {
         );
       }
 
-      // Nodes pop in and trigger BOLT reactions when line reaches them
+      // Nodes pop in and trigger STEVE reactions when line reaches them
       nodesRef.current.forEach((node, idx) => {
         if (!node) return;
         const year = milestonesData[idx].year;
@@ -192,7 +192,7 @@ export const Journey: React.FC = () => {
             className="absolute top-0 bottom-0 left-6 md:left-1/2 -translate-x-1/2 w-1 bg-[#0A0A0A] origin-top pointer-events-none"
           />
 
-          {/* Orange walked trail that fills as BOLT travels down the line */}
+          {/* Orange walked trail that fills as STEVE travels down the line */}
           <div 
             ref={walkedTrailRef}
             className="absolute top-0 bottom-0 left-6 md:left-1/2 -translate-x-1/2 w-1.5 bg-[#FF5A1F] origin-top pointer-events-none"

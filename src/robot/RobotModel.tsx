@@ -24,7 +24,7 @@ interface RobotModelProps {
 }
 
 export const RobotModel: React.FC<RobotModelProps> = ({
-  variant = 'bolt',
+  variant = 'steve',
   expression = 'happy',
   animation = 'idle',
   position = [0, 0, 0],

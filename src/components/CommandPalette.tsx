@@ -16,7 +16,10 @@ import {
   Sparkles,
   Moon,
   Sun,
-  Power
+  Power,
+  Volume2,
+  VolumeX,
+  Heart
 } from 'lucide-react';
 import { robotStore } from '../robot/robotStore';
 import { getLenis } from '../lib/lenis';
@@ -104,8 +107,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       action: handleCopyEmail
     },
     {
-      id: 'robot-dance',
-      name: 'Dance (Robot: Dance Party)',
+      id: 'steve-dance',
+      name: 'steve: dance (Dance Party)',
       category: 'Actions',
       icon: Sparkles,
       action: () => {
@@ -114,8 +117,57 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       }
     },
     {
-      id: 'robot-sleep',
-      name: 'Sleep (Robot: Nap Time)',
+      id: 'steve-shy-now',
+      name: 'steve: shy mode now (Trigger Shy Reaction)',
+      category: 'Actions',
+      icon: Heart,
+      action: () => {
+        robotStore.triggerShyMode();
+        onClose();
+      }
+    },
+    {
+      id: 'steve-shy-on',
+      name: 'steve: shy mode on',
+      category: 'Actions',
+      icon: Check,
+      action: () => {
+        robotStore.triggerShyMode();
+        onClose();
+      }
+    },
+    {
+      id: 'steve-shy-off',
+      name: 'steve: shy mode off',
+      category: 'Actions',
+      icon: Power,
+      action: () => {
+        onClose();
+      }
+    },
+    {
+      id: 'steve-quiet',
+      name: 'steve: quiet (Mute Speech Bubbles)',
+      category: 'Actions',
+      icon: VolumeX,
+      action: () => {
+        robotStore.setQuiet(true);
+        onClose();
+      }
+    },
+    {
+      id: 'steve-talk',
+      name: 'steve: talk (Enable Speech Bubbles)',
+      category: 'Actions',
+      icon: Volume2,
+      action: () => {
+        robotStore.setQuiet(false);
+        onClose();
+      }
+    },
+    {
+      id: 'steve-sleep',
+      name: 'steve: sleep (Nap Time)',
       category: 'Actions',
       icon: Moon,
       action: () => {
@@ -124,8 +176,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       }
     },
     {
-      id: 'robot-wake',
-      name: 'Wake (Robot: Wake Up)',
+      id: 'steve-wake',
+      name: 'steve: wake (Wake Up)',
       category: 'Actions',
       icon: Sun,
       action: () => {
@@ -134,8 +186,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       }
     },
     {
-      id: 'robot-off',
-      name: 'Robot Off (Disable 3D Mascots)',
+      id: 'steve-off',
+      name: 'steve: off (Disable Mascot)',
       category: 'Actions',
       icon: Power,
       action: () => {
@@ -144,8 +196,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       }
     },
     {
-      id: 'robot-on',
-      name: 'Robot On (Enable 3D Mascots)',
+      id: 'steve-on',
+      name: 'steve: on (Enable Mascot)',
       category: 'Actions',
       icon: Check,
       action: () => {
