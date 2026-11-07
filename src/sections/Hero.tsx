@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Download, ArrowRight, Mail } from 'lucide-react';
 import { CONTACT_INFO } from '../data/contact';
+import { SOCIAL_LINKS } from '../data/socials';
 import type { GitHubProfile } from '../hooks/useGitHubData';
 import { robotStore } from '../robot/robotStore';
 import { RobotDebugOverlay } from '../robot/RobotDebugOverlay';
@@ -41,7 +42,7 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
           
           {/* Available for Opportunities Chip with ample spacing */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] text-xs font-mono font-bold uppercase tracking-wider mb-1">
-            <span className="w-2.5 h-2.5 bg-[#FF5A1F] border border-[#0A0A0A]" />
+            <span className="w-2.5 h-2.5 bg-[#FF5C00] border border-[#0A0A0A]" />
             <span>AVAILABLE FOR OPPORTUNITIES</span>
           </div>
 
@@ -50,13 +51,13 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
             {/* Square Profile Photo with 3px Black Border and Offset Orange Block */}
             <div className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32">
               <div 
-                className="absolute inset-0 bg-[#FF5A1F] translate-x-2.5 translate-y-2.5 border-[3px] border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A]" 
+                className="absolute inset-0 bg-[#FF5C00] translate-x-2.5 translate-y-2.5 border-[3px] border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A]" 
                 aria-hidden="true" 
               />
               <div className="relative w-full h-full bg-[#0047AB] border-[3px] border-[#0A0A0A] overflow-hidden flex items-center justify-center">
                 <img
                   src="/profile.webp"
-                  alt="Sunny Pasumarthi - Computer Science Student & Frontend Developer"
+                  alt="Sunny Pasumarthi - Computer Science Student, Web3 Focus & Content Creator"
                   width={128}
                   height={128}
                   loading="eager"
@@ -83,13 +84,24 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
             </h1>
           </div>
 
-          {/* Static Tagline: single line with flex-wrap and neat separator spacing */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs sm:text-sm font-mono font-bold text-[#0A0A0A] mt-1 max-w-full">
-            <span className="whitespace-nowrap">Computer Science Student</span>
-            <span className="w-2 h-2 bg-[#FF5A1F] border border-[#0A0A0A] shrink-0 hidden sm:inline-block" aria-hidden="true" />
-            <span className="whitespace-nowrap">Frontend Developer</span>
-            <span className="w-2 h-2 bg-[#FF5A1F] border border-[#0A0A0A] shrink-0 hidden sm:inline-block" aria-hidden="true" />
-            <span className="whitespace-nowrap">Blockchain Enthusiast</span>
+          {/* Static Tagline: 4 items each with its own orange square bullet, so wrapping never leaves an orphan separator */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 text-xs sm:text-sm font-mono font-bold text-[#0A0A0A] mt-2 max-w-full">
+            <span className="inline-flex items-center gap-2 whitespace-nowrap">
+              <span className="w-2.5 h-2.5 bg-[#FF5C00] border border-[#0A0A0A] shrink-0" aria-hidden="true" />
+              <span>Computer Science Student</span>
+            </span>
+            <span className="inline-flex items-center gap-2 whitespace-nowrap">
+              <span className="w-2.5 h-2.5 bg-[#FF5C00] border border-[#0A0A0A] shrink-0" aria-hidden="true" />
+              <span>Frontend Developer</span>
+            </span>
+            <span className="inline-flex items-center gap-2 whitespace-nowrap">
+              <span className="w-2.5 h-2.5 bg-[#FF5C00] border border-[#0A0A0A] shrink-0" aria-hidden="true" />
+              <span>Web3 & Blockchain</span>
+            </span>
+            <span className="inline-flex items-center gap-2 whitespace-nowrap">
+              <span className="w-2.5 h-2.5 bg-[#FF5C00] border border-[#0A0A0A] shrink-0" aria-hidden="true" />
+              <span>Content Creator & Editor</span>
+            </span>
           </div>
 
           {/* Action CTAs */}
@@ -102,7 +114,7 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
               }}
               onMouseEnter={() => window.dispatchEvent(new CustomEvent('robot:action', { detail: 'jump' }))}
               onMouseLeave={() => window.dispatchEvent(new CustomEvent('robot:action', { detail: 'idle' }))}
-              className="flex items-center justify-center gap-2 px-7 py-3.5 bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] hover:bg-black hover:text-white active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0px_#0A0A0A] transition-all cursor-pointer"
+              className="flex items-center justify-center gap-2 px-7 py-3.5 bg-[#FF5C00] text-black border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] hover:bg-black hover:text-white active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0px_#0A0A0A] transition-all cursor-pointer"
             >
               <span>GET IN TOUCH</span>
               <ArrowRight size={14} />
@@ -122,15 +134,15 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
             </a>
           </div>
 
-          {/* Square Black-Bordered Social Buttons */}
+          {/* Square Black-Bordered Social Buttons: GitHub, LinkedIn, Instagram, YouTube, Email */}
           <div className="flex gap-2.5 items-center font-mono text-xs mt-1">
             <a
-              href="https://github.com/sunny200551"
+              href={SOCIAL_LINKS.github.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-10 h-10 border-2 border-[#0A0A0A] bg-white text-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] flex items-center justify-center hover:bg-[#FF5A1F] hover:text-black active:translate-x-0.5 active:translate-y-0.5 transition-all"
+              className="w-10 h-10 border-2 border-[#0A0A0A] bg-white text-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] flex items-center justify-center hover:bg-[#FF5C00] hover:text-black active:translate-x-0.5 active:translate-y-0.5 transition-all"
               title="GitHub" data-robot-react="hero:social"
-              aria-label="GitHub profile"
+              aria-label={SOCIAL_LINKS.github.ariaLabel}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
@@ -139,12 +151,12 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
             </a>
             
             <a
-              href="https://www.linkedin.com/in/sunny-pasumarthi-357615333/"
+              href={SOCIAL_LINKS.linkedin.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-10 h-10 border-2 border-[#0A0A0A] bg-white text-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] flex items-center justify-center hover:bg-[#FF5A1F] hover:text-black active:translate-x-0.5 active:translate-y-0.5 transition-all"
+              className="w-10 h-10 border-2 border-[#0A0A0A] bg-white text-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] flex items-center justify-center hover:bg-[#FF5C00] hover:text-black active:translate-x-0.5 active:translate-y-0.5 transition-all"
               title="LinkedIn" data-robot-react="hero:social"
-              aria-label="LinkedIn profile"
+              aria-label={SOCIAL_LINKS.linkedin.ariaLabel}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
@@ -154,12 +166,12 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
             </a>
 
             <a
-              href="https://instagram.com/sunny_pasumarthi"
+              href={SOCIAL_LINKS.instagram.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-10 h-10 border-2 border-[#0A0A0A] bg-white text-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] flex items-center justify-center hover:bg-[#FF5A1F] hover:text-black active:translate-x-0.5 active:translate-y-0.5 transition-all"
+              className="w-10 h-10 border-2 border-[#0A0A0A] bg-white text-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] flex items-center justify-center hover:bg-[#FF5C00] hover:text-black active:translate-x-0.5 active:translate-y-0.5 transition-all"
               title="Instagram" data-robot-react="hero:social"
-              aria-label="Instagram profile"
+              aria-label={SOCIAL_LINKS.instagram.ariaLabel}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
@@ -169,8 +181,21 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
             </a>
 
             <a
+              href={SOCIAL_LINKS.youtube.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 border-2 border-[#0A0A0A] bg-white text-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] flex items-center justify-center hover:bg-[#FF0000] hover:text-white active:translate-x-0.5 active:translate-y-0.5 transition-all"
+              title="YouTube" data-robot-react="hero:social"
+              aria-label={SOCIAL_LINKS.youtube.ariaLabel}
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+            </a>
+
+            <a
               href={`mailto:${CONTACT_INFO.email}?subject=Hello%20Sunny`}
-              className="w-10 h-10 border-2 border-[#0A0A0A] bg-white text-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] flex items-center justify-center hover:bg-[#FF5A1F] hover:text-black active:translate-x-0.5 active:translate-y-0.5 transition-all"
+              className="w-10 h-10 border-2 border-[#0A0A0A] bg-white text-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] flex items-center justify-center hover:bg-[#FF5C00] hover:text-black active:translate-x-0.5 active:translate-y-0.5 transition-all"
               title="Email" data-robot-react="hero:social"
               aria-label="Send direct email"
             >
@@ -212,7 +237,7 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
             border: 'none',
             outline: 'none',
           }}
-          className="focus-visible:ring-2 focus-visible:ring-[#FF5A1F]"
+          className="focus-visible:ring-2 focus-visible:ring-[#FF5C00]"
         />
       )}
 

@@ -130,7 +130,7 @@ export const Events: React.FC = () => {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#EEF2FA] border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] text-xs font-mono font-bold tracking-wider uppercase mb-3">
               <Calendar className="w-3.5 h-3.5 text-[#FF5A1F]" />
-              07 // EVENTS & WORKSHOPS
+              08 // EVENTS & WORKSHOPS
             </div>
             <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0A0A0A] tracking-tight">
               EVENTS & HACKATHONS

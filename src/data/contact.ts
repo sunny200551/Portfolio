@@ -1,26 +1,32 @@
+import { SOCIAL_LINKS } from './socials';
+
 export const CONTACT_INFO = {
-  email: 'sunnypasumarthi9@gmail.com',
+  email: SOCIAL_LINKS.email.handle,
   name: 'Sunny Pasumarthi',
   location: 'Nellore, Andhra Pradesh, India',
   country: 'India',
   social: {
     linkedin: {
       name: 'LINKEDIN',
-      handle: 'sunny-pasumarthi',
-      url: 'https://www.linkedin.com/in/sunny-pasumarthi-357615333/',
+      handle: SOCIAL_LINKS.linkedin.handle,
+      url: SOCIAL_LINKS.linkedin.url,
     },
     github: {
       name: 'GITHUB',
-      handle: 'sunny200551',
-      url: 'https://github.com/sunny200551',
+      handle: SOCIAL_LINKS.github.handle,
+      url: SOCIAL_LINKS.github.url,
     },
     instagram: {
       name: 'INSTAGRAM',
-      handle: 'sunny_pasumarthi',
-      url: 'https://instagram.com/sunny_pasumarthi',
+      handle: SOCIAL_LINKS.instagram.handle,
+      url: SOCIAL_LINKS.instagram.url,
+    },
+    youtube: {
+      name: 'YOUTUBE',
+      handle: SOCIAL_LINKS.youtube.handle,
+      url: SOCIAL_LINKS.youtube.url,
     },
   },
 } as const;
 
 export default CONTACT_INFO;
-

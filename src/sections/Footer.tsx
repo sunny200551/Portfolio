@@ -1,6 +1,7 @@
 import React from 'react';
 import { Mail, ArrowUp, FileText, Sparkles } from 'lucide-react';
 import { CONTACT_INFO } from '../data/contact';
+import { SOCIAL_LINKS } from '../data/socials';
 import type { GitHubProfile } from '../hooks/useGitHubData';
 import { robotStore } from '../robot/robotStore';
 
@@ -13,10 +14,12 @@ const navLinks = [
   { id: 'about', label: 'ABOUT' },
   { id: 'work', label: 'WORK' },
   { id: 'skills', label: 'SKILLS' },
+  { id: 'internship', label: 'INTERNSHIP' },
   { id: 'github', label: 'GITHUB' },
   { id: 'stats', label: 'STATS' },
   { id: 'events', label: 'EVENTS' },
   { id: 'journey', label: 'JOURNEY' },
+  { id: 'content', label: 'CONTENT' },
   { id: 'contact', label: 'CONTACT' },
 ];
 
@@ -51,7 +54,7 @@ export const Footer: React.FC<FooterProps> = () => {
           {/* Identity */}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-2">
-              <span className="font-display font-black text-lg px-2.5 py-0.5 bg-[#FF5A1F] text-black border border-white shadow-[2px_2px_0px_#FFFFFF]">
+              <span className="font-display font-black text-lg px-2.5 py-0.5 bg-[#FF5C00] text-black border border-white shadow-[2px_2px_0px_#FFFFFF]">
                 SP
               </span>
               <span className="font-display font-black text-2xl uppercase tracking-wider text-white">
@@ -59,7 +62,7 @@ export const Footer: React.FC<FooterProps> = () => {
               </span>
             </div>
             <p className="text-xs text-white/70">
-              Computer Science Student • Frontend Developer • Blockchain Enthusiast
+              Computer Science Student • Web3 & Blockchain • Content Creator & Editor
             </p>
           </div>
 
@@ -69,7 +72,7 @@ export const Footer: React.FC<FooterProps> = () => {
               href="/Resume.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-4 py-2 bg-white text-black font-bold text-xs uppercase border-2 border-white hover:bg-[#FF5A1F] hover:border-black transition-all cursor-pointer shadow-[3px_3px_0px_#0A0A0A]"
+              className="flex items-center gap-1.5 px-4 py-2 bg-white text-black font-bold text-xs uppercase border-2 border-white hover:bg-[#FF5C00] hover:border-black transition-all cursor-pointer shadow-[3px_3px_0px_#0A0A0A]"
             >
               <FileText size={14} />
               <span>RESUME (PDF)</span>
@@ -79,7 +82,7 @@ export const Footer: React.FC<FooterProps> = () => {
               data-robot-anchor="footer:top-btn"
               data-robot-react="footer:back-to-top"
               onClick={scrollToTop}
-              className="flex items-center gap-1.5 px-4 py-2 bg-[#FF5A1F] text-black font-bold text-xs uppercase border-2 border-white hover:bg-white transition-all cursor-pointer shadow-[3px_3px_0px_#0A0A0A]"
+              className="flex items-center gap-1.5 px-4 py-2 bg-[#FF5C00] text-black font-bold text-xs uppercase border-2 border-white hover:bg-white transition-all cursor-pointer shadow-[3px_3px_0px_#0A0A0A]"
               title="Scroll back to top"
             >
               <span>BACK TO TOP</span>
@@ -98,7 +101,7 @@ export const Footer: React.FC<FooterProps> = () => {
               <button
                 key={link.id}
                 onClick={() => scrollTo(link.id)}
-                className="hover:text-[#FF5A1F] transition-colors cursor-pointer uppercase"
+                className="hover:text-[#FF5C00] transition-colors cursor-pointer uppercase"
               >
                 {link.label}
               </button>
@@ -108,7 +111,7 @@ export const Footer: React.FC<FooterProps> = () => {
           {/* Steve Showcase Link */}
           <a
             href="/?robot-showcase=true"
-            className="inline-flex items-center gap-1.5 text-xs text-[#FF5A1F] hover:text-white font-bold transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs text-[#FF5C00] hover:text-white font-bold transition-colors cursor-pointer"
           >
             <Sparkles size={13} />
             <span>STEVE SHOWCASE (EXPRESSIONS & POSES) ↗</span>
@@ -123,10 +126,11 @@ export const Footer: React.FC<FooterProps> = () => {
           {/* Social Icons */}
           <div className="flex items-center gap-2.5">
             <a
-              href="https://github.com/sunny200551"
+              href={SOCIAL_LINKS.github.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 bg-white/10 border border-white/25 text-white hover:bg-[#FF5A1F] hover:text-black hover:border-black transition-colors"
+              aria-label={SOCIAL_LINKS.github.ariaLabel}
+              className="p-2 bg-white/10 border border-white/25 text-white hover:bg-[#FF5C00] hover:text-black hover:border-black transition-colors"
               title="GitHub Profile"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -136,9 +140,10 @@ export const Footer: React.FC<FooterProps> = () => {
             </a>
 
             <a
-              href="https://www.linkedin.com/in/sunny-pasumarthi-357615333/"
+              href={SOCIAL_LINKS.linkedin.url}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={SOCIAL_LINKS.linkedin.ariaLabel}
               className="p-2 bg-white/10 border border-white/25 text-white hover:bg-[#0047AB] hover:text-white hover:border-black transition-colors"
               title="LinkedIn Profile"
             >
@@ -150,10 +155,11 @@ export const Footer: React.FC<FooterProps> = () => {
             </a>
 
             <a
-              href="https://instagram.com/sunny_pasumarthi"
+              href={SOCIAL_LINKS.instagram.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 bg-white/10 border border-white/25 text-white hover:bg-[#FF5A1F] hover:text-black hover:border-black transition-colors"
+              aria-label={SOCIAL_LINKS.instagram.ariaLabel}
+              className="p-2 bg-white/10 border border-white/25 text-white hover:bg-[#E1306C] hover:text-white hover:border-black transition-colors"
               title="Instagram Profile"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -164,9 +170,23 @@ export const Footer: React.FC<FooterProps> = () => {
             </a>
 
             <a
+              href={SOCIAL_LINKS.youtube.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={SOCIAL_LINKS.youtube.ariaLabel}
+              className="p-2 bg-white/10 border border-white/25 text-white hover:bg-[#FF0000] hover:text-white hover:border-black transition-colors"
+              title="YouTube Channel"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+            </a>
+
+            <a
               href={`mailto:${CONTACT_INFO.email}?subject=Hello%20Sunny`}
-              className="p-2 bg-white/10 border border-white/25 text-white hover:bg-[#FF5A1F] hover:text-black hover:border-black transition-colors"
+              className="p-2 bg-white/10 border border-white/25 text-white hover:bg-[#FF5C00] hover:text-black hover:border-black transition-colors"
               title="Email Sunny Directly"
+              aria-label="Send direct email"
             >
               <Mail size={16} />
             </a>

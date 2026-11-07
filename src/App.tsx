@@ -8,8 +8,9 @@ import { Hero } from './sections/Hero';
 import { About } from './sections/About';
 import { Projects } from './sections/Projects';
 import { Skills } from './sections/Skills';
-import { CodingDashboard } from './sections/CodingDashboard';
+import { Internship } from './sections/Internship';
 import { GitHubActivity } from './sections/GitHubActivity';
+import { CodingDashboard } from './sections/CodingDashboard';
 import { Events } from './sections/Events';
 import { Journey } from './sections/Journey';
 import { Contact } from './sections/Contact';
@@ -19,9 +20,10 @@ import { useGitHubData } from './hooks/useGitHubData';
 import { SessionLoader } from './components/ui/SessionLoader';
 import { useSteveHandoff } from './hooks/useSteveHandoff';
 
-// Lazy-load fixed gutter mascot so text is instantly readable
+// Lazy-load fixed gutter mascot & content edit bay for optimal initial load
 const FixedGutterSteve = lazy(() => import('./robot/FixedGutterSteve'));
 const RobotShowcase = lazy(() => import('./robot/RobotShowcase'));
+const ContentSection = lazy(() => import('./sections/Content'));
 
 function App() {
   useSteveHandoff();
@@ -85,22 +87,30 @@ function App() {
         {/* 04. Technical Stack & Skills (#skills) */}
         <Skills />
 
-        {/* 05. GitHub Activity (#github) */}
+        {/* 05. Internship & Apprenticeship (#internship) */}
+        <Internship />
+
+        {/* 06. GitHub Activity (#github) */}
         <GitHubActivity profile={profile} repos={repos} />
 
-        {/* 06. Coding Dashboard (#stats) */}
+        {/* 07. Coding Dashboard (#stats) */}
         <CodingDashboard />
 
-        {/* 07. Participated Events & Hackathons (#events) */}
+        {/* 08. Participated Events & Hackathons (#events) */}
         <Events />
 
-        {/* 08. Learning Journey (#journey) */}
+        {/* 09. Learning Journey (#journey) */}
         <Journey />
 
-        {/* 09. Contact Form (#contact) */}
+        {/* 10. Content & Edit Bay (#content) */}
+        <Suspense fallback={<div className="min-h-[400px] bg-[#0A1128] text-white flex items-center justify-center font-mono text-xs">LOADING EDIT BAY...</div>}>
+          <ContentSection />
+        </Suspense>
+
+        {/* 11. Contact Form (#contact) */}
         <Contact />
 
-        {/* 10. Footer (#footer) */}
+        {/* Footer (#footer) */}
         <Footer />
       </main>
 

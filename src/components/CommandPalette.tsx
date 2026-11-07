@@ -85,11 +85,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
     { id: 'about', name: 'Go to 02 // About', category: 'Navigation', icon: User, action: () => scrollToSection('about') },
     { id: 'work', name: 'Go to 03 // Work (Featured Projects)', category: 'Navigation', icon: Briefcase, action: () => scrollToSection('work') },
     { id: 'skills', name: 'Go to 04 // Skills', category: 'Navigation', icon: Code, action: () => scrollToSection('skills') },
-    { id: 'github', name: 'Go to 05 // GitHub Commit Skyline', category: 'Navigation', icon: Terminal, action: () => scrollToSection('github') },
-    { id: 'stats', name: 'Go to 06 // Coding Stats', category: 'Navigation', icon: Award, action: () => scrollToSection('stats') },
-    { id: 'events', name: 'Go to 07 // Events & Hackathons', category: 'Navigation', icon: Calendar, action: () => scrollToSection('events') },
-    { id: 'journey', name: 'Go to 08 // Learning Journey', category: 'Navigation', icon: Compass, action: () => scrollToSection('journey') },
-    { id: 'contact', name: 'Go to 09 // Contact', category: 'Navigation', icon: User, action: () => scrollToSection('contact') },
+    { id: 'internship', name: 'Go to 05 // Internship (Work & Apprenticeship)', category: 'Navigation', icon: Award, action: () => scrollToSection('internship') },
+    { id: 'github', name: 'Go to 06 // GitHub Commit Skyline', category: 'Navigation', icon: Terminal, action: () => scrollToSection('github') },
+    { id: 'stats', name: 'Go to 07 // Coding Stats', category: 'Navigation', icon: Award, action: () => scrollToSection('stats') },
+    { id: 'events', name: 'Go to 08 // Events & Hackathons', category: 'Navigation', icon: Calendar, action: () => scrollToSection('events') },
+    { id: 'journey', name: 'Go to 09 // Learning Journey', category: 'Navigation', icon: Compass, action: () => scrollToSection('journey') },
+    { id: 'content', name: 'Go to 10 // Content (The Edit Bay)', category: 'Navigation', icon: Sparkles, action: () => scrollToSection('content') },
+    { id: 'contact', name: 'Go to 11 // Contact', category: 'Navigation', icon: User, action: () => scrollToSection('contact') },
     {
       id: 'resume',
       name: 'Open Official Resume (PDF)',
@@ -97,6 +99,26 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       icon: FileText,
       action: () => {
         window.open('/Resume.pdf', '_blank');
+        onClose();
+      }
+    },
+    {
+      id: 'open-youtube',
+      name: 'Open YouTube Channel (@sunny-pasumarthi-21)',
+      category: 'Actions',
+      icon: Sparkles,
+      action: () => {
+        window.open('https://www.youtube.com/@sunny-pasumarthi-21', '_blank');
+        onClose();
+      }
+    },
+    {
+      id: 'open-instagram',
+      name: 'Open Instagram Profile (@sunny_pasumarthi)',
+      category: 'Actions',
+      icon: Sparkles,
+      action: () => {
+        window.open('https://instagram.com/sunny_pasumarthi', '_blank');
         onClose();
       }
     },

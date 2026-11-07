@@ -1,4 +1,4 @@
-export type SkillTier = 'Daily' | 'Comfortable' | 'Learning';
+export type SkillTier = 'Focus' | 'Daily' | 'Comfortable' | 'Learning';
 
 export type SkillCategory =
   | 'Frontend'
@@ -6,7 +6,8 @@ export type SkillCategory =
   | 'Languages'
   | 'Database'
   | 'Blockchain'
-  | 'Tools';
+  | 'Tools'
+  | 'Content';
 
 export interface PeriodicSkill {
   id: string;
@@ -26,13 +27,62 @@ export const SKILL_CATEGORIES: SkillCategory[] = [
   'Database',
   'Blockchain',
   'Tools',
+  'Content',
 ];
 
 export const skillsData: PeriodicSkill[] = [
-  // --- FRONTEND (Cobalt) ---
+  // --- CURRENT FOCUS: BLOCKCHAIN, WEB3 & DSA (Top Shelf) ---
+  {
+    id: 'solidity',
+    index: 1,
+    name: 'Solidity',
+    symbol: 'So',
+    category: 'Blockchain',
+    tier: 'Focus',
+    note: 'EVM smart contract programming, ABI bindings & event emitters.',
+    verifyRequired: true,
+  },
+  {
+    id: 'web3-concepts',
+    index: 2,
+    name: 'Web3 Concepts',
+    symbol: 'W3',
+    category: 'Blockchain',
+    tier: 'Focus',
+    note: 'Browser wallet integration, RPC providers & distributed applications.',
+  },
+  {
+    id: 'smart-contracts',
+    index: 3,
+    name: 'Smart Contracts',
+    symbol: 'Sc',
+    category: 'Blockchain',
+    tier: 'Focus',
+    note: 'Autonomous on-chain deterministic execution & state mutation.',
+  },
+  {
+    id: 'blockchain-fund',
+    index: 4,
+    name: 'Blockchain Fundamentals',
+    symbol: 'Bc',
+    category: 'Blockchain',
+    tier: 'Focus',
+    note: 'Decentralized ledgers, consensus algorithms & cryptographic hashing.',
+  },
+  {
+    id: 'dsa-practice',
+    index: 5,
+    name: 'Data Structures & Algorithms',
+    symbol: 'Ds',
+    category: 'Languages',
+    tier: 'Focus',
+    note: 'Daily algorithmic problem-solving on LeetCode & CodeChef.',
+  },
+
+  // --- FRONTEND (Established Production Skills) ---
   {
     id: 'react',
-    index: 1,
+    index: 6,
     name: 'React 19',
     symbol: 'Re',
     category: 'Frontend',
@@ -41,7 +91,7 @@ export const skillsData: PeriodicSkill[] = [
   },
   {
     id: 'tailwindcss',
-    index: 2,
+    index: 7,
     name: 'Tailwind CSS v4',
     symbol: 'Tw',
     category: 'Frontend',
@@ -50,7 +100,7 @@ export const skillsData: PeriodicSkill[] = [
   },
   {
     id: 'html-css',
-    index: 3,
+    index: 8,
     name: 'HTML5 & CSS3',
     symbol: 'Ht',
     category: 'Frontend',
@@ -59,7 +109,7 @@ export const skillsData: PeriodicSkill[] = [
   },
   {
     id: 'nextjs',
-    index: 4,
+    index: 9,
     name: 'Next.js',
     symbol: 'Nx',
     category: 'Frontend',
@@ -68,7 +118,7 @@ export const skillsData: PeriodicSkill[] = [
   },
   {
     id: 'framer-motion',
-    index: 5,
+    index: 10,
     name: 'Framer Motion',
     symbol: 'Fm',
     category: 'Frontend',
@@ -80,7 +130,7 @@ export const skillsData: PeriodicSkill[] = [
   // --- BACKEND (Navy) ---
   {
     id: 'nodejs',
-    index: 6,
+    index: 11,
     name: 'Node.js',
     symbol: 'Nd',
     category: 'Backend',
@@ -89,7 +139,7 @@ export const skillsData: PeriodicSkill[] = [
   },
   {
     id: 'express',
-    index: 7,
+    index: 12,
     name: 'Express.js',
     symbol: 'Ex',
     category: 'Backend',
@@ -98,7 +148,7 @@ export const skillsData: PeriodicSkill[] = [
   },
   {
     id: 'rest-apis',
-    index: 8,
+    index: 13,
     name: 'REST APIs',
     symbol: 'Rs',
     category: 'Backend',
@@ -106,10 +156,10 @@ export const skillsData: PeriodicSkill[] = [
     note: 'Client-server contracts, endpoint design & HTTP response codes.',
   },
 
-  // --- LANGUAGES (Orange) ---
+  // --- LANGUAGES (Orange / Cobalt) ---
   {
     id: 'typescript',
-    index: 9,
+    index: 14,
     name: 'TypeScript',
     symbol: 'Ts',
     category: 'Languages',
@@ -119,7 +169,7 @@ export const skillsData: PeriodicSkill[] = [
   },
   {
     id: 'javascript',
-    index: 10,
+    index: 15,
     name: 'JavaScript',
     symbol: 'Js',
     category: 'Languages',
@@ -128,7 +178,7 @@ export const skillsData: PeriodicSkill[] = [
   },
   {
     id: 'python',
-    index: 11,
+    index: 16,
     name: 'Python',
     symbol: 'Py',
     category: 'Languages',
@@ -137,7 +187,7 @@ export const skillsData: PeriodicSkill[] = [
   },
   {
     id: 'c-lang',
-    index: 12,
+    index: 17,
     name: 'C Programming',
     symbol: 'C',
     category: 'Languages',
@@ -146,7 +196,7 @@ export const skillsData: PeriodicSkill[] = [
   },
   {
     id: 'java',
-    index: 13,
+    index: 18,
     name: 'Java',
     symbol: 'Jv',
     category: 'Languages',
@@ -154,10 +204,10 @@ export const skillsData: PeriodicSkill[] = [
     note: 'Object-oriented programming, class hierarchies & JVM patterns.',
   },
 
-  // --- DATABASE (White with Cobalt border) ---
+  // --- DATABASE ---
   {
     id: 'mongodb',
-    index: 14,
+    index: 19,
     name: 'MongoDB',
     symbol: 'Mo',
     category: 'Database',
@@ -166,7 +216,7 @@ export const skillsData: PeriodicSkill[] = [
   },
   {
     id: 'firestore',
-    index: 15,
+    index: 20,
     name: 'Firestore',
     symbol: 'Fs',
     category: 'Database',
@@ -175,7 +225,7 @@ export const skillsData: PeriodicSkill[] = [
   },
   {
     id: 'mysql',
-    index: 16,
+    index: 21,
     name: 'MySQL',
     symbol: 'My',
     category: 'Database',
@@ -183,49 +233,10 @@ export const skillsData: PeriodicSkill[] = [
     note: 'Relational table normalization, foreign keys & structured queries.',
   },
 
-  // --- BLOCKCHAIN (Black with White text) ---
-  {
-    id: 'blockchain-fund',
-    index: 17,
-    name: 'Blockchain Fundamentals',
-    symbol: 'Bc',
-    category: 'Blockchain',
-    tier: 'Learning',
-    note: 'Decentralized ledgers, consensus algorithms & cryptographic hashing.',
-  },
-  {
-    id: 'smart-contracts',
-    index: 18,
-    name: 'Smart Contracts',
-    symbol: 'Sc',
-    category: 'Blockchain',
-    tier: 'Learning',
-    note: 'Autonomous on-chain deterministic execution & state mutation.',
-  },
-  {
-    id: 'web3-concepts',
-    index: 19,
-    name: 'Web3 Concepts',
-    symbol: 'W3',
-    category: 'Blockchain',
-    tier: 'Learning',
-    note: 'Browser wallet integration, RPC providers & distributed applications.',
-  },
-  {
-    id: 'solidity',
-    index: 20,
-    name: 'Solidity',
-    symbol: 'So',
-    category: 'Blockchain',
-    tier: 'Learning',
-    note: 'EVM smart contract programming & event emitters.',
-    verifyRequired: true,
-  },
-
-  // --- TOOLS (White with Cobalt text) ---
+  // --- TOOLS ---
   {
     id: 'git-github',
-    index: 21,
+    index: 22,
     name: 'Git & GitHub',
     symbol: 'Gt',
     category: 'Tools',
@@ -234,7 +245,7 @@ export const skillsData: PeriodicSkill[] = [
   },
   {
     id: 'vscode',
-    index: 22,
+    index: 23,
     name: 'VS Code',
     symbol: 'Vs',
     category: 'Tools',
@@ -243,7 +254,7 @@ export const skillsData: PeriodicSkill[] = [
   },
   {
     id: 'vite',
-    index: 23,
+    index: 24,
     name: 'Vite',
     symbol: 'Vi',
     category: 'Tools',
@@ -253,7 +264,7 @@ export const skillsData: PeriodicSkill[] = [
   },
   {
     id: 'postman',
-    index: 24,
+    index: 25,
     name: 'Postman',
     symbol: 'Pm',
     category: 'Tools',
@@ -262,13 +273,33 @@ export const skillsData: PeriodicSkill[] = [
   },
   {
     id: 'figma',
-    index: 25,
+    index: 26,
     name: 'Figma',
     symbol: 'Fg',
     category: 'Tools',
     tier: 'Comfortable',
     note: 'Interface layout prototyping, component variants & handoff specs.',
     verifyRequired: true,
+  },
+
+  // --- CONTENT (Video Editing & Creator Tools) ---
+  {
+    id: 'video-editing',
+    index: 27,
+    name: 'Video Editing & Storyboarding',
+    symbol: 'Ed',
+    category: 'Content',
+    tier: 'Comfortable',
+    note: 'Timeline pacing, video cuts, color grading & multi-track storytelling.',
+  },
+  {
+    id: 'content-production',
+    index: 28,
+    name: 'YouTube & Short-form Production',
+    symbol: 'Yt',
+    category: 'Content',
+    tier: 'Comfortable',
+    note: 'Creator workflow, thumbnail design, YouTube Shorts & Instagram Reels.',
   },
 ];
 

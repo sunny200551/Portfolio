@@ -13,10 +13,11 @@ import { steveVoice } from '../robot/steveVoice';
 const CATEGORY_CODE: Record<SkillCategory, { code: string; color: string; textColor: string }> = {
   Frontend: { code: 'FE', color: '#0047AB', textColor: '#FFFFFF' },
   Backend: { code: 'BE', color: '#0A1A3F', textColor: '#FFFFFF' },
-  Languages: { code: 'LANG', color: '#FF5A1F', textColor: '#0A0A0A' },
+  Languages: { code: 'LANG', color: '#FF5C00', textColor: '#0A0A0A' },
   Database: { code: 'DB', color: '#0047AB', textColor: '#FFFFFF' },
-  Blockchain: { code: 'WEB3', color: '#FF5A1F', textColor: '#0A0A0A' },
+  Blockchain: { code: 'WEB3', color: '#FF5C00', textColor: '#0A0A0A' },
   Tools: { code: 'TOOL', color: '#0A0A0A', textColor: '#FFFFFF' },
+  Content: { code: 'EDIT', color: '#FF5C00', textColor: '#0A0A0A' },
 };
 
 const SHELF_CONFIG: {
@@ -30,36 +31,50 @@ const SHELF_CONFIG: {
   badgeText: string;
   plankShadow: string;
   sizeClass: string;
+  isFocus?: boolean;
 }[] = [
+  {
+    tier: 'Focus',
+    title: 'CURRENT FOCUS',
+    subtitle: 'Blockchain, Web3 Protocols & DSA Problem-Solving',
+    chipBg: 'bg-[#FF5C00]',
+    chipText: 'text-black font-black',
+    chipBorder: 'border-3 border-[#0A0A0A]',
+    badgeBg: 'bg-[#FF5C00] text-black border border-[#0A0A0A]',
+    badgeText: 'text-black font-black',
+    plankShadow: 'shadow-[6px_6px_0px_#0A0A0A]',
+    sizeClass: 'text-xs sm:text-sm md:text-base py-2.5 px-3.5 sm:px-4.5',
+    isFocus: true,
+  },
   {
     tier: 'Daily',
     title: 'DAILY DRIVERS',
     subtitle: 'Primary Production Arsenal',
-    chipBg: 'bg-[#FF5A1F]',
-    chipText: 'text-black font-black',
+    chipBg: 'bg-[#0047AB]',
+    chipText: 'text-white font-bold',
     chipBorder: 'border-2 border-[#0A0A0A]',
-    badgeBg: 'bg-black text-white',
+    badgeBg: 'bg-[#0047AB] text-white',
     badgeText: 'text-white',
-    plankShadow: 'shadow-[4px_4px_0px_#0047AB]',
+    plankShadow: 'shadow-[4px_4px_0px_#0A0A0A]',
     sizeClass: 'text-xs sm:text-sm py-2 px-3 sm:px-4',
   },
   {
     tier: 'Comfortable',
     title: 'COMFORTABLE',
     subtitle: 'Production Proficient & Deployed',
-    chipBg: 'bg-[#0047AB]',
-    chipText: 'text-white font-bold',
+    chipBg: 'bg-white',
+    chipText: 'text-[#0A0A0A] font-bold',
     chipBorder: 'border-2 border-[#0A0A0A]',
-    badgeBg: 'bg-[#FF5A1F] text-black',
-    badgeText: 'text-black',
-    plankShadow: 'shadow-[4px_4px_0px_#FF5A1F]',
+    badgeBg: 'bg-[#EEF2FA] text-[#0A0A0A]',
+    badgeText: 'text-[#0A0A0A]',
+    plankShadow: 'shadow-[4px_4px_0px_#0A0A0A]',
     sizeClass: 'text-xs sm:text-sm py-1.5 px-2.5 sm:px-3.5',
   },
   {
     tier: 'Learning',
-    title: 'LEARNING',
+    title: 'EXPLORING',
     subtitle: 'Active R&D & Exploring Tech',
-    chipBg: 'bg-white',
+    chipBg: 'bg-[#FAFAFA]',
     chipText: 'text-[#0A0A0A] font-bold',
     chipBorder: 'border-2 border-dashed border-[#0A0A0A]',
     badgeBg: 'bg-[#0A0A0A] text-white',
@@ -101,16 +116,7 @@ export const Skills: React.FC = () => {
 
     hoverTimeoutRef.current = setTimeout(() => {
       setHoveredSkill(skill);
-      steveVoice.speak('chip_hover');
-
-      // Funny level-based reaction without walking onto the chips
-      if (skill.tier === 'Daily') {
-        robotStore.setSteve('cheer', 'happy');
-      } else if (skill.tier === 'Comfortable') {
-        robotStore.setSteve('salute', 'focused');
-      } else {
-        robotStore.setSteve('idle', 'curious');
-      }
+      robotStore.react(skill.category);
     }, 120);
   };
 
@@ -119,44 +125,50 @@ export const Skills: React.FC = () => {
 
     leaveTimeoutRef.current = setTimeout(() => {
       setHoveredSkill(null);
-      robotStore.setSteve('idle', 'happy');
     }, 600);
   };
 
   const handleChipClick = (skill: PeriodicSkill) => {
     setPinnedSkill(skill);
-    robotStore.setSteve('salute', 'focused'); // Points at inspector
+    setHoveredSkill(skill);
+    steveVoice.speak('skills_chip_click');
+    robotStore.react(skill.category);
   };
 
   return (
     <section
       id="skills"
-      className="py-20 sm:py-28 lane-padded bg-transparent text-[#0A0A0A] relative z-10 scroll-mt-24 w-full"
+      className="w-full bg-[#EEF2FA] text-[#0A0A0A] relative z-10 border-b-2 border-[#0A0A0A] scroll-mt-24 sm:scroll-mt-28"
     >
-      <div className="w-full max-w-[2200px] mx-auto flex flex-col gap-10 sm:gap-14">
-        {/* Section Top Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-2 border-[#0A0A0A] pb-3 gap-2">
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 bg-[#0A0A0A] text-white font-mono text-xs font-bold tracking-wider uppercase">
-              04 // LOADOUT
-            </span>
-          </div>
-          <span className="font-mono text-xs text-[#0047AB] font-bold uppercase tracking-wider">
-            TECHNICAL EXPERTISE & STACK
+      <div className="pt-20 pb-16 md:pt-28 md:pb-24 lane-padded w-full max-w-[2200px] mx-auto space-y-10 sm:space-y-12">
+        
+        {/* Section Tag */}
+        <div
+          data-robot-anchor="skills:shelf"
+          data-robot-offset-x="-50"
+          data-robot-offset-y="-20"
+          className="flex items-center gap-3"
+        >
+          <span className="font-mono text-xs font-bold px-3 py-1 bg-[#0A0A0A] text-white border-2 border-[#0A0A0A]">
+            04 // SKILLS
+          </span>
+          <div className="h-0.5 flex-grow bg-[#0A0A0A]" />
+          <span className="font-mono text-xs font-bold text-[#FF5C00]">
+            CURRENT FOCUS & CORE ARSENAL
           </span>
         </div>
 
-        {/* Section Title & Description */}
+        {/* Section Header */}
         <div className="space-y-3 sm:pl-6 lg:pl-8">
           <h2 className="font-display font-black text-4xl sm:text-6xl uppercase tracking-tighter text-[#0A0A0A] leading-none">
             SKILL LOADOUT
           </h2>
           <p className="font-mono text-xs sm:text-sm text-[#0A0A0A]/80 max-w-2xl leading-relaxed">
-            Technologies and tools I work with daily, comfortably, and actively exploring.
+            Core engineering focus in Blockchain, Web3 & DSA, with established production frontend proficiencies.
           </p>
         </div>
 
-        {/* Category Filter Tabs (Dims non-matching chips instead of removing them, so layout never jumps) */}
+        {/* Category Filter Tabs */}
         <div className="flex flex-wrap items-center gap-2 p-3 sm:p-4 bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A]">
           <button
             onClick={() => {
@@ -166,7 +178,7 @@ export const Skills: React.FC = () => {
             }}
             className={`px-3 py-1.5 font-mono text-xs font-bold uppercase border-2 border-[#0A0A0A] transition-all cursor-pointer ${
               selectedCategory === 'ALL'
-                ? 'bg-[#FF5A1F] text-black shadow-[2px_2px_0px_#0A0A0A]'
+                ? 'bg-[#FF5C00] text-black shadow-[2px_2px_0px_#0A0A0A]'
                 : 'bg-white text-[#0A0A0A] hover:bg-[#EEF2FA]'
             }`}
           >
@@ -174,6 +186,7 @@ export const Skills: React.FC = () => {
           </button>
           {SKILL_CATEGORIES.map((cat) => {
             const count = skillsData.filter((s) => s.category === cat).length;
+            if (count === 0) return null; // Only show categories with entries as required
             const isActive = selectedCategory === cat;
             return (
               <button
@@ -185,7 +198,7 @@ export const Skills: React.FC = () => {
                 }}
                 className={`px-3 py-1.5 font-mono text-xs font-bold uppercase border-2 border-[#0A0A0A] transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-[#FF5A1F] text-black shadow-[2px_2px_0px_#0A0A0A]'
+                    ? 'bg-[#FF5C00] text-black shadow-[2px_2px_0px_#0A0A0A]'
                     : 'bg-white text-[#0A0A0A] hover:bg-[#EEF2FA]'
                 }`}
               >
@@ -195,22 +208,29 @@ export const Skills: React.FC = () => {
           })}
         </div>
 
-        {/* 3 Horizontal Shelves Stacked Vertically */}
+        {/* Shelves Stacked Vertically */}
         <div className="flex flex-col gap-10 sm:gap-14">
           {SHELF_CONFIG.map((shelf) => {
             const tierSkills = skillsData.filter((s) => s.tier === shelf.tier);
+            if (tierSkills.length === 0) return null;
 
             return (
               <div key={shelf.tier} className="flex flex-col gap-3">
                 {/* Shelf Row: Left Label Block + Chip Array sitting on Plank */}
                 <div className="flex flex-col lg:flex-row items-stretch lg:items-end gap-4 lg:gap-6">
                   {/* Left Label Block */}
-                  <div className="lg:w-64 shrink-0 flex flex-col justify-end p-4 bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A]">
+                  <div className={`lg:w-64 shrink-0 flex flex-col justify-end p-4 bg-white border-2 border-[#0A0A0A] ${
+                    shelf.isFocus ? 'shadow-[5px_5px_0px_#FF5C00] border-3' : 'shadow-[4px_4px_0px_#0A0A0A]'
+                  }`}>
                     <div className="flex items-center justify-between">
-                      <span className="font-display font-black text-sm sm:text-base tracking-tight text-[#0A0A0A] uppercase">
+                      <span className={`font-display font-black text-sm sm:text-base tracking-tight uppercase ${
+                        shelf.isFocus ? 'text-[#FF5C00]' : 'text-[#0A0A0A]'
+                      }`}>
                         {shelf.title}
                       </span>
-                      <span className="px-2 py-0.5 bg-[#0A0A0A] text-white font-mono text-[11px] font-bold">
+                      <span className={`px-2 py-0.5 font-mono text-[11px] font-bold ${
+                        shelf.isFocus ? 'bg-[#FF5C00] text-black' : 'bg-[#0A0A0A] text-white'
+                      }`}>
                         {tierSkills.length}
                       </span>
                     </div>
@@ -225,7 +245,7 @@ export const Skills: React.FC = () => {
                       const isCategoryMatch =
                         selectedCategory === 'ALL' || skill.category === selectedCategory;
                       const isSelected = activeSkill.id === skill.id;
-                      const catInfo = CATEGORY_CODE[skill.category];
+                      const catInfo = CATEGORY_CODE[skill.category] || { code: 'DEV', color: '#0047AB', textColor: '#FFF' };
 
                       return (
                         <button
@@ -241,7 +261,7 @@ export const Skills: React.FC = () => {
                               : 'opacity-25 hover:opacity-80'
                           } ${
                             isSelected
-                              ? 'ring-2 ring-black shadow-[5px_5px_0px_#0A0A0A] -translate-y-1'
+                              ? 'ring-2 ring-black shadow-[6px_6px_0px_#0A0A0A] -translate-y-1'
                               : 'shadow-[3px_3px_0px_#0A0A0A]'
                           }`}
                         >
@@ -258,9 +278,16 @@ export const Skills: React.FC = () => {
                             {catInfo.code}
                           </span>
 
+                          {/* Orange FOCUS badge for Focus shelf */}
+                          {shelf.isFocus && (
+                            <span className="text-[9px] font-black px-1.5 py-0.2 bg-black text-[#FF5C00] border border-black uppercase tracking-wider">
+                              FOCUS
+                            </span>
+                          )}
+
                           {/* Small WIP badge for learning shelf */}
                           {shelf.tier === 'Learning' && (
-                            <span className="text-[9px] font-black px-1 bg-[#FF5A1F] text-black border border-[#0A0A0A]">
+                            <span className="text-[9px] font-black px-1 bg-[#FF5C00] text-black border border-[#0A0A0A]">
                               WIP
                             </span>
                           )}
@@ -270,57 +297,67 @@ export const Skills: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Thick Black Plank Under the Chips */}
+                {/* Neo-brutalist Plank base line */}
                 <div
-                  className={`w-full h-3.5 bg-[#0A0A0A] border-2 border-[#0A0A0A] ${shelf.plankShadow}`}
+                  className={`w-full h-2.5 bg-[#0A0A0A] ${shelf.plankShadow} border-t border-black/30`}
                 />
               </div>
             );
           })}
         </div>
 
-        {/* Inspector Strip Under the Shelves */}
-        <div className="bg-[#EEF2FA] border-2 border-[#0A0A0A] shadow-[5px_5px_0px_#0A0A0A] p-5 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 font-mono">
-          <div className="space-y-1.5 max-w-xl">
-            <div className="flex items-center gap-3">
-              <span className="font-display font-black text-xl sm:text-2xl text-[#0A0A0A] uppercase tracking-tight">
-                {activeSkill.name}
-              </span>
-              <span className="px-2.5 py-0.5 bg-[#0047AB] text-white text-xs font-bold uppercase border border-[#0A0A0A]">
-                {activeSkill.category}
-              </span>
-              <span className="px-2.5 py-0.5 bg-[#FF5A1F] text-black text-xs font-bold uppercase border border-[#0A0A0A]">
-                {activeSkill.tier}
-              </span>
+        {/* Dynamic Skill Detail Inspector */}
+        {activeSkill && (
+          <div className="bg-white border-2 border-[#0A0A0A] shadow-[6px_6px_0px_#0A0A0A] p-5 sm:p-7 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-2 border-[#0A0A0A]/10 pb-4 gap-2">
+              <div className="flex items-center gap-3">
+                <span
+                  className="font-mono text-xs font-black px-2.5 py-1 border-2 border-[#0A0A0A]"
+                  style={{
+                    backgroundColor: CATEGORY_CODE[activeSkill.category]?.color || '#0047AB',
+                    color: CATEGORY_CODE[activeSkill.category]?.textColor || '#FFF',
+                  }}
+                >
+                  {CATEGORY_CODE[activeSkill.category]?.code} // {activeSkill.category.toUpperCase()}
+                </span>
+                <h3 className="font-display font-black text-xl sm:text-2xl uppercase tracking-tight text-[#0A0A0A]">
+                  {activeSkill.name}
+                </h3>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-bold text-[#0A0A0A]/70 uppercase">
+                  CLASSIFICATION:
+                </span>
+                <span className="font-mono text-xs font-black px-2 py-0.5 bg-[#EEF2FA] border border-[#0A0A0A] uppercase">
+                  {activeSkill.tier === 'Focus' ? 'CURRENT FOCUS' : activeSkill.tier}
+                </span>
+              </div>
             </div>
-            <p className="text-xs sm:text-sm text-[#0A0A0A]/85 leading-relaxed font-sans">
+
+            <p className="font-sans text-sm sm:text-base text-[#0A0A0A]/90 leading-relaxed">
               {activeSkill.note}
             </p>
-          </div>
 
-          {/* Real Project Associations Derived from Project Stack Data */}
-          <div className="shrink-0 flex flex-col gap-1.5">
-            <span className="text-[10px] font-bold text-[#0A0A0A]/60 uppercase tracking-wider">
-              Used in Projects ({projectsUsingSkill.length})
-            </span>
-            {projectsUsingSkill.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5 max-w-md">
-                {projectsUsingSkill.map((p) => (
+            {/* Cross-Referenced Projects */}
+            {projectsUsingSkill.length > 0 && (
+              <div className="pt-3 border-t border-[#0A0A0A]/10 flex flex-wrap items-center gap-2">
+                <span className="font-mono text-xs font-bold text-[#0A0A0A]/70 uppercase">
+                  ACTIVE IN PROJECTS:
+                </span>
+                {projectsUsingSkill.map((proj) => (
                   <span
-                    key={p.id}
-                    className="px-2.5 py-1 bg-white border border-[#0A0A0A] text-[#0A0A0A] font-mono text-xs font-bold shadow-[2px_2px_0px_#0A0A0A]"
+                    key={proj.id}
+                    className="font-mono text-xs font-bold px-2 py-0.5 bg-[#FF5C00] text-black border border-[#0A0A0A]"
                   >
-                    {p.name}
+                    {proj.name}
                   </span>
                 ))}
               </div>
-            ) : (
-              <span className="text-xs text-[#0A0A0A]/60 italic font-mono">
-                Foundational & lab experiments
-              </span>
             )}
           </div>
-        </div>
+        )}
+
       </div>
     </section>
   );

@@ -18,6 +18,7 @@ export type VoiceCategory =
   | 'copy_email'
   | 'skills_filter'
   | 'chip_hover'
+  | 'skills_chip_click'
   | 'rail_hover'
   | 'palette_open'
   | 'palette_close'
@@ -25,7 +26,15 @@ export type VoiceCategory =
   | 'back_to_top'
   | 'click_steve'
   | 'click_steve_overheat'
-  | 'shy_pickup';
+  | 'shy_pickup'
+  | 'section_internship'
+  | 'section_content'
+  | 'internship_badge_hover'
+  | 'internship_cert_click'
+  | 'content_scrub'
+  | 'content_clip_click'
+  | 'content_stats_hover'
+  | 'content_return';
 
 interface VoiceLine {
   text: string;
@@ -91,6 +100,62 @@ const VOICE_POOLS: Record<VoiceCategory, VoiceLine[]> = {
     { text: "A continuous journey of learning and shipping.", anim: 'salute', expr: 'focused' },
     { text: "I've been here the whole way. It's a great ride.", anim: 'wave', expr: 'happy' },
   ],
+  section_internship: [
+    { text: "Professional Steve, reporting for duty.", anim: 'salute', expr: 'focused' },
+    { text: "Look at me, I'm wearing a tie! Very corporate.", anim: 'salute', expr: 'proud' },
+    { text: "Real industry code. Clean, tested and audited.", anim: 'idle', expr: 'thinking' },
+    { text: "Official apprentice badge unlocked. Sharp look!", anim: 'cheer', expr: 'happy' },
+    { text: "Corporate Steve has officially entered the building.", anim: 'wave', expr: 'flirty' },
+  ],
+  section_content: [
+    { text: "Lights, camera, Steve!", anim: 'cheer', expr: 'excited' },
+    { text: "Behind every great video is a very tired editor.", anim: 'idle', expr: 'thinking' },
+    { text: "Welcome to the Edit Bay. Popcorn not included.", anim: 'wave', expr: 'happy' },
+    { text: "Rendering frames and turning caffeine into cuts.", anim: 'salute', expr: 'focused' },
+    { text: "Multi-track magic in progress! Action!", anim: 'dance', expr: 'enjoying' },
+  ],
+  internship_badge_hover: [
+    { text: "Official badge. Very official. Very handsome.", anim: 'salute', expr: 'proud' },
+    { text: "Security pass verified. You may proceed.", anim: 'idle', expr: 'focused' },
+    { text: "Inspecting credentials with my magnifying loupe.", anim: 'idle', expr: 'curious' },
+    { text: "Look at those highlights! Real engineering impact.", anim: 'cheer', expr: 'happy' },
+    { text: "Certified apprentice in action. Top marks.", anim: 'salute', expr: 'happy' },
+  ],
+  internship_cert_click: [
+    { text: "Official proof of greatness!", anim: 'cheer', expr: 'excited', priority: 6 },
+    { text: "Certificates make everything ten times more real.", anim: 'salute', expr: 'proud', priority: 6 },
+    { text: "Verified and stamped. Excellent!", anim: 'jump', expr: 'happy', priority: 6 },
+    { text: "Credentials loaded with honors.", anim: 'dance', expr: 'happy', priority: 6 },
+    { text: "Thumbs up for verified achievement!", anim: 'salute', expr: 'focused', priority: 6 },
+  ],
+  content_scrub: [
+    { text: "Scrubbing the timeline like a pro editor.", anim: 'walk', expr: 'focused' },
+    { text: "Finding the perfect cut point.", anim: 'idle', expr: 'thinking' },
+    { text: "Playhead in motion! Frame accurate.", anim: 'walk', expr: 'excited' },
+    { text: "Scrub, scrub, cut! Music in sync.", anim: 'dance', expr: 'enjoying' },
+    { text: "Rolling 60 frames per second right here.", anim: 'salute', expr: 'focused' },
+  ],
+  content_clip_click: [
+    { text: "Go on, hit play. I'll wait right here.", anim: 'wave', expr: 'happy', priority: 5 },
+    { text: "Opening the video in a new tab! Enjoy the cut.", anim: 'cheer', expr: 'excited', priority: 5 },
+    { text: "Grab some popcorn, this one has great pacing.", anim: 'jump', expr: 'flirty', priority: 5 },
+    { text: "Directing this was a masterclass.", anim: 'salute', expr: 'proud', priority: 5 },
+    { text: "Streaming greatness right now. Enjoy!", anim: 'dance', expr: 'enjoying', priority: 5 },
+  ],
+  content_stats_hover: [
+    { text: "Real views, zero bots. Certified creator counts.", anim: 'cheer', expr: 'proud' },
+    { text: "The numbers keep climbing! Community approved.", anim: 'jump', expr: 'happy' },
+    { text: "Creator analytics look sleek. High engagement!", anim: 'salute', expr: 'focused' },
+    { text: "Every view was someone entertained or educated.", anim: 'wave', expr: 'flirty' },
+    { text: "Clapping for real milestones! Ten out of ten.", anim: 'cheer', expr: 'excited' },
+  ],
+  content_return: [
+    { text: "Welcome back! I missed you while you watched.", anim: 'wave', expr: 'flirty', priority: 7 },
+    { text: "Back already? Told you Sunny's cuts are engaging!", anim: 'cheer', expr: 'happy', priority: 7 },
+    { text: "You're back! Ready for the next section?", anim: 'salute', expr: 'excited', priority: 7 },
+    { text: "I kept your spot warm right here.", anim: 'dance', expr: 'shy', priority: 7 },
+    { text: "Tab restored! Let's continue the grand tour.", anim: 'wave', expr: 'happy', priority: 7 },
+  ],
   section_contact: [
     { text: "Say hi! I promise he replies quickly.", anim: 'wave', expr: 'happy' },
     { text: "Don't be shy, great connections start with a hello.", anim: 'dance', expr: 'flirty' },
@@ -139,6 +204,13 @@ const VOICE_POOLS: Record<VoiceCategory, VoiceLine[]> = {
     { text: "Frontend? Backend? Blockchain? Why not all three?", anim: 'cheer', expr: 'proud' },
     { text: "Dialing in on the exact right skills.", anim: 'jump', expr: 'focused' },
     { text: "Custom view unlocked. Look at all those tools.", anim: 'wave', expr: 'happy' },
+  ],
+  skills_chip_click: [
+    { text: "Mmm, solid tech choice.", anim: 'salute', expr: 'proud' },
+    { text: "A personal favorite in the toolbelt.", anim: 'idle', expr: 'curious' },
+    { text: "Rock solid stack! Production tested.", anim: 'cheer', expr: 'happy' },
+    { text: "Fast, responsive and elegant.", anim: 'dance', expr: 'flirty' },
+    { text: "Great tool! Sunny knows it inside out.", anim: 'salute', expr: 'focused' },
   ],
   chip_hover: [
     { text: "Mmm, good choice.", anim: 'idle', expr: 'flirty' },

@@ -13,10 +13,12 @@ const SECTION_GREETINGS: Record<string, { anim: RobotAnimation; expr: RobotExpre
   about: { anim: 'idle', expr: 'curious', text: 'Meet Sunny! 👋' },
   work: { anim: 'salute', expr: 'happy', text: 'Featured work! 🚀' },
   skills: { anim: 'idle', expr: 'thinking', text: 'Tech loadout! ⚡' },
+  internship: { anim: 'salute', expr: 'focused', text: 'Pro Steve, ready! 👔' },
   github: { anim: 'idle', expr: 'proud', text: 'Green skyline! 📊' },
   stats: { anim: 'cheer', expr: 'happy', text: 'Code stats! 🏆' },
   events: { anim: 'wave', expr: 'excited', text: 'Hackathons! 🎟️' },
   journey: { anim: 'idle', expr: 'curious', text: 'My journey! 🗺️' },
+  content: { anim: 'dance', expr: 'excited', text: 'Action & Cut! 🎬' },
   contact: { anim: 'wave', expr: 'happy', text: 'Say hello! ✉️' },
 };
 
@@ -206,7 +208,11 @@ export const FixedGutterSteve: React.FC = () => {
 
       let reaction: { anim: RobotAnimation; expr: RobotExpression; text: string } | null = null;
 
-      if (href.includes('instagram') || ariaLabel.includes('instagram')) {
+      if (href.includes('youtube') || ariaLabel.includes('youtube')) {
+        reaction = isWoman
+          ? { anim: 'dance', expr: 'flirty', text: `Watching Sunny's videos with me, ${effectiveName}? Grab the popcorn! 🎬🍿` }
+          : { anim: 'cheer', expr: 'excited', text: `Sunny's YouTube channel, ${effectiveName}! Real edits and campus vlogs! 🎥⚡` };
+      } else if (href.includes('instagram') || ariaLabel.includes('instagram')) {
         reaction = isWoman
           ? { anim: 'wave', expr: 'flirty', text: `${effectiveName}, Sunny's Insta DMs are open... but my DMs are open too! 😉💬` }
           : { anim: 'salute', expr: 'happy', text: `Insta is Sunny's fastest channel, ${effectiveName}! Best place to connect! ⚡📱` };

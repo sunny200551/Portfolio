@@ -1,25 +1,26 @@
 import React, { useEffect, useRef } from 'react';
 
+// Reordered so Web3, blockchain and DSA items lead, followed by existing technologies
 const row1 = [
+  'SOLIDITY',
+  'WEB3 BASICS',
+  'DATA STRUCTURES',
+  'PYTHON',
+  'C PROGRAMMING',
   'REACT 19',
   'TYPESCRIPT',
   'TAILWIND CSS',
+];
+
+const row2 = [
+  'DATA STRUCTURES',
+  'SOLIDITY',
+  'WEB3 BASICS',
   'JAVASCRIPT',
   'HTML5 & CSS3',
   'NODE.JS',
   'FIREBASE',
   'GIT & GITHUB',
-];
-
-const row2 = [
-  'WEB3 BASICS',
-  'SOLIDITY',
-  'PYTHON',
-  'C PROGRAMMING',
-  'EXPRESS',
-  'MONGODB',
-  'DATA STRUCTURES',
-  'FIGMA',
 ];
 
 export const SkillsMarquee: React.FC = () => {
@@ -107,8 +108,8 @@ export const SkillsMarquee: React.FC = () => {
           <div ref={chunk1Ref} className="flex gap-8 items-center shrink-0 pr-8">
             {row1.map((item, idx) => (
               <div key={`r1-c1-${idx}`} className="flex items-center gap-4">
-                <span className="uppercase text-white hover:text-[#FF5A1F] transition-colors">{item}</span>
-                <span className="w-2 h-2 bg-[#FF5A1F] border border-[#0A0A0A]" />
+                <span className="uppercase text-white hover:text-[#FF5C00] transition-colors">{item}</span>
+                <span className="w-2 h-2 bg-[#FF5C00] border border-[#0A0A0A]" />
               </div>
             ))}
           </div>
@@ -117,8 +118,8 @@ export const SkillsMarquee: React.FC = () => {
           <div className="flex gap-8 items-center shrink-0 pr-8" aria-hidden="true">
             {row1.map((item, idx) => (
               <div key={`r1-c2-${idx}`} className="flex items-center gap-4">
-                <span className="uppercase text-white hover:text-[#FF5A1F] transition-colors">{item}</span>
-                <span className="w-2 h-2 bg-[#FF5A1F] border border-[#0A0A0A]" />
+                <span className="uppercase text-white hover:text-[#FF5C00] transition-colors">{item}</span>
+                <span className="w-2 h-2 bg-[#FF5C00] border border-[#0A0A0A]" />
               </div>
             ))}
           </div>
@@ -127,8 +128,8 @@ export const SkillsMarquee: React.FC = () => {
           <div className="flex gap-8 items-center shrink-0 pr-8" aria-hidden="true">
             {row1.map((item, idx) => (
               <div key={`r1-c3-${idx}`} className="flex items-center gap-4">
-                <span className="uppercase text-white hover:text-[#FF5A1F] transition-colors">{item}</span>
-                <span className="w-2 h-2 bg-[#FF5A1F] border border-[#0A0A0A]" />
+                <span className="uppercase text-white hover:text-[#FF5C00] transition-colors">{item}</span>
+                <span className="w-2 h-2 bg-[#FF5C00] border border-[#0A0A0A]" />
               </div>
             ))}
           </div>
@@ -137,8 +138,8 @@ export const SkillsMarquee: React.FC = () => {
           <div className="flex gap-8 items-center shrink-0 pr-8" aria-hidden="true">
             {row1.map((item, idx) => (
               <div key={`r1-c4-${idx}`} className="flex items-center gap-4">
-                <span className="uppercase text-white hover:text-[#FF5A1F] transition-colors">{item}</span>
-                <span className="w-2 h-2 bg-[#FF5A1F] border border-[#0A0A0A]" />
+                <span className="uppercase text-white hover:text-[#FF5C00] transition-colors">{item}</span>
+                <span className="w-2 h-2 bg-[#FF5C00] border border-[#0A0A0A]" />
               </div>
             ))}
           </div>
@@ -152,7 +153,7 @@ export const SkillsMarquee: React.FC = () => {
           <div ref={chunk2Ref} className="flex gap-8 items-center shrink-0 pr-8">
             {row2.map((item, idx) => (
               <div key={`r2-c1-${idx}`} className="flex items-center gap-4">
-                <span className="uppercase text-[#EEF2FA] hover:text-[#FF5A1F] transition-colors">{item}</span>
+                <span className="uppercase text-[#EEF2FA] hover:text-[#FF5C00] transition-colors">{item}</span>
                 <span className="w-2 h-2 bg-white border border-[#0A0A0A]" />
               </div>
             ))}
@@ -162,7 +163,7 @@ export const SkillsMarquee: React.FC = () => {
           <div className="flex gap-8 items-center shrink-0 pr-8" aria-hidden="true">
             {row2.map((item, idx) => (
               <div key={`r2-c2-${idx}`} className="flex items-center gap-4">
-                <span className="uppercase text-[#EEF2FA] hover:text-[#FF5A1F] transition-colors">{item}</span>
+                <span className="uppercase text-[#EEF2FA] hover:text-[#FF5C00] transition-colors">{item}</span>
                 <span className="w-2 h-2 bg-white border border-[#0A0A0A]" />
               </div>
             ))}
@@ -172,7 +173,7 @@ export const SkillsMarquee: React.FC = () => {
           <div className="flex gap-8 items-center shrink-0 pr-8" aria-hidden="true">
             {row2.map((item, idx) => (
               <div key={`r2-c3-${idx}`} className="flex items-center gap-4">
-                <span className="uppercase text-[#EEF2FA] hover:text-[#FF5A1F] transition-colors">{item}</span>
+                <span className="uppercase text-[#EEF2FA] hover:text-[#FF5C00] transition-colors">{item}</span>
                 <span className="w-2 h-2 bg-white border border-[#0A0A0A]" />
               </div>
             ))}
@@ -182,7 +183,7 @@ export const SkillsMarquee: React.FC = () => {
           <div className="flex gap-8 items-center shrink-0 pr-8" aria-hidden="true">
             {row2.map((item, idx) => (
               <div key={`r2-c4-${idx}`} className="flex items-center gap-4">
-                <span className="uppercase text-[#EEF2FA] hover:text-[#FF5A1F] transition-colors">{item}</span>
+                <span className="uppercase text-[#EEF2FA] hover:text-[#FF5C00] transition-colors">{item}</span>
                 <span className="w-2 h-2 bg-white border border-[#0A0A0A]" />
               </div>
             ))}
