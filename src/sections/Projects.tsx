@@ -114,7 +114,7 @@ export const Projects: React.FC = () => {
       }`}
     >
       {/* Section Header */}
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 mb-6 shrink-0">
+      <div className="w-full max-w-[2200px] mx-auto px-4 sm:px-6 lg:px-[clamp(16px,3.5vw,64px)] mb-6 shrink-0">
         <div className="flex items-center justify-between gap-4 mb-3">
           <div data-robot-anchor="work:header" data-robot-offset-x="-50" data-robot-offset-y="-20" className="flex items-center gap-3 flex-grow">
             <span className="font-mono text-xs font-bold px-3 py-1 bg-[#FF5A1F] text-black border-2 border-[#0A0A0A]">
@@ -153,8 +153,8 @@ export const Projects: React.FC = () => {
           style={
             !isMobile
               ? {
-                  paddingLeft: 'max(1.5rem, calc((100vw - 80rem) / 2 + 1.5rem))',
-                  paddingRight: 'max(4rem, calc((100vw - 80rem) / 2 + 8rem))',
+                  paddingLeft: 'clamp(16px, 3.5vw, 64px)',
+                  paddingRight: 'clamp(32px, 6vw, 120px)',
                 }
               : undefined
           }

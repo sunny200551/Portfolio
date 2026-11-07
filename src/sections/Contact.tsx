@@ -104,7 +104,7 @@ export const Contact: React.FC<ContactProps> = () => {
       ref={containerRef}
       className="w-full bg-[#0047AB] text-white pt-24 pb-16 sm:pt-28 sm:pb-20 md:pt-32 md:pb-24 relative z-10 border-t-2 border-b-2 border-[#0A0A0A] scroll-mt-24 sm:scroll-mt-28"
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      <div className="w-full max-w-[2200px] mx-auto px-4 sm:px-6 lg:px-[clamp(16px,3.5vw,64px)]">
         
         {/* Section Pill */}
         <div

@@ -41,11 +41,11 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
     <section 
       ref={heroRef}
       id="home" 
-      className="relative min-h-[92svh] flex items-center justify-center px-4 sm:px-6 lg:px-12 py-16 sm:py-24 overflow-hidden z-10 bg-transparent text-[#0A0A0A]"
+      className="relative min-h-[92svh] flex items-center justify-center px-4 sm:px-6 lg:px-[clamp(16px,3.5vw,64px)] pt-20 pb-12 sm:pt-28 sm:pb-20 z-10 bg-transparent text-[#0A0A0A] w-full"
     >
-      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+      <div className="w-full max-w-[2200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
         
-        {/* Left Column: Clear, Protected Text & Identity Zone */}
+        {/* Left Column: Clear, Protected Text & Identity Zone (~55-60%) */}
         <div className="lg:col-span-7 flex flex-col items-start text-left gap-6 z-20">
           
           {/* Available for Opportunities Chip with ample spacing */}
@@ -92,12 +92,12 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
             </h1>
           </div>
 
-          {/* Static Tagline: single line with small orange squares (stacked on mobile) */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-xs sm:text-sm font-mono font-bold text-[#0A0A0A] mt-1">
+          {/* Static Tagline: single line with flex-wrap and neat separator spacing */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm font-mono font-bold text-[#0A0A0A] mt-1">
             <span>Computer Science Student</span>
-            <span className="hidden sm:inline-block w-2 h-2 bg-[#FF5A1F] border border-[#0A0A0A] shrink-0" aria-hidden="true" />
+            <span className="w-2 h-2 bg-[#FF5A1F] border border-[#0A0A0A] shrink-0" aria-hidden="true" />
             <span>Frontend Developer</span>
-            <span className="hidden sm:inline-block w-2 h-2 bg-[#FF5A1F] border border-[#0A0A0A] shrink-0" aria-hidden="true" />
+            <span className="w-2 h-2 bg-[#FF5A1F] border border-[#0A0A0A] shrink-0" aria-hidden="true" />
             <span>Blockchain Enthusiast</span>
           </div>
 
@@ -185,12 +185,12 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
 
         </div>
 
-        {/* Right Column: Contained 3D Visual Stage with Plinth, Architectural Panels and Robots */}
+        {/* Right Column: Contained 3D Visual Stage with Plinth, Architectural Panels and Robots (~40-45%) */}
         <div 
           data-robot-anchor="home:platform" 
           data-robot-offset-x="0" 
           data-robot-offset-y="0" 
-          className="w-full lg:col-span-5 h-[380px] sm:h-[440px] lg:h-[480px] max-w-[500px] mx-auto relative flex items-center justify-center pointer-events-auto"
+          className="w-full lg:col-span-5 h-[420px] sm:h-[480px] lg:h-[560px] xl:h-[620px] max-w-[720px] mx-auto relative flex items-center justify-center pointer-events-auto"
         >
           <HeroIllustration isHeroInView={isHeroInView} />
         </div>

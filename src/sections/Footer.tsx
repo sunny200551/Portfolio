@@ -37,8 +37,8 @@ export const Footer: React.FC<FooterProps> = () => {
   };
 
   return (
-    <footer data-robot-anchor="footer:sleep" className="border-t-2 border-[#0A0A0A] bg-[#0A1A3F] text-white py-16 px-4 sm:px-6 relative z-10 font-mono">
-      <div className="max-w-6xl mx-auto flex flex-col gap-10">
+    <footer data-robot-anchor="footer:sleep" className="border-t-2 border-[#0A0A0A] bg-[#0A1A3F] text-white py-16 px-4 sm:px-6 lg:px-[clamp(16px,3.5vw,64px)] relative z-10 font-mono w-full">
+      <div className="w-full max-w-[2200px] mx-auto flex flex-col gap-10">
         
         {/* Top Header Row: Identity + Resume + Back to Top */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-white/15 pb-8">

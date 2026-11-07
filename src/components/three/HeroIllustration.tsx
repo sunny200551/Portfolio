@@ -147,12 +147,12 @@ const HeroSceneContent: React.FC<HeroSceneContentProps> = ({ isMobile }) => {
   });
 
   return (
-    <group ref={groupRef} position={[0.26, -0.14, 0]} rotation={[0.28, -0.16, 0]}>
+    <group ref={groupRef} position={[0, -0.22, 0]} rotation={[0.26, -0.14, 0]}>
       {/* 1. Base Foundation Desk Slab: Plain grey/ice-blue with clear floor in front */}
       <UIBlock
         position={[0, 0, 0]}
         rotation={[0, 0, 0]}
-        size={[3.8, 0.12, 2.5]}
+        size={[3.6, 0.14, 2.4]}
         color="#EEF2FA"
         outlineColor="#0A0A0A"
       />
@@ -160,7 +160,7 @@ const HeroSceneContent: React.FC<HeroSceneContentProps> = ({ isMobile }) => {
       {/* 2. Standing Architectural Panes toward the BACK and RIGHT */}
       
       {/* Blue Window Panel (#0047AB) in background */}
-      <group position={[0.55, 0.62, -0.42]} rotation={[0, -0.18, 0]}>
+      <group position={[0.40, 0.65, -0.55]} rotation={[0, -0.15, 0]}>
         <UIBlock
           position={[0, 0, 0]}
           rotation={[0, 0, 0]}
@@ -188,7 +188,7 @@ const HeroSceneContent: React.FC<HeroSceneContentProps> = ({ isMobile }) => {
       </group>
 
       {/* Grey Top Bar Pane (#FFFFFF) */}
-      <group position={[0.55, 1.24, -0.42]} rotation={[0, -0.18, 0]}>
+      <group position={[0.40, 1.28, -0.55]} rotation={[0, -0.15, 0]}>
         <UIBlock
           position={[0, 0, 0]}
           rotation={[0, 0, 0]}
@@ -211,7 +211,7 @@ const HeroSceneContent: React.FC<HeroSceneContentProps> = ({ isMobile }) => {
       </group>
 
       {/* Navy Panel (#0A1A3F) on right */}
-      <group position={[1.12, 0.44, 0.14]} rotation={[0, -0.38, 0]}>
+      <group position={[1.08, 0.45, -0.28]} rotation={[0, -0.32, 0]}>
         <UIBlock
           position={[0, 0, 0]}
           rotation={[0, 0, 0]}
@@ -242,7 +242,7 @@ const HeroSceneContent: React.FC<HeroSceneContentProps> = ({ isMobile }) => {
       </group>
 
       {/* Orange Bar Accent (#FF5A1F) */}
-      <group position={[0.74, 0.16, 0.54]} rotation={[0, -0.15, 0]}>
+      <group position={[0.78, 0.14, 0.08]} rotation={[0, -0.12, 0]}>
         <UIBlock
           position={[0, 0, 0]}
           rotation={[0, 0, 0]}
@@ -260,42 +260,42 @@ const HeroSceneContent: React.FC<HeroSceneContentProps> = ({ isMobile }) => {
         </UIBlock>
       </group>
 
-      {/* 3. Three Robots Standing on Clear Grey Floor Area in Front */}
+      {/* 3. Three Robots Standing on Clear Grey Floor Area in Front - SPREAD with >= 1 robot width gap */}
       {robotEnabled && (
-        <group position={[0, 0.06, 0]}>
+        <group position={[0, 0.07, 0]}>
           {/* Main Hero BOLT (Center-Front, ~170-200px tall at 1920px, facing visitor & Sunny) */}
-          <group position={[-0.15, 0, 0.38]} rotation={[0, 0.18, 0]}>
+          <group position={[0.0, 0, 0.48]} rotation={[0, 0.08, 0]}>
             <Robot
               variant="bolt"
               animation={boltAnim === 'jump' ? 'jump' : 'wave'}
-              expression={boltExpr}
+              expression={boltExpr === 'focused' ? 'happy' : boltExpr}
               position={[0, 0, 0]}
-              scale={1.08}
+              scale={1.12}
               headTrackCursor={true}
             />
           </group>
 
-          {/* NUT: Front-Left on clear floor (~110-130px tall, lively, facing right/forward) */}
-          <group position={[-0.92, 0, 0.16]} rotation={[0, 0.32, 0]}>
+          {/* NUT: Front-Left on clear floor (~110-130px tall, lively, >= 1 robot-width gap from BOLT) */}
+          <group position={[-0.85, 0, 0.38]} rotation={[0, 0.28, 0]}>
             <Robot
               variant="nut"
               animation={nutAnim}
-              expression="focused"
+              expression="happy"
               position={[0, 0, 0]}
-              scale={0.72}
+              scale={0.76}
               headTrackCursor={true}
             />
           </group>
 
-          {/* CHIP: Front-Right on clear floor (~110-130px tall, upright, desktop only on tight mobile) */}
+          {/* CHIP: Front-Right on clear floor (~110-130px tall, upright, >= 1 robot-width gap from BOLT) */}
           {(!isMobile || window.innerWidth > 480) && (
-            <group position={[0.65, 0, 0.44]} rotation={[0, -0.18, 0]}>
+            <group position={[0.85, 0, 0.38]} rotation={[0, -0.22, 0]}>
               <Robot
                 variant="chip"
                 animation={chipAnim}
-                expression={chipExpr}
+                expression={chipExpr === 'focused' ? 'happy' : chipExpr}
                 position={[0, 0, 0]}
-                scale={0.70}
+                scale={0.72}
                 headTrackCursor={true}
               />
             </group>
@@ -328,7 +328,7 @@ export const HeroIllustration: React.FC<HeroIllustrationProps> = ({ isHeroInView
       <CanvasErrorBoundary fallback={null}>
         <Canvas
           dpr={[1, 1.5]}
-          camera={{ position: [0, 1.35, 4.4], fov: 35 }}
+          camera={{ position: [0, 1.35, 5.6], fov: 36 }}
           gl={{
             alpha: true,
             antialias: true,

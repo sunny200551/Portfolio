@@ -2,6 +2,11 @@ export type RobotVariant = 'bolt' | 'nut' | 'chip';
 
 export type RobotExpression = 
   | 'happy' 
+  | 'enjoying'
+  | 'thinking'
+  | 'proud'
+  | 'shy'
+  | 'flirty'
   | 'grin' 
   | 'laughing' 
   | 'wink' 

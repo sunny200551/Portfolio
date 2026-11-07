@@ -129,9 +129,9 @@ export const Skills: React.FC = () => {
   return (
     <section
       id="skills"
-      className="py-20 sm:py-28 px-4 sm:px-6 lg:px-12 bg-transparent text-[#0A0A0A] relative z-10 scroll-mt-24"
+      className="py-20 sm:py-28 px-4 sm:px-6 lg:px-[clamp(16px,3.5vw,64px)] bg-transparent text-[#0A0A0A] relative z-10 scroll-mt-24 w-full"
     >
-      <div className="max-w-7xl mx-auto flex flex-col gap-10 sm:gap-14">
+      <div className="w-full max-w-[2200px] mx-auto flex flex-col gap-10 sm:gap-14">
         {/* Section Top Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-2 border-[#0A0A0A] pb-3 gap-2">
           <div className="flex items-center gap-2">

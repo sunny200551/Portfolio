@@ -61,8 +61,8 @@ function App() {
       {/* Modern Navigation: SP Logo + Controls + Vertical Section Rail + Fullscreen Menu */}
       <NavigationRail onOpenCommandPalette={() => setCommandPaletteOpen(true)} />
 
-      {/* Main Page Layout Shell: Reserved 100px left lane for BOLT & 96px right lane for Rail on >= 1200px */}
-      <main className="w-full bg-transparent text-[#0A0A0A] relative z-10 xl:pl-[100px] xl:pr-[96px]">
+      {/* Main Page Layout Shell: Full-width fluid container */}
+      <main className="w-full bg-transparent text-[#0A0A0A] relative z-10">
         {/* 01. Hero Section (#home) */}
         <Hero onContactClick={handleContactScroll} profile={profile} />
 

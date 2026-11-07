@@ -20,6 +20,7 @@ import {
   Power
 } from 'lucide-react';
 import { robotStore } from '../robot/robotStore';
+import { getLenis } from '../lib/lenis';
 
 const GithubIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg className={className || "w-4 h-4"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -170,6 +171,24 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
     cmd.category.toLowerCase().includes(search.toLowerCase())
   );
 
+    // Strict Lenis pause and scroll lock management with guaranteed cleanup
+  useEffect(() => {
+    if (isOpen) {
+      getLenis()?.stop();
+      document.documentElement.classList.add('lenis-stopped');
+      document.body.style.overflow = 'hidden';
+    } else {
+      getLenis()?.start();
+      document.documentElement.classList.remove('lenis-stopped');
+      document.body.style.overflow = '';
+    }
+    return () => {
+      getLenis()?.start();
+      document.documentElement.classList.remove('lenis-stopped');
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   // Global Ctrl+K trigger and Escape
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
@@ -289,7 +308,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
         )}
 
         {/* Command List */}
-        <div className="max-h-80 overflow-y-auto p-2 divide-y divide-[#0A0A0A]/10">
+        <div data-lenis-prevent="true" style={{ overscrollBehavior: 'contain' }} className="max-h-80 overflow-y-auto p-2 divide-y divide-[#0A0A0A]/10">
           {filtered.length === 0 ? (
             <div className="p-8 text-center text-xs text-[#0A0A0A]/60">
               No matching commands found.

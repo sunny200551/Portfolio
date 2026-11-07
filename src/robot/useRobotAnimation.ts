@@ -204,34 +204,48 @@ export function useRobotAnimation(
           currentPose.leftLegRotX = 0.2 * p;
           currentPose.rightLegRotX = 0.2 * p;
         } else if (cycle < 0.48) {
-          // 2. Launch & Stretch (120ms - 480ms)
+          // 2. Launch & Stretch (120ms - 480ms): Whole body leaves ground, legs extend on takeoff
           const p = (cycle - 0.12) / 0.36;
           const arc = Math.sin(p * Math.PI * 0.5);
-          currentPose.bodyY = arc * 0.24;
-          currentPose.scaleY = 1.0 + 0.16 * (1 - p * 0.5);
-          currentPose.scaleXZ = 1.0 - 0.08 * (1 - p * 0.5);
+          currentPose.bodyY = arc * 0.26;
+          currentPose.scaleY = 1.0 + 0.14 * (1 - p * 0.5);
+          currentPose.scaleXZ = 1.0 - 0.07 * (1 - p * 0.5);
           currentPose.leftArmRotZ = -RIG.LIMITS.ARM_REST_OUTWARD - 0.9 * p;
           currentPose.rightArmRotZ = RIG.LIMITS.ARM_REST_OUTWARD + 0.9 * p;
-        } else if (cycle < 0.62) {
-          // 3. Apex Hold (480ms - 620ms)
-          currentPose.bodyY = 0.24;
+          currentPose.leftLegRotX = -0.12 * (1 - p);
+          currentPose.rightLegRotX = -0.12 * (1 - p);
+        } else if (cycle < 0.65) {
+          // 3. Apex Hold & Tuck (480ms - 650ms): Legs tuck slightly at apex
+          const p = (cycle - 0.48) / 0.17;
+          currentPose.bodyY = 0.26 - 0.02 * p;
           currentPose.scaleY = 1.02;
           currentPose.scaleXZ = 0.99;
           currentPose.leftArmRotZ = -RIG.LIMITS.ARM_REST_OUTWARD - 0.9;
           currentPose.rightArmRotZ = RIG.LIMITS.ARM_REST_OUTWARD + 0.9;
-          currentPose.leftLegRotX = -0.22;
-          currentPose.rightLegRotX = -0.22;
-        } else if (cycle < 0.90) {
-          // 4. Descent & Landing Squash (620ms - 900ms)
-          const p = (cycle - 0.62) / 0.28;
-          currentPose.bodyY = 0.24 * (1 - p);
-          currentPose.scaleY = p > 0.7 ? 0.84 : 1.0;
-          currentPose.scaleXZ = p > 0.7 ? 1.12 : 1.0;
-          currentPose.leftArmRotZ = -RIG.LIMITS.ARM_REST_OUTWARD - 0.9 * (1 - p);
-          currentPose.rightArmRotZ = RIG.LIMITS.ARM_REST_OUTWARD + 0.9 * (1 - p);
+          currentPose.leftLegRotX = 0.32;
+          currentPose.rightLegRotX = 0.32;
+        } else if (cycle < 0.95) {
+          // 4. Descent & Landing Extension (650ms - 950ms): Legs extend for landing contact
+          const p = (cycle - 0.65) / 0.30;
+          const arc = Math.cos(p * Math.PI * 0.5);
+          currentPose.bodyY = 0.24 * arc;
+          currentPose.scaleY = 1.0 + 0.06 * arc;
+          currentPose.leftArmRotZ = -RIG.LIMITS.ARM_REST_OUTWARD - 0.9 * arc;
+          currentPose.rightArmRotZ = RIG.LIMITS.ARM_REST_OUTWARD + 0.9 * arc;
+          currentPose.leftLegRotX = 0.32 * (1 - p);
+          currentPose.rightLegRotX = 0.32 * (1 - p);
+        } else if (cycle < 1.15) {
+          // 5. Landing Impact Squash (950ms - 1150ms)
+          const p = (cycle - 0.95) / 0.20;
+          const squash = Math.sin(p * Math.PI);
+          currentPose.bodyY = -0.04 * squash;
+          currentPose.scaleY = 1.0 - 0.16 * squash;
+          currentPose.scaleXZ = 1.0 + 0.10 * squash;
+          currentPose.leftLegRotX = 0.20 * squash;
+          currentPose.rightLegRotX = 0.20 * squash;
         } else {
-          // 5. Recovery (900ms - 1400ms)
-          const p = (cycle - 0.90) / 0.50;
+          // 6. Recovery to Idle (1150ms - 1400ms)
+          const p = (cycle - 1.15) / 0.25;
           currentPose.bodyY = 0;
           currentPose.scaleY = THREE.MathUtils.lerp(0.84, 1.0, p);
           currentPose.scaleXZ = THREE.MathUtils.lerp(1.12, 1.0, p);

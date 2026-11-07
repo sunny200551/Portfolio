@@ -145,7 +145,7 @@ export const About: React.FC<{ profile?: GitHubProfile | null }> = ({ profile })
 
   return (
     <section id="about" className="w-full bg-white text-[#0A0A0A] relative z-10 border-b-2 border-[#0A0A0A]">
-      <div className="py-16 md:py-24 px-4 sm:px-6 max-w-6xl mx-auto">
+      <div className="py-16 md:py-24 px-4 sm:px-6 lg:px-[clamp(16px,3.5vw,64px)] w-full max-w-[2200px] mx-auto">
         
         {/* Section Tag */}
         <div

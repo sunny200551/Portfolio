@@ -160,7 +160,7 @@ export const Journey: React.FC = () => {
 
   return (
     <section id="journey" className="w-full bg-white text-[#0A0A0A] relative z-10 border-b-2 border-[#0A0A0A] scroll-mt-24 sm:scroll-mt-28">
-      <div className="pt-20 pb-16 md:pt-28 md:pb-24 px-4 sm:px-6 max-w-6xl mx-auto">
+      <div className="pt-20 pb-16 md:pt-28 md:pb-24 px-4 sm:px-6 lg:px-[clamp(16px,3.5vw,64px)] w-full max-w-[2200px] mx-auto">
         
         {/* Section Tag */}
         <div data-robot-anchor="journey:timeline" data-robot-offset-x="-50" data-robot-offset-y="-20" className="flex items-center gap-3 mb-8">

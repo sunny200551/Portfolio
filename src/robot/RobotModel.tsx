@@ -81,6 +81,8 @@ export const RobotModel: React.FC<RobotModelProps> = ({
   const leftArmGroupRef = useRef<THREE.Group>(null);
   const rightArmGroupRef = useRef<THREE.Group>(null);
   const [hasCollision, setHasCollision] = useState(false);
+  const [hipDetachViolation, setHipDetachViolation] = useState<number | null>(null);
+  const [shadowJumpProps, setShadowJumpProps] = useState({ scale: 1.0, opacity: 0.88 });
 
   useFrame((state) => {
     // Skip uninitialized first few frames
@@ -88,6 +90,35 @@ export const RobotModel: React.FC<RobotModelProps> = ({
 
     const isDebug = typeof window !== 'undefined' &&
       (window.location.search.includes('robotDebug=1') || robotStore.getState().isDebug);
+
+    // Compute dynamic ground shadow scaling and fading with jump elevation
+    if (bodyRef.current) {
+      const jumpElevation = Math.max(0, bodyRef.current.position.y - RIG.TORSO.Y);
+      const s = Math.max(0.42, 1.0 - jumpElevation * 1.5);
+      const op = Math.max(0.20, 0.88 - jumpElevation * 1.7);
+      setShadowJumpProps(prev => (Math.abs(prev.scale - s) > 0.02 ? { scale: s, opacity: op } : prev));
+    }
+
+    // Part 4 Assertion: Check hip socket to leg joint distance <= 0.05 in ?robotDebug=1
+    if (isDebug && bodyRef.current && leftLegRef.current && rightLegRef.current) {
+      bodyRef.current.updateWorldMatrix(true, true);
+      leftLegRef.current.updateWorldMatrix(true, true);
+      rightLegRef.current.updateWorldMatrix(true, true);
+
+      const leftHipSocketWorld = new THREE.Vector3(-RIG.HIP.X, RIG.HIP.Y - RIG.TORSO.Y, 0).applyMatrix4(bodyRef.current.matrixWorld);
+      const leftLegPivotWorld = new THREE.Vector3(0, 0, 0).applyMatrix4(leftLegRef.current.matrixWorld);
+      const leftDist = leftHipSocketWorld.distanceTo(leftLegPivotWorld);
+
+      const rightHipSocketWorld = new THREE.Vector3(RIG.HIP.X, RIG.HIP.Y - RIG.TORSO.Y, 0).applyMatrix4(bodyRef.current.matrixWorld);
+      const rightLegPivotWorld = new THREE.Vector3(0, 0, 0).applyMatrix4(rightLegRef.current.matrixWorld);
+      const rightDist = rightHipSocketWorld.distanceTo(rightLegPivotWorld);
+
+      const maxDist = Math.max(leftDist, rightDist);
+      if (maxDist > 0.05) {
+        console.error('[ROBOT ASSERTION VIOLATION] Hip detachment exceeded 0.05! dist=' + maxDist.toFixed(4));
+        setHipDetachViolation(maxDist);
+      }
+    }
 
     if (isDebug && bodyRef.current && torsoMeshRef.current && leftArmGroupRef.current && rightArmGroupRef.current) {
       // Force hierarchical world matrix update for accurate transform sampling
@@ -150,7 +181,7 @@ export const RobotModel: React.FC<RobotModelProps> = ({
       scale={[finalScale, finalScale, finalScale]}
     >
       {/* Flat hard offset shadow on ground plate (neo-brutalist rounded rectangle, zero blur) */}
-      <RobotHardShadow width={0.52} depth={0.32} radius={0.06} offset={[0.04, -0.04]} opacity={0.88} />
+      <RobotHardShadow width={0.52 * shadowJumpProps.scale} depth={0.32 * shadowJumpProps.scale} radius={0.06 * shadowJumpProps.scale} offset={[0.04, -0.04]} opacity={shadowJumpProps.opacity} />
 
       {/* Skateboard Accessory (attached at ground level under feet) */}
       {accessories?.skateboard && (
@@ -202,6 +233,14 @@ export const RobotModel: React.FC<RobotModelProps> = ({
         </mesh>
 
         {/* Facing and Gaze Debug Visualizers (?robotDebug=1) */}
+        {hipDetachViolation !== null && (
+          <group position={[0, 0.95, 0]}>
+            <mesh>
+              <boxGeometry args={[0.6, 0.16, 0.05]} />
+              <meshBasicMaterial color="#FF0000" />
+            </mesh>
+          </group>
+        )}
         {typeof window !== 'undefined' && (window.location.search.includes('robotDebug=1') || robotStore.getState().isDebug) && (
           <group position={[0, 0.44, 0]}>
             <primitive object={new THREE.ArrowHelper(new THREE.Vector3(facing, 0, 0.4).normalize(), new THREE.Vector3(0, 0, 0), 0.45, 0x00FFFF, 0.1, 0.06)} />
@@ -209,9 +248,11 @@ export const RobotModel: React.FC<RobotModelProps> = ({
           </group>
         )}
 
-        {/* 1. LOWER BODY: HIPS & CLEARLY VISIBLE LEGS */}
+        {/* 2. COMPACT ROUNDED-BOX TORSO */}
+        <group ref={bodyRef} position={[0, RIG.TORSO.Y, 0]}>
+{/* 1. LOWER BODY: HIPS & CLEARLY VISIBLE LEGS */}
         {/* Left Leg Hip Pivot */}
-        <group ref={leftLegRef} position={[-RIG.HIP.X, RIG.HIP.Y, 0]}>
+        <group ref={leftLegRef} position={[-RIG.HIP.X, RIG.HIP.Y - RIG.TORSO.Y, 0]}>
           {/* Hip Ball Joint in Navy */}
           <mesh castShadow receiveShadow>
             <sphereGeometry args={[RIG.HIP.BALL_R, 12, 12]} />
@@ -250,7 +291,7 @@ export const RobotModel: React.FC<RobotModelProps> = ({
         </group>
 
         {/* Right Leg Hip Pivot */}
-        <group ref={rightLegRef} position={[RIG.HIP.X, RIG.HIP.Y, 0]}>
+        <group ref={rightLegRef} position={[RIG.HIP.X, RIG.HIP.Y - RIG.TORSO.Y, 0]}>
           {/* Hip Ball Joint in Navy */}
           <mesh castShadow receiveShadow>
             <sphereGeometry args={[RIG.HIP.BALL_R, 12, 12]} />
@@ -288,8 +329,7 @@ export const RobotModel: React.FC<RobotModelProps> = ({
           )}
         </group>
 
-        {/* 2. COMPACT ROUNDED-BOX TORSO */}
-        <group ref={bodyRef} position={[0, RIG.TORSO.Y, 0]}>
+        
           {/* Torso Box */}
           <mesh ref={torsoMeshRef} castShadow receiveShadow>
             <boxGeometry args={[RIG.TORSO.W, RIG.TORSO.H, RIG.TORSO.D]} />
