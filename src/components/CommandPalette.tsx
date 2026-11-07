@@ -44,13 +44,22 @@ interface CommandItem {
   category: 'Navigation' | 'Actions';
   icon: React.ElementType;
   action: () => void;
+  statusBadge?: string;
+  isActive?: boolean;
 }
 
 export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, onOpen }) => {
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const [robotState, setRobotState] = useState(() => robotStore.getState());
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return robotStore.subscribe(() => {
+      setRobotState({ ...robotStore.getState() });
+    });
+  }, []);
   const dialogRef = useRef<HTMLDivElement>(null);
 
   const scrollToSection = (id: string) => {
@@ -109,8 +118,56 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       action: handleCopyEmail
     },
     {
+      id: 'steve-talk',
+      name: 'steve: talk (Enable Speech Bubbles)',
+      category: 'Actions',
+      icon: Volume2,
+      statusBadge: !robotState.isQuiet ? 'SELECTED' : 'NOT SELECTED',
+      isActive: !robotState.isQuiet,
+      action: () => {
+        robotStore.setQuiet(false);
+        onClose();
+      }
+    },
+    {
+      id: 'steve-quiet',
+      name: 'steve: quiet (Mute Speech Bubbles)',
+      category: 'Actions',
+      icon: VolumeX,
+      statusBadge: robotState.isQuiet ? 'SELECTED' : 'NOT SELECTED',
+      isActive: robotState.isQuiet,
+      action: () => {
+        robotStore.setQuiet(true);
+        onClose();
+      }
+    },
+    {
+      id: 'steve-mode-woman',
+      name: 'steve: woman visitor persona (She / Her)',
+      category: 'Actions',
+      icon: Heart,
+      statusBadge: robotState.visitorGender === 'woman' ? 'SELECTED' : 'NOT SELECTED',
+      isActive: robotState.visitorGender === 'woman',
+      action: () => {
+        robotStore.setVisitorIdentity(robotState.visitorName, 'woman');
+        onClose();
+      }
+    },
+    {
+      id: 'steve-mode-man',
+      name: 'steve: man visitor persona (He / Him)',
+      category: 'Actions',
+      icon: Sparkles,
+      statusBadge: robotState.visitorGender === 'man' ? 'SELECTED' : 'NOT SELECTED',
+      isActive: robotState.visitorGender === 'man',
+      action: () => {
+        robotStore.setVisitorIdentity(robotState.visitorName, 'man');
+        onClose();
+      }
+    },
+    {
       id: 'steve-flirt',
-      name: 'steve: flirt (Drop a Flirty Tech Pickup Line)',
+      name: 'steve: flirt (Drop Tech Line)',
       category: 'Actions',
       icon: Heart,
       action: () => {
@@ -149,59 +206,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       }
     },
     {
-      id: 'steve-shy-now',
-      name: 'steve: shy mode now (Trigger Shy Reaction)',
-      category: 'Actions',
-      icon: Heart,
-      action: () => {
-        robotStore.triggerShyMode();
-        onClose();
-      }
-    },
-    {
-      id: 'steve-shy-on',
-      name: 'steve: shy mode on',
-      category: 'Actions',
-      icon: Check,
-      action: () => {
-        robotStore.triggerShyMode();
-        onClose();
-      }
-    },
-    {
-      id: 'steve-shy-off',
-      name: 'steve: shy mode off',
-      category: 'Actions',
-      icon: Power,
-      action: () => {
-        onClose();
-      }
-    },
-    {
-      id: 'steve-quiet',
-      name: 'steve: quiet (Mute Speech Bubbles)',
-      category: 'Actions',
-      icon: VolumeX,
-      action: () => {
-        robotStore.setQuiet(true);
-        onClose();
-      }
-    },
-    {
-      id: 'steve-talk',
-      name: 'steve: talk (Enable Speech Bubbles)',
-      category: 'Actions',
-      icon: Volume2,
-      action: () => {
-        robotStore.setQuiet(false);
-        onClose();
-      }
-    },
-    {
       id: 'steve-sleep',
       name: 'steve: sleep (Nap Time)',
       category: 'Actions',
       icon: Moon,
+      statusBadge: robotState.isIdleSleeping ? 'SELECTED' : 'NOT SELECTED',
+      isActive: robotState.isIdleSleeping,
       action: () => {
         robotStore.triggerSleep();
         onClose();
@@ -212,18 +222,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       name: 'steve: wake (Wake Up)',
       category: 'Actions',
       icon: Sun,
+      statusBadge: !robotState.isIdleSleeping ? 'SELECTED' : 'NOT SELECTED',
+      isActive: !robotState.isIdleSleeping,
       action: () => {
         robotStore.triggerWake();
-        onClose();
-      }
-    },
-    {
-      id: 'steve-off',
-      name: 'steve: off (Disable Mascot)',
-      category: 'Actions',
-      icon: Power,
-      action: () => {
-        robotStore.setRobotEnabled(false);
         onClose();
       }
     },
@@ -232,8 +234,22 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       name: 'steve: on (Enable Mascot)',
       category: 'Actions',
       icon: Check,
+      statusBadge: robotState.robotEnabled ? 'SELECTED' : 'NOT SELECTED',
+      isActive: robotState.robotEnabled,
       action: () => {
         robotStore.setRobotEnabled(true);
+        onClose();
+      }
+    },
+    {
+      id: 'steve-off',
+      name: 'steve: off (Disable Mascot)',
+      category: 'Actions',
+      icon: Power,
+      statusBadge: !robotState.robotEnabled ? 'SELECTED' : 'NOT SELECTED',
+      isActive: !robotState.robotEnabled,
+      action: () => {
+        robotStore.setRobotEnabled(false);
         onClose();
       }
     }
@@ -406,8 +422,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
                     <Icon size={16} className={isSelected ? 'text-black' : 'text-[#0047AB]'} />
                     <span>{item.name}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-[10px] uppercase font-bold opacity-80">
-                    <span>{item.category}</span>
+                  <div className="flex items-center gap-2 text-[10px] uppercase font-bold">
+                    {item.statusBadge && (
+                      <span className={`px-2 py-0.5 text-[9px] font-black tracking-wider border-2 border-[#0A0A0A] ${
+                        item.isActive
+                          ? 'bg-[#00D26A] text-black shadow-[1px_1px_0px_#0A0A0A]'
+                          : 'bg-white/80 text-[#0A0A0A]/60'
+                      }`}>
+                        {item.statusBadge}
+                      </span>
+                    )}
+                    <span className="opacity-75">{item.category}</span>
                     <CornerDownLeft size={11} />
                   </div>
                 </button>

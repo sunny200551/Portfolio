@@ -43,6 +43,7 @@ export const FixedGutterSteve: React.FC = () => {
   const [isSquashing, setIsSquashing] = useState(false);
   const [isLandingPuff, setIsLandingPuff] = useState(false);
   const [windowWidth, setWindowWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1440));
+  const [isInFooter, setIsInFooter] = useState(false);
 
   // Visitor identity state
   const [visitorName, setVisitorName] = useState(() => robotStore.getState().visitorName);
@@ -82,7 +83,21 @@ export const FixedGutterSteve: React.FC = () => {
     return unsub;
   }, []);
 
-  // 2. Subscribe to robotStore updates
+  // 2. Hide dock Steve when reaching the Footer (Image 3 fix)
+  useEffect(() => {
+    const footerEl = document.querySelector('footer');
+    if (!footerEl) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        setIsInFooter(entry.isIntersecting);
+      },
+      { threshold: 0.05 }
+    );
+    obs.observe(footerEl);
+    return () => obs.disconnect();
+  }, []);
+
+  // 3. Subscribe to robotStore updates
   useEffect(() => {
     const unsub = robotStore.subscribe(() => {
       const state = robotStore.getState();
@@ -111,7 +126,7 @@ export const FixedGutterSteve: React.FC = () => {
     return unsub;
   }, [activeSection]);
 
-  // 3. Listen for Center Stage / Flirt Events
+  // 4. Center stage movements
   const triggerCenterMovement = useCallback((durationMs = 4000) => {
     if (centerStageTimerRef.current) clearTimeout(centerStageTimerRef.current);
     setIsCenterStage(true);
@@ -137,7 +152,34 @@ export const FixedGutterSteve: React.FC = () => {
     };
   }, [triggerCenterMovement]);
 
-  // 4. Cursor-Aware Interactive Commentary with Personalized Gender Intelligence
+  // 5. Ambient Lively Pose & Expression Cycle for First-Time Users
+  useEffect(() => {
+    if (prefersReducedMotion || !robotEnabled || isQuiet) return;
+
+    const ambientPoses: { anim: RobotAnimation; expr: RobotExpression }[] = [
+      { anim: 'wave', expr: 'happy' },
+      { anim: 'idle', expr: 'curious' },
+      { anim: 'salute', expr: 'proud' },
+      { anim: 'flex', expr: 'grin' },
+      { anim: 'cheer', expr: 'excited' },
+      { anim: 'idle', expr: 'wink' },
+      { anim: 'dance', expr: 'enjoying' },
+    ];
+
+    let poseIdx = 0;
+    const interval = setInterval(() => {
+      // Only cycle ambient poses if no speech bubble or center stage active
+      if (robotStore.getState().speechBubble || isCenterStage || scrollDirection !== 'idle') return;
+
+      poseIdx = (poseIdx + 1) % ambientPoses.length;
+      const next = ambientPoses[poseIdx];
+      robotStore.setSteve(next.anim, next.expr);
+    }, 6500);
+
+    return () => clearInterval(interval);
+  }, [prefersReducedMotion, robotEnabled, isQuiet, isCenterStage, scrollDirection]);
+
+  // 6. Cursor-Aware Interactive Commentary with Personalized Gender Intelligence
   useEffect(() => {
     if (prefersReducedMotion || !robotEnabled || isQuiet) return;
 
@@ -211,12 +253,11 @@ export const FixedGutterSteve: React.FC = () => {
     return () => window.removeEventListener('mouseover', handleMouseOver);
   }, [prefersReducedMotion, robotEnabled, isQuiet]);
 
-  // 5. Intelligent Idle Reading Commentary (Cycles varied lines while user is reading)
+  // 7. Idle Reading Commentary
   useEffect(() => {
     if (prefersReducedMotion || !robotEnabled || isQuiet) return;
 
     const interval = setInterval(() => {
-      // If a bubble is already visible, don't interrupt
       if (robotStore.getState().speechBubble) return;
 
       const lineData = robotStore.getPersonalizedLine();
@@ -231,7 +272,7 @@ export const FixedGutterSteve: React.FC = () => {
     return () => clearInterval(interval);
   }, [prefersReducedMotion, robotEnabled, isQuiet]);
 
-  // 6. Dynamic Scroll Stunts: Surfing down, rocket flight up, tilt & sunglasses
+  // 8. Dynamic Scroll Stunts (Normal upright posture, no sideways tilt)
   useEffect(() => {
     let lastY = window.scrollY;
     let lastTime = performance.now();
@@ -263,7 +304,6 @@ export const FixedGutterSteve: React.FC = () => {
       lastY = currentY;
       lastTime = now;
 
-      // Debounce scroll stop
       if (scrollStopTimerRef.current) clearTimeout(scrollStopTimerRef.current);
       scrollStopTimerRef.current = setTimeout(() => {
         setScrollDirection('idle');
@@ -278,7 +318,7 @@ export const FixedGutterSteve: React.FC = () => {
     };
   }, [isQuiet]);
 
-  // 7. Window resize and tab visibility
+  // 9. Window resize and tab visibility
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     const handleVisibility = () => setIsTabVisible(!document.hidden);
@@ -300,7 +340,6 @@ export const FixedGutterSteve: React.FC = () => {
     setIsIdentityModalOpen(false);
   };
 
-  // Steve click handler
   const handleMascotClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     robotStore.handleSteveClick();
@@ -311,6 +350,9 @@ export const FixedGutterSteve: React.FC = () => {
 
   // In SEATED state (Hero section): Dock Steve is completely unmounted (lives in Hero illustration)
   if (currentSteveState === 'SEATED') return null;
+
+  // In Footer section: Dock Steve is unmounted (SittingSteve lives in Footer dispatch hub)
+  if (isInFooter) return null;
 
   if (!robotEnabled) return null;
 
@@ -335,26 +377,22 @@ export const FixedGutterSteve: React.FC = () => {
   }
 
   // Compute X Position:
-  let posX = 16;
+  // Dock Steve is comfortably inset at 32px from left screen edge, so speech bubbles & badges never touch the edge
+  let posX = 32;
   if (isCenterStage) {
     posX = Math.round(windowWidth / 2 - 80);
   } else if (activeSection === 'skills') {
-    posX = 44;
+    posX = 48;
   } else if (activeSection === 'stats') {
     posX = 56;
   } else if (activeSection === 'journey') {
     posX = Math.min(Math.round(windowWidth * 0.22), 300);
   } else if (activeSection === 'contact') {
-    posX = 50;
+    posX = 52;
   }
 
-  // Dynamic stunt tilt
-  let stuntTransform = 'translateY(-50%)';
-  if (scrollDirection === 'down') {
-    stuntTransform = 'translateY(-50%) rotate(-12deg) scale(1.05)';
-  } else if (scrollDirection === 'up') {
-    stuntTransform = 'translateY(-50%) rotate(10deg) scale(1.05)';
-  }
+  // Normal upright posture at all times (zero rotation)
+  const stuntTransform = 'translateY(-50%)';
 
   // Canvas dimensions
   const canvasW = 160;
@@ -373,8 +411,8 @@ export const FixedGutterSteve: React.FC = () => {
         height: `${canvasH + 45}px`,
         opacity: currentSteveState === 'RETURNING' ? 0.3 : 1,
         transition: isCenterStage
-          ? 'left 0.75s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s ease-out, transform 0.25s ease-out'
-          : 'left 0.6s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s ease-out, transform 0.25s ease-out',
+          ? 'left 0.75s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s ease-out'
+          : 'left 0.6s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s ease-out',
       }}
       aria-label="Steve mascot dock"
     >
@@ -382,9 +420,9 @@ export const FixedGutterSteve: React.FC = () => {
       {storeBubble && !isQuiet && (
         <div
           data-testid="steve-speech-bubble"
-          className="absolute z-50 pointer-events-none bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] px-3 py-2 text-center font-mono text-[11px] font-bold text-[#0A0A0A] leading-tight"
+          className="absolute z-50 pointer-events-none bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] px-3.5 py-2 text-center font-mono text-[11px] font-bold text-[#0A0A0A] leading-tight"
           style={{
-            left: isCenterStage ? '50%' : '0px',
+            left: isCenterStage ? '50%' : '14px',
             transform: isCenterStage ? 'translateX(-50%)' : 'none',
             bottom: 'calc(100% - 15px)',
             width: '185px',
@@ -395,7 +433,7 @@ export const FixedGutterSteve: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-center gap-1.5 text-[9px] font-black uppercase text-[#FF5A1F] border-b border-[#0A0A0A]/20 pb-0.5 mb-1 tracking-wider">
             <span>STEVE</span>
-            <span>{visitorGender === 'woman' ? '💖😉' : '⚡👑'}</span>
+            <span>{visitorGender === 'woman' ? '❤️' : '⚡'}</span>
           </div>
 
           <span>{storeBubble}</span>
@@ -405,7 +443,7 @@ export const FixedGutterSteve: React.FC = () => {
             style={{
               position: 'absolute',
               top: '100%',
-              left: '50%',
+              left: isCenterStage ? '50%' : '66px',
               transform: 'translateX(-50%)',
               width: 0,
               height: 0,
@@ -418,7 +456,7 @@ export const FixedGutterSteve: React.FC = () => {
             style={{
               position: 'absolute',
               top: 'calc(100% - 2px)',
-              left: '50%',
+              left: isCenterStage ? '50%' : '66px',
               transform: 'translateX(-50%)',
               width: 0,
               height: 0,
@@ -432,10 +470,10 @@ export const FixedGutterSteve: React.FC = () => {
 
       {/* Wind Lines / Speed Streak when surfing */}
       {scrollDirection === 'down' && (
-        <div className="absolute top-1/2 -left-6 flex flex-col gap-1.5 pointer-events-none">
-          <div className="w-8 h-1 bg-[#FF5A1F] border border-[#0A0A0A] -rotate-12 animate-pulse" />
-          <div className="w-6 h-1 bg-[#0A0A0A] -rotate-12" />
-          <div className="w-10 h-1 bg-[#0047AB] border border-[#0A0A0A] -rotate-12 animate-pulse" />
+        <div className="absolute top-1/2 -left-4 flex flex-col gap-1.5 pointer-events-none">
+          <div className="w-8 h-1 bg-[#FF5A1F] border border-[#0A0A0A] animate-pulse" />
+          <div className="w-6 h-1 bg-[#0A0A0A]" />
+          <div className="w-9 h-1 bg-[#0047AB] border border-[#0A0A0A] animate-pulse" />
         </div>
       )}
 
@@ -507,6 +545,7 @@ export const FixedGutterSteve: React.FC = () => {
 
       {/* ================================================================= */}
       {/* VISITOR IDENTITY VIP PASS BADGE (Under Steve's feet)              */}
+      {/* Strictly Name + Emoji only (No mode labels like "Flirt" or "Bro")  */}
       {/* ================================================================= */}
       <div className="mt-1 flex flex-col items-center">
         <button
@@ -515,7 +554,7 @@ export const FixedGutterSteve: React.FC = () => {
             e.stopPropagation();
             setIsIdentityModalOpen(prev => !prev);
           }}
-          className="group flex items-center gap-1.5 px-2.5 py-1 bg-white border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] hover:bg-[#FF5A1F] hover:shadow-[1px_1px_0px_#0A0A0A] transition-all cursor-pointer font-mono text-[10px] font-bold text-[#0A0A0A]"
+          className="group flex items-center gap-1.5 px-3 py-1 bg-white border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] hover:bg-[#FF5A1F] hover:shadow-[1px_1px_0px_#0A0A0A] transition-all cursor-pointer font-mono text-[10px] font-bold text-[#0A0A0A]"
           title="Tell Steve your name and preference!"
         >
           {visitorGender === 'woman' ? (
@@ -527,7 +566,7 @@ export const FixedGutterSteve: React.FC = () => {
           )}
           <span>
             {visitorName
-              ? `${visitorName} (${visitorGender === 'woman' ? 'Flirt' : 'Bro'})`
+              ? (visitorGender === 'woman' ? `❤️ ${visitorName}` : visitorGender === 'man' ? `⚡ ${visitorName}` : `👤 ${visitorName}`)
               : 'VIP PASS: Who are you?'}
           </span>
           <Edit3 size={10} className="opacity-60" />
@@ -548,7 +587,7 @@ export const FixedGutterSteve: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsIdentityModalOpen(false)}
-                className="p-0.5 hover:bg-black hover:text-white transition-colors"
+                className="p-0.5 hover:bg-black hover:text-white transition-colors cursor-pointer"
               >
                 <X size={13} />
               </button>
@@ -571,33 +610,33 @@ export const FixedGutterSteve: React.FC = () => {
 
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-wider mb-1">
-                  Steve&apos;s Mode:
+                  I Identify As:
                 </label>
                 <div className="grid grid-cols-2 gap-1.5">
                   <button
                     type="button"
                     onClick={() => setInputGender('woman')}
-                    className={`p-1.5 border-2 border-[#0A0A0A] font-bold text-[10px] uppercase flex flex-col items-center gap-0.5 transition-all ${
+                    className={`p-1.5 border-2 border-[#0A0A0A] font-bold text-[10px] uppercase flex flex-col items-center gap-0.5 transition-all cursor-pointer ${
                       inputGender === 'woman'
                         ? 'bg-[#FF5A1F] text-black shadow-[2px_2px_0px_#0A0A0A]'
                         : 'bg-white hover:bg-[#EEF2FA]'
                     }`}
                   >
                     <span>👑 WOMAN</span>
-                    <span className="text-[8px] font-normal opacity-85">(Flirt Mode 😉)</span>
+                    <span className="text-[8px] font-normal opacity-85">She / Her</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setInputGender('man')}
-                    className={`p-1.5 border-2 border-[#0A0A0A] font-bold text-[10px] uppercase flex flex-col items-center gap-0.5 transition-all ${
+                    className={`p-1.5 border-2 border-[#0A0A0A] font-bold text-[10px] uppercase flex flex-col items-center gap-0.5 transition-all cursor-pointer ${
                       inputGender === 'man'
                         ? 'bg-[#0047AB] text-white shadow-[2px_2px_0px_#0A0A0A]'
                         : 'bg-white hover:bg-[#EEF2FA]'
                     }`}
                   >
                     <span>⚡ MAN</span>
-                    <span className="text-[8px] font-normal opacity-85">(Wingman 🤝)</span>
+                    <span className="text-[8px] font-normal opacity-85">He / Him</span>
                   </button>
                 </div>
               </div>

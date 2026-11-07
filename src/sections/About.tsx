@@ -116,18 +116,19 @@ export const About: React.FC<{ profile?: GitHubProfile | null }> = ({ profile })
       if (lines && lines.length > 0) {
         gsap.fromTo(
           lines,
-          { y: 20 },
+          { color: '#B5B5B5', opacity: 0.3, y: 16 },
           {
+            color: '#0A0A0A',
             opacity: 1,
             y: 0,
-            duration: 0.8,
-            stagger: 0.25,
+            duration: 1.2,
+            stagger: 0.35,
             ease: 'power2.out',
             scrollTrigger: {
               trigger: headlineRef.current,
-              start: 'top 75%',
-              end: 'bottom 40%',
-              scrub: 1,
+              start: 'top 82%',
+              end: 'bottom 45%',
+              scrub: 0.75,
             },
           }
         );
@@ -168,7 +169,7 @@ export const About: React.FC<{ profile?: GitHubProfile | null }> = ({ profile })
           {headlineLines.map((line, idx) => (
             <div
               key={idx}
-              className="reveal-line font-display font-black text-3xl sm:text-5xl md:text-6xl uppercase tracking-tight text-[#0A0A0A] leading-[1.08] transition-opacity"
+              className="reveal-line font-display font-black text-3xl sm:text-5xl md:text-6xl uppercase tracking-tight text-[#B5B5B5] leading-[1.08]"
             >
               {line}
             </div>

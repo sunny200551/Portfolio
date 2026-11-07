@@ -506,12 +506,18 @@ export function useRobotAnimation(
     }
 
     // Additive cursor look-at for head
+    // Steve is docked on the left gutter: he must only look straight (0) or rightward into website content (> 0), never left into the wall!
     if (headTrackCursor && animation !== 'sleep' && animation !== 'dizzy' && animation !== 'spin') {
       const { x: cursorX, y: cursorY } = robotStore.getState().cursor;
-      const clampedX = THREE.MathUtils.clamp(cursorX * 0.35, -RIG.LIMITS.HEAD_YAW_MAX, RIG.LIMITS.HEAD_YAW_MAX);
+      // Map cursor to forward-or-right yaw only: 0 to +HEAD_YAW_MAX
+      const rightwardLook = Math.max(0, (cursorX + 0.35) * 0.4);
+      const clampedX = THREE.MathUtils.clamp(rightwardLook, 0, RIG.LIMITS.HEAD_YAW_MAX);
       const clampedY = THREE.MathUtils.clamp(cursorY * 0.25, -RIG.LIMITS.HEAD_PITCH_MAX, RIG.LIMITS.HEAD_PITCH_MAX);
-      targetPose.headRotY += clampedX;
+      targetPose.headRotY = Math.max(0, THREE.MathUtils.clamp(targetPose.headRotY + clampedX, 0, RIG.LIMITS.HEAD_YAW_MAX));
       targetPose.headRotX -= clampedY;
+    } else {
+      // Even without cursor tracking, clamp headRotY so it never turns left off-screen
+      targetPose.headRotY = Math.max(0, targetPose.headRotY);
     }
 
     // Additive antenna secondary motion (damped spring based on head angular acceleration)
