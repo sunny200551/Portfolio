@@ -274,14 +274,15 @@ class RobotStore {
     }, 2600);
   }
 
-  public showSpeechBubble(text: string, durationMs = 3200) {
-    this.state.speechBubble = text;
+  public showSpeechBubble(text: string, durationMs = 2500) {
+    // Truncate to maximum 24 characters as required
+    this.state.speechBubble = text.slice(0, 24);
     this.notify();
 
     if (this.speechTimer) clearTimeout(this.speechTimer);
     this.speechTimer = setTimeout(() => {
       this.clearSpeechBubble();
-    }, durationMs);
+    }, Math.min(2500, durationMs));
   }
 
   public clearSpeechBubble() {
@@ -320,7 +321,6 @@ class RobotStore {
   public triggerIdleSleep() {
     this.state.isIdleSleeping = true;
     this.setBolt('sleep', 'sleepy');
-    this.showSpeechBubble("*Yawn*... Resting my circuits (idle 10s)", 3000);
     this.notify();
   }
 
@@ -328,8 +328,37 @@ class RobotStore {
     if (this.state.isIdleSleeping || this.state.boltAnim === 'sleep') {
       this.state.isIdleSleeping = false;
       this.setBolt('idle', 'happy');
-      this.showSpeechBubble("Back online!", 1800);
+      // Do NOT show unprompted "Back online!" over content
       this.notify();
+    }
+  }
+
+  /**
+   * Category reaction method for skills or other interactive elements
+   */
+  public react(category: string) {
+    if (!this.state.robotEnabled) return;
+    const cat = category.toLowerCase();
+    switch (cat) {
+      case 'frontend':
+        this.setBolt('cheer', 'happy');
+        break;
+      case 'backend':
+      case 'languages':
+        this.setBolt('salute', 'focused');
+        break;
+      case 'database':
+        this.setBolt('idle', 'curious');
+        break;
+      case 'blockchain':
+      case 'web3':
+        this.setBolt('cheer', 'smug');
+        break;
+      case 'tools':
+        this.setBolt('wave', 'happy');
+        break;
+      default:
+        this.setBolt('wave', 'happy');
     }
   }
 
@@ -604,6 +633,11 @@ class RobotStore {
 }
 
 export const robotStore = new RobotStore();
+export const bolt = {
+  react: (category: string) => robotStore.react(category),
+};
+
 if (typeof window !== 'undefined') {
   (window as unknown as { __ROBOT_STORE__: RobotStore }).__ROBOT_STORE__ = robotStore;
+  (window as unknown as { bolt: typeof bolt }).bolt = bolt;
 }

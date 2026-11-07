@@ -175,7 +175,10 @@ export const Skills: React.FC = () => {
           {/* Filter Pills */}
           <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={() => setSelectedCategory('ALL')}
+              onClick={() => {
+                setSelectedCategory('ALL');
+                robotStore.react('all');
+              }}
               className={`px-3 py-1.5 font-mono text-xs font-bold uppercase border-2 border-[#0A0A0A] transition-all cursor-pointer ${
                 selectedCategory === 'ALL'
                   ? 'bg-[#FF5A1F] text-black shadow-[2px_2px_0px_#0A0A0A]'
@@ -190,7 +193,10 @@ export const Skills: React.FC = () => {
               return (
                 <button
                   key={cat}
-                  onClick={() => setSelectedCategory(cat)}
+                  onClick={() => {
+                    setSelectedCategory(cat);
+                    robotStore.react(cat);
+                  }}
                   className={`px-3 py-1.5 font-mono text-xs font-bold uppercase border-2 border-[#0A0A0A] transition-all cursor-pointer ${
                     isActive
                       ? 'bg-[#FF5A1F] text-black shadow-[2px_2px_0px_#0A0A0A]'

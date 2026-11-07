@@ -46,7 +46,7 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
       <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
         
         {/* Left Column: Clear, Protected Text & Identity Zone */}
-        <div className="lg:col-span-7 flex flex-col items-start text-left gap-6 z-20">
+        <div className="lg:col-span-6 flex flex-col items-start text-left gap-6 z-20">
           
           {/* Available for Opportunities Chip with ample spacing */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] text-xs font-mono font-bold uppercase tracking-wider mb-1">
@@ -190,7 +190,7 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
           data-robot-anchor="home:platform" 
           data-robot-offset-x="0" 
           data-robot-offset-y="0" 
-          className="w-full lg:col-span-5 h-[380px] sm:h-[440px] lg:h-[480px] max-w-[500px] mx-auto relative flex items-center justify-center pointer-events-auto"
+          className="w-full lg:col-span-6 h-[440px] sm:h-[520px] lg:h-[600px] max-w-[620px] lg:max-w-none mx-auto relative flex items-center justify-center pointer-events-auto"
         >
           <HeroIllustration isHeroInView={isHeroInView} />
         </div>

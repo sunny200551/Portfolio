@@ -188,3 +188,4 @@ export function useReveal<T extends HTMLElement = HTMLDivElement>(options: Revea
 
   return ref;
 }
+

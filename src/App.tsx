@@ -16,8 +16,8 @@ import { Contact } from './sections/Contact';
 import { Footer } from './sections/Footer';
 import { useGitHubData } from './hooks/useGitHubData';
 
-// Lazy-load persistent 3D canvas so text is instantly readable
-const TravelingBolt = lazy(() => import('./robot/TravelingBolt'));
+// Lazy-load fixed gutter mascot so text is instantly readable
+const FixedGutterBolt = lazy(() => import('./robot/FixedGutterBolt'));
 const RobotShowcase = lazy(() => import('./robot/RobotShowcase'));
 
 function App() {
@@ -46,10 +46,10 @@ function App() {
       {/* Flat Custom Cursor */}
       <CustomCursor />
       
-      {/* Persistent Traveling BOLT Mascot Canvas (deferred after first paint) */}
+      {/* Fixed Gutter BOLT Mascot (deferred after first paint) */}
       {mountedAfterPaint && (
         <Suspense fallback={null}>
-          <TravelingBolt />
+          <FixedGutterBolt />
         </Suspense>
       )}
       {isRobotShowcase && (
