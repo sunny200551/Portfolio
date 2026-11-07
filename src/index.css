@@ -53,3 +53,24 @@ html.modal-open .fixed:not([role="dialog"]):not([role="dialog"] *) {
     scroll-behavior: auto !important;
   }
 }
+
+/* Robot Lane Protected Content Shell */
+.lane-padded {
+  padding-left: clamp(16px, 4vw, 32px);
+  padding-right: clamp(16px, 4vw, 32px);
+}
+
+@media (min-width: 1024px) {
+  .lane-padded {
+    padding-left: calc(clamp(72px, 5.5vw, 112px) + 12px);
+    padding-right: calc(clamp(72px, 5.5vw, 112px) + 24px);
+  }
+}
+
+@media (min-width: 1200px) {
+  .lane-padded {
+    padding-left: calc(clamp(72px, 5.5vw, 112px) + 12px);
+    padding-right: calc(clamp(72px, 5.5vw, 112px) + 54px);
+  }
+}
+

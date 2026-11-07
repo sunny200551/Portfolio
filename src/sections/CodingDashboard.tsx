@@ -55,7 +55,7 @@ export const CodingDashboard: React.FC = () => {
       ref={sectionRef} 
       className="w-full bg-white text-[#0A0A0A] relative z-10 border-b-2 border-[#0A0A0A] scroll-mt-24 sm:scroll-mt-28"
     >
-      <div className="pt-20 pb-16 md:pt-28 md:pb-24 px-4 sm:px-6 lg:px-[clamp(16px,3.5vw,64px)] w-full max-w-[2200px] mx-auto">
+      <div className="pt-20 pb-16 md:pt-28 md:pb-24 lane-padded w-full max-w-[2200px] mx-auto">
         {/* Section Tag */}
         <div data-robot-anchor="stats:board" data-robot-offset-x="-50" data-robot-offset-y="-20" className="flex items-center gap-3 mb-8">
           <span className="font-mono text-xs font-bold px-3 py-1 bg-[#0A0A0A] text-white border-2 border-[#0A0A0A]">

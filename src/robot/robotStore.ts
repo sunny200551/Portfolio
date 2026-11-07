@@ -28,9 +28,6 @@ export type ContactAction = 'building' | 'watching' | 'rocket' | 'cheer';
 export interface RobotState {
   boltAnim: RobotAnimation;
   boltExpr: RobotExpression;
-  nutAnim: RobotAnimation;
-  chipAnim: RobotAnimation;
-  chipExpr: RobotExpression;
   cursor: { x: number; y: number };
   boltScreenPos: { x: number; y: number; visible: boolean };
   isDebug: boolean;
@@ -105,9 +102,6 @@ class RobotStore {
   private state: RobotState = {
     boltAnim: 'wave',
     boltExpr: 'happy',
-    nutAnim: 'walk',
-    chipAnim: 'walk',
-    chipExpr: 'focused',
     cursor: { x: 0, y: 0 },
     boltScreenPos: { x: 0, y: 0, visible: false },
     isDebug: typeof window !== 'undefined' && window.location.search.includes('robotDebug=1'),
@@ -153,7 +147,6 @@ class RobotStore {
   private speechTimer: ReturnType<typeof setTimeout> | null = null;
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
   private dancePartyTimer: ReturnType<typeof setTimeout> | null = null;
-  private summonFriendsTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Konami code tracker
   private konamiSequence = [
@@ -376,29 +369,6 @@ class RobotStore {
     this.notify();
   }
 
-  public triggerSummonFriends(durationMs = 6000) {
-    if (!this.state.robotEnabled) return;
-    this.state.isSummonedFriends = true;
-    this.setNut('run');
-    this.setChip('run', 'excited');
-    this.setBolt('jump', 'excited');
-    this.showSpeechBubble("Hey! NUT and CHIP are chasing me!", 4000);
-    this.notify();
-
-    if (this.summonFriendsTimer) clearTimeout(this.summonFriendsTimer);
-    this.summonFriendsTimer = setTimeout(() => {
-      this.state.isSummonedFriends = false;
-      this.setNut('walk');
-      this.setChip('walk', 'focused');
-      this.setBolt('idle', 'happy');
-      this.notify();
-    }, durationMs);
-  }
-
-  /**
-   * 4. Konami code:
-   * All three robots do a dance party for 5 seconds.
-   */
   private handleKonamiKey(key: string) {
     const normalized = key.toLowerCase();
     if (normalized === this.konamiSequence[this.konamiIndex]) {
@@ -415,20 +385,14 @@ class RobotStore {
   public triggerKonamiParty(durationMs = 5000) {
     if (!this.state.robotEnabled) return;
     this.state.isDanceParty = true;
-    this.state.isSummonedFriends = true;
     this.setBolt('dance', 'excited');
-    this.setNut('dance');
-    this.setChip('dance', 'excited');
-    this.showSpeechBubble("🎉 KONAMI CODE ACTIVATED! 5S DANCE PARTY! 🎉", 4500);
+    this.showSpeechBubble("🎉 KONAMI CODE ACTIVATED! DANCE PARTY! 🎉", 4500);
     this.notify();
 
     if (this.dancePartyTimer) clearTimeout(this.dancePartyTimer);
     this.dancePartyTimer = setTimeout(() => {
       this.state.isDanceParty = false;
-      this.state.isSummonedFriends = false;
       this.setBolt('idle', 'happy');
-      this.setNut('walk');
-      this.setChip('walk', 'focused');
       this.notify();
     }, durationMs);
   }
@@ -474,7 +438,7 @@ class RobotStore {
     } else if (action === 'wake') {
       this.triggerWake();
     } else if (action === 'summon-friends') {
-      this.triggerSummonFriends();
+      this.triggerDance();
     } else if (action === 'robot-off') {
       this.setRobotEnabled(false);
     } else if (action === 'robot-on') {
@@ -499,21 +463,6 @@ class RobotStore {
     if (this.state.boltAnim !== anim || this.state.boltExpr !== expr) {
       this.state.boltAnim = anim;
       this.state.boltExpr = expr;
-      this.notify();
-    }
-  }
-
-  public setChip(anim: RobotAnimation, expr: RobotExpression) {
-    if (this.state.chipAnim !== anim || this.state.chipExpr !== expr) {
-      this.state.chipAnim = anim;
-      this.state.chipExpr = expr;
-      this.notify();
-    }
-  }
-
-  public setNut(anim: RobotAnimation) {
-    if (this.state.nutAnim !== anim) {
-      this.state.nutAnim = anim;
       this.notify();
     }
   }

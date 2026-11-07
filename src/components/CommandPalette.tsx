@@ -16,7 +16,6 @@ import {
   Sparkles,
   Moon,
   Sun,
-  Users,
   Power
 } from 'lucide-react';
 import { robotStore } from '../robot/robotStore';
@@ -131,16 +130,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       icon: Sun,
       action: () => {
         robotStore.triggerWake();
-        onClose();
-      }
-    },
-    {
-      id: 'robot-summon-friend',
-      name: 'Summon Friend (Robot: Chase Gag with NUT & CHIP)',
-      category: 'Actions',
-      icon: Users,
-      action: () => {
-        robotStore.triggerSummonFriends();
         onClose();
       }
     },

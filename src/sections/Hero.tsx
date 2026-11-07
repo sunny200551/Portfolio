@@ -41,7 +41,7 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
     <section 
       ref={heroRef}
       id="home" 
-      className="relative min-h-[92svh] flex items-center justify-center px-4 sm:px-6 lg:px-[clamp(16px,3.5vw,64px)] pt-20 pb-12 sm:pt-28 sm:pb-20 z-10 bg-transparent text-[#0A0A0A] w-full"
+      className="relative min-h-[92svh] flex items-center justify-center lane-padded pt-20 pb-12 sm:pt-28 sm:pb-20 z-10 bg-transparent text-[#0A0A0A] w-full"
     >
       <div className="w-full max-w-[2200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
         

@@ -342,6 +342,11 @@ export class RobotFaceTexture {
         ctx.quadraticCurveTo(rightEyeX, 48, 204, 84);
         ctx.stroke();
 
+        // Orange neo-brutal blush squares
+        ctx.fillStyle = '#FF5A1F';
+        ctx.fillRect(48, 90, 12, 6);
+        ctx.fillRect(196, 90, 12, 6);
+
         // Cheerful smile mouth
         ctx.lineWidth = 7;
         ctx.beginPath();
@@ -483,48 +488,55 @@ export class RobotFaceTexture {
       }
 
       case 'curious': {
-        // Left eyebrow high in inquisitive arch, right eyebrow slightly furrowed
+        // Friendly raised inquisitive curved eyebrows (both friendly and cheerful)
         ctx.lineWidth = 6;
         ctx.beginPath();
-        ctx.arc(leftEyeX, 34, 18, 1.15 * Math.PI, 1.85 * Math.PI);
+        ctx.arc(leftEyeX, 36, 18, 1.15 * Math.PI, 1.85 * Math.PI);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(164, 48);
-        ctx.lineTo(200, 42);
+        ctx.arc(rightEyeX, 40, 18, 1.15 * Math.PI, 1.85 * Math.PI);
         ctx.stroke();
 
-        // Left eye: larger curious eye
+        // Sparkly bright open eyes with starry catchlights
         ctx.fillStyle = '#FFFFFF';
         ctx.beginPath();
-        ctx.arc(leftEyeX, eyeY - 2, 24, 0, Math.PI * 2);
+        ctx.arc(leftEyeX, eyeY, 21, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#051226';
         ctx.beginPath();
-        ctx.arc(leftEyeX + 3, eyeY - 4, 12, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#FFFFFF';
-        ctx.beginPath();
-        ctx.arc(leftEyeX, eyeY - 8, 4, 0, Math.PI * 2);
+        ctx.arc(rightEyeX, eyeY, 21, 0, Math.PI * 2);
         ctx.fill();
 
-        // Right eye: standard open eye
-        ctx.beginPath();
-        ctx.arc(rightEyeX, eyeY + 2, 18, 0, Math.PI * 2);
-        ctx.fill();
+        // Dark pupils
         ctx.fillStyle = '#051226';
         ctx.beginPath();
-        ctx.arc(rightEyeX - 1, eyeY, 9, 0, Math.PI * 2);
+        ctx.arc(leftEyeX + 2, eyeY - 1, 10, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#FFFFFF';
         ctx.beginPath();
-        ctx.arc(rightEyeX - 3, eyeY - 3, 3, 0, Math.PI * 2);
+        ctx.arc(rightEyeX + 2, eyeY - 1, 10, 0, Math.PI * 2);
         ctx.fill();
 
-        // Curious small 'o' mouth
+        // Sparkle catchlights (cross / star highlights in pupils)
+        ctx.fillStyle = '#FFFFFF';
+        const drawSparkle = (cx: number, cy: number) => {
+          ctx.beginPath();
+          ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillRect(cx - 5, cy - 1, 10, 2);
+          ctx.fillRect(cx - 1, cy - 5, 2, 10);
+        };
+        drawSparkle(leftEyeX - 2, eyeY - 5);
+        drawSparkle(rightEyeX - 2, eyeY - 5);
+
+        // Cheerful orange blush squares
+        ctx.fillStyle = '#FF5A1F';
+        ctx.fillRect(48, 86, 12, 6);
+        ctx.fillRect(196, 86, 12, 6);
+
+        // Small open cheerful smile
         ctx.lineWidth = 6;
         ctx.strokeStyle = '#FFFFFF';
         ctx.beginPath();
-        ctx.arc(128, 114, 10, 0, Math.PI * 2);
+        ctx.arc(128, 106, 16, 0.1 * Math.PI, 0.9 * Math.PI);
         ctx.stroke();
         break;
       }

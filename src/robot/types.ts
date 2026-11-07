@@ -1,4 +1,4 @@
-export type RobotVariant = 'bolt' | 'nut' | 'chip';
+export type RobotVariant = 'bolt';
 
 export type RobotExpression = 
   | 'happy' 
@@ -93,23 +93,5 @@ export const VARIANT_CONFIGS: Record<RobotVariant, RobotVariantConfig> = {
     accentColor: '#FF5A1F', // Orange accents
     pixelColor: '#FFFFFF', // White face features
     scale: 1.0,
-  },
-  nut: {
-    name: 'NUT',
-    bodyColor: '#EEF2FA', // Light grey/white body
-    visorBgColor: '#0A1A3F', // Navy screen
-    limbColor: '#0A1A3F', // Navy joints
-    accentColor: '#FF5A1F', // Orange accents
-    pixelColor: '#FFFFFF', // White face features
-    scale: 0.75,
-  },
-  chip: {
-    name: 'CHIP',
-    bodyColor: '#0A1A3F', // Navy body
-    visorBgColor: '#0047AB', // Blue screen
-    limbColor: '#0A1A3F', // Navy joints
-    accentColor: '#FF5A1F', // Orange accents
-    pixelColor: '#FFFFFF', // White face features
-    scale: 0.65,
   },
 };

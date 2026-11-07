@@ -152,7 +152,7 @@ export const GitHubActivity: React.FC<GitHubActivityProps> = () => {
       id="github" 
       className="w-full bg-white text-[#0A0A0A] relative z-10 border-b-2 border-[#0A0A0A] scroll-mt-24 sm:scroll-mt-28"
     >
-      <div className="pt-20 pb-16 md:pt-28 md:pb-24 px-4 sm:px-6 lg:px-[clamp(16px,3.5vw,64px)] w-full max-w-[2200px] mx-auto">
+      <div className="pt-20 pb-16 md:pt-28 md:pb-24 lane-padded w-full max-w-[2200px] mx-auto">
         
         {/* Section Header */}
         <div data-robot-anchor="github:skyline" data-robot-offset-x="-60" data-robot-offset-y="-15" className="flex items-center gap-3 mb-8">

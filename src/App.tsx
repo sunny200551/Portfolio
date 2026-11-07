@@ -16,6 +16,8 @@ import { Contact } from './sections/Contact';
 import { Footer } from './sections/Footer';
 import { useGitHubData } from './hooks/useGitHubData';
 
+import { SessionLoader } from './components/ui/SessionLoader';
+
 // Lazy-load fixed gutter mascot so text is instantly readable
 const FixedGutterBolt = lazy(() => import('./robot/FixedGutterBolt'));
 const RobotShowcase = lazy(() => import('./robot/RobotShowcase'));
@@ -43,6 +45,9 @@ function App() {
 
   return (
     <SmoothScroll>
+      {/* Session Brutalist Loader */}
+      <SessionLoader />
+
       {/* Flat Custom Cursor */}
       <CustomCursor />
       

@@ -124,7 +124,7 @@ export const Events: React.FC = () => {
 
   return (
     <section id="events" className="pt-24 pb-20 sm:pt-32 sm:pb-28 bg-white relative border-b-2 border-[#0A0A0A] scroll-mt-24 sm:scroll-mt-28">
-      <div className="w-full max-w-[2200px] mx-auto px-4 sm:px-6 lg:px-[clamp(16px,3.5vw,64px)]">
+      <div className="w-full max-w-[2200px] mx-auto lane-padded">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 sm:mb-16 gap-6">
           <div>

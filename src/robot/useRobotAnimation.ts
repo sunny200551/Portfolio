@@ -124,6 +124,7 @@ export function useRobotAnimation(
         currentPose.bodyRotZ = Math.sin(t * 1.2) * 0.01;
         currentPose.leftArmRotZ = -RIG.LIMITS.ARM_REST_OUTWARD - breath * 0.03;
         currentPose.rightArmRotZ = RIG.LIMITS.ARM_REST_OUTWARD + breath * 0.03;
+        currentPose.antennaRotZ = Math.sin(t * 3.6) * 0.14;
         currentPose.scaleY = 1.0 + breath * 0.02;
         currentPose.scaleXZ = 1.0 - breath * 0.01;
         break;

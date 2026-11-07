@@ -18,17 +18,19 @@ const SHY_TECH_PICKUP_LINES = [
   "My heart has zero merge conflicts with yours."
 ];
 
-// Context expression mapping table (Part 5c)
-const SECTION_EXPRESSIONS: Record<string, { anim: RobotAnimation; expr: RobotExpression; side: 'left' | 'right' }> = {
-  home: { anim: 'wave', expr: 'happy', side: 'right' },
-  about: { anim: 'idle', expr: 'curious', side: 'left' },
-  work: { anim: 'idle', expr: 'proud', side: 'right' },
-  skills: { anim: 'idle', expr: 'thinking', side: 'left' },
-  github: { anim: 'idle', expr: 'proud', side: 'right' },
-  stats: { anim: 'cheer', expr: 'happy', side: 'left' },
-  events: { anim: 'wave', expr: 'excited', side: 'right' },
-  journey: { anim: 'idle', expr: 'curious', side: 'left' },
-  contact: { anim: 'wave', expr: 'happy', side: 'right' },
+// Context expression mapping table & alternating lanes
+// Alternate lanes by section:
+// Hero: right | About: left | Work: left | Skills: right | GitHub: left | Stats: right | Events: left | Journey: right | Contact: left
+const SECTION_CONFIG: Record<string, { anim: RobotAnimation; expr: RobotExpression; side: 'left' | 'right'; greeting: string }> = {
+  home: { anim: 'wave', expr: 'happy', side: 'right', greeting: "Hi! I'm BOLT, follow me! 👋" },
+  about: { anim: 'idle', expr: 'curious', side: 'left', greeting: "Welcome to About! ✨" },
+  work: { anim: 'idle', expr: 'curious', side: 'left', greeting: "Check out these projects! 🚀" },
+  skills: { anim: 'idle', expr: 'thinking', side: 'right', greeting: "Sunny's tech loadout! ⚡" },
+  github: { anim: 'idle', expr: 'proud', side: 'left', greeting: "Green commit skyline! 📊" },
+  stats: { anim: 'cheer', expr: 'happy', side: 'right', greeting: "Problem solving stats! 🏆" },
+  events: { anim: 'wave', expr: 'excited', side: 'left', greeting: "Hackathons & events! 🎟️" },
+  journey: { anim: 'idle', expr: 'curious', side: 'right', greeting: "The learning journey! 🗺️" },
+  contact: { anim: 'wave', expr: 'happy', side: 'left', greeting: "Let's build something! ✉️" },
 };
 
 export const FixedGutterBolt: React.FC = () => {
@@ -37,6 +39,17 @@ export const FixedGutterBolt: React.FC = () => {
   const [speechBubble, setSpeechBubble] = useState<string | null>(() => robotStore.getState().speechBubble);
   const [isTabVisible, setIsTabVisible] = useState(() => typeof document !== 'undefined' ? !document.hidden : true);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [isFastScrolling, setIsFastScrolling] = useState(false);
+  const [isCrossing, setIsCrossing] = useState(false);
+  const [idleWaveActive, setIdleWaveActive] = useState(false);
+  const [greetBubble, setGreetBubble] = useState<string | null>(null);
+
+  const prevSideRef = useRef<'left' | 'right'>('right');
+  const lastScrollTime = useRef(0);
+  const scrollStopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const greetingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const idleWaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const visitedSectionsRef = useRef<Set<string>>(new Set());
 
   const [windowDimensions, setWindowDimensions] = useState(() => ({
     w: typeof window !== 'undefined' ? window.innerWidth : 1440,
@@ -62,17 +75,56 @@ export const FixedGutterBolt: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Track scroll progress for gentle vertical drift
+  // Track scroll progress and velocity for fast-scroll companion fade
   useEffect(() => {
+    let lastY = window.scrollY;
+
     const handleScroll = () => {
+      const now = performance.now();
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
       const progress = scrollHeight > 0 ? window.scrollY / scrollHeight : 0;
       setScrollProgress(progress);
+
+      const deltaY = Math.abs(window.scrollY - lastY);
+      const deltaTime = Math.max(1, now - lastScrollTime.current);
+      const velocity = deltaY / deltaTime; // px/ms
+
+      if (velocity > 1.8) {
+        setIsFastScrolling(true);
+      }
+
+      if (scrollStopTimer.current) clearTimeout(scrollStopTimer.current);
+      scrollStopTimer.current = setTimeout(() => {
+        setIsFastScrolling(false);
+      }, 150);
+
+      lastY = window.scrollY;
+      lastScrollTime.current = now;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollStopTimer.current) clearTimeout(scrollStopTimer.current);
+    };
   }, []);
+
+  // Periodic gentle idle wave every 13s
+  useEffect(() => {
+    if (prefersReducedMotion || !robotEnabled) return;
+
+    const interval = setInterval(() => {
+      setIdleWaveActive(true);
+      idleWaveTimerRef.current = setTimeout(() => {
+        setIdleWaveActive(false);
+      }, 2200);
+    }, 13000);
+
+    return () => {
+      clearInterval(interval);
+      if (idleWaveTimerRef.current) clearTimeout(idleWaveTimerRef.current);
+    };
+  }, [prefersReducedMotion, robotEnabled]);
 
   // Tab visibility
   useEffect(() => {
@@ -96,7 +148,55 @@ export const FixedGutterBolt: React.FC = () => {
     return () => unsubscribe();
   }, [speechBubble]);
 
-  // Shy mode state machine (Part 7)
+  const [heroPlinthMode, setHeroPlinthMode] = useState(true);
+  const [isJumpingOffPlinth, setIsJumpingOffPlinth] = useState(false);
+  const [homePlatformPos, setHomePlatformPos] = useState(() => robotStore.getState().homePlatformPos);
+
+  // Home hero plinth mode scroll & idle watcher
+  useEffect(() => {
+    let heroIdleTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      if (scrollY < 60) {
+        setHeroPlinthMode(true);
+        if (heroIdleTimer) clearTimeout(heroIdleTimer);
+        heroIdleTimer = setTimeout(() => {
+          if (window.scrollY < 60) {
+            // After 6s idle on top, jump off platform into lane
+            setIsJumpingOffPlinth(true);
+            setHeroPlinthMode(false);
+            setTimeout(() => setIsJumpingOffPlinth(false), 900);
+          }
+        }, 6000);
+      } else {
+        if (heroPlinthMode) {
+          setIsJumpingOffPlinth(true);
+          setTimeout(() => setIsJumpingOffPlinth(false), 900);
+        }
+        setHeroPlinthMode(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (heroIdleTimer) clearTimeout(heroIdleTimer);
+    };
+  }, [heroPlinthMode]);
+
+  // Sync homePlatformPos from store
+  useEffect(() => {
+    const unsub = robotStore.subscribe(() => {
+      const p = robotStore.getState().homePlatformPos;
+      if (p.x > 0 && (p.x !== homePlatformPos.x || p.y !== homePlatformPos.y)) {
+        setHomePlatformPos(p);
+      }
+    });
+    return () => unsub();
+  }, [homePlatformPos]);
   const [shyModeActive, setShyModeActive] = useState(false);
   const [shyStep, setShyStep] = useState(0);
   const [shyLineIndex, setShyLineIndex] = useState(0);
@@ -125,30 +225,22 @@ export const FixedGutterBolt: React.FC = () => {
     setShyStep(1); // 1. Tiptoe sneak
     setShyLineIndex((prev) => (prev + 1) % SHY_TECH_PICKUP_LINES.length);
 
-    // Sequence timer chain
-    // Step 1: sneak (0 - 2s)
     shySequenceTimerRef.current = setTimeout(() => {
-      setShyStep(2); // Hide behind screen edge
-      // Step 2: hide (2s - 3.5s)
+      setShyStep(2);
       shySequenceTimerRef.current = setTimeout(() => {
-        setShyStep(3); // Peek with blush
-        // Step 3: peek (3.5s - 5.5s)
+        setShyStep(3);
         shySequenceTimerRef.current = setTimeout(() => {
-          setShyStep(4); // "Ahem!" clears throat
+          setShyStep(4);
           setShyBubble("Ahem... ✨");
-          // Step 4: clears throat (5.5s - 7.5s)
           shySequenceTimerRef.current = setTimeout(() => {
-            setShyStep(5); // Flirt with cheesy line + wink
+            setShyStep(5);
             setShyBubble(SHY_TECH_PICKUP_LINES[shyLineIndex]);
-            // Step 5: flirt (7.5s - 12s)
             shySequenceTimerRef.current = setTimeout(() => {
-              setShyStep(6); // Embarrassed, covers face, hides
+              setShyStep(6);
               setShyBubble(null);
-              // Step 6: hide embarrassed (12s - 14s)
               shySequenceTimerRef.current = setTimeout(() => {
-                setShyStep(7); // Little bow and wave
+                setShyStep(7);
                 setShyBubble("Enjoy the site! 😊");
-                // Step 7: bow (14s - 16.5s)
                 shySequenceTimerRef.current = setTimeout(() => {
                   cancelShyMode();
                 }, 2500);
@@ -160,7 +252,7 @@ export const FixedGutterBolt: React.FC = () => {
     }, 2000);
   }, [prefersReducedMotion, robotEnabled, shyEnabled, shyLineIndex, cancelShyMode]);
 
-  // Idle watcher (7.5s idle reading detection)
+  // Idle watcher (7.5s idle reading detection for shy mode)
   useEffect(() => {
     if (prefersReducedMotion || !robotEnabled || !shyEnabled || shyModeActive) return;
 
@@ -170,7 +262,6 @@ export const FixedGutterBolt: React.FC = () => {
         cancelShyMode();
       }
       idleTimerRef.current = setTimeout(() => {
-        // Check if tab visible and not in an input
         const activeTag = document.activeElement?.tagName.toLowerCase();
         const isInInput = activeTag === 'input' || activeTag === 'textarea';
         const hasOpenModal = document.documentElement.classList.contains('lenis-stopped');
@@ -215,89 +306,113 @@ export const FixedGutterBolt: React.FC = () => {
     };
   }, [cancelShyMode, triggerShySequence]);
 
-  // Section configuration & alternating side (Part 6b)
-  const currentConfig = SECTION_EXPRESSIONS[activeSection] || SECTION_EXPRESSIONS.home;
-  const isMobile = windowDimensions.w < 768;
-  const isTablet = windowDimensions.w >= 768 && windowDimensions.w < 1200;
+  // Current section configuration
+  const currentConfig = SECTION_CONFIG[activeSection] || SECTION_CONFIG.home;
+  const isMobileOrTablet = windowDimensions.w < 1024;
 
-  // Compute position
-  const { posX, posY, facing, isPeeking, canvasW, canvasH, robotScale } = useMemo(() => {
+  // Lane switch detection: trigger crossing walk animation and first-time greeting bubble
+  useEffect(() => {
+    const targetSide = currentConfig.side;
+    if (prevSideRef.current !== targetSide && !isMobileOrTablet) {
+      setIsCrossing(true);
+      const timer = setTimeout(() => setIsCrossing(false), 850);
+      prevSideRef.current = targetSide;
+
+      // First time in this lane greeting
+      if (!visitedSectionsRef.current.has(activeSection) && currentConfig.greeting) {
+        visitedSectionsRef.current.add(activeSection);
+        setGreetBubble(currentConfig.greeting);
+        if (greetingTimerRef.current) clearTimeout(greetingTimerRef.current);
+        greetingTimerRef.current = setTimeout(() => setGreetBubble(null), 2500);
+      }
+
+      return () => clearTimeout(timer);
+    }
+    prevSideRef.current = targetSide;
+  }, [activeSection, currentConfig, isMobileOrTablet]);
+
+  // Compute exact position inside reserved lanes
+  const { posX, posY, facing, canvasW, canvasH, robotScale } = useMemo(() => {
     const { w, h } = windowDimensions;
 
-    if (isMobile) {
-      // Mobile companion: 64x80px compact size resting in bottom corner
+    if (isMobileOrTablet) {
+      // Mobile & tablet companion: 76x96px docked in bottom corner, alternating per section
       const mScale = 0.62;
-      const mX = w - 88;
+      const cW = 76;
+      const cH = 96;
       const mY = h - 110;
+      const isLeft = currentConfig.side === 'left';
+      const mX = isLeft ? 16 : w - cW - 16;
+
       return {
         posX: mX,
         posY: mY,
-        facing: -1 as const,
-        isPeeking: false,
-        canvasW: 80,
-        canvasH: 104,
+        facing: (isLeft ? 1 : -1) as (1 | -1),
+        canvasW: cW,
+        canvasH: cH,
         robotScale: mScale,
       };
     }
 
-    const preferredSide = currentConfig.side;
-    const isWorkSection = activeSection === 'work';
-    const restingMiddleY = h * 0.5;
-    const driftY = (scrollProgress - 0.5) * (h * 0.22);
-    const canvasHeight = 260;
-    const clampedY = Math.max(32 + canvasHeight / 2, Math.min(h - 32 - canvasHeight / 2, restingMiddleY + driftY));
+    // Desktop (>= 1024px):
+    // Standard canvas: 110px wide x 150px tall (holds ~102px tall robot without any clipping)
+    const cW = 110;
+    const cH = 150;
+    const rScale = 0.95;
 
-    // Shy mode position overrides
+    // Center vertically at 50% viewport with slight subtle scroll drift (+/- 36px)
+    const restingMiddleY = h * 0.5;
+    const driftY = (scrollProgress - 0.5) * 72;
+    const clampedY = Math.max(cH / 2 + 24, Math.min(h - cH / 2 - 24, restingMiddleY + driftY));
+
+    // Shy mode override
     if (shyModeActive) {
       if (shyStep === 2 || shyStep === 6) {
-        // Hidden behind edge
-        const hideX = preferredSide === 'left' ? -150 : w - 24;
         return {
-          posX: hideX,
+          posX: currentConfig.side === 'left' ? -80 : w - 30,
           posY: clampedY,
-          facing: (preferredSide === 'left' ? 1 : -1) as (1 | -1),
-          isPeeking: true,
-          canvasW: 200,
-          canvasH: 260,
-          robotScale: 1.15,
-        };
-      }
-      if (shyStep === 3) {
-        // Peeking from edge
-        const peekX = preferredSide === 'left' ? -110 : w - 75;
-        return {
-          posX: peekX,
-          posY: clampedY,
-          facing: (preferredSide === 'left' ? 1 : -1) as (1 | -1),
-          isPeeking: true,
-          canvasW: 200,
-          canvasH: 260,
-          robotScale: 1.15,
+          facing: (currentConfig.side === 'left' ? 1 : -1) as (1 | -1),
+          canvasW: cW,
+          canvasH: cH,
+          robotScale: rScale,
         };
       }
     }
 
-    // Normal resting position:
-    // Left side or right side edge peek mode (64px visible) so full-width cards and headings are NEVER covered!
-    const isRight = preferredSide === 'right';
+    // Hero plinth handoff: BOLT starts on the hero platform floor anchor!
+    if (activeSection === 'home' && heroPlinthMode && homePlatformPos.x > 0) {
+      return {
+        posX: Math.max(16, Math.min(w - cW - 16, homePlatformPos.x - cW / 2)),
+        posY: Math.max(cH / 2 + 10, homePlatformPos.y - cH / 2),
+        facing: -1 as const,
+        canvasW: cW,
+        canvasH: cH,
+        robotScale: rScale * 1.05,
+      };
+    }
+
+    // Reserved lanes positioning:
+    // Left lane: BOLT sits comfortably inside left margin [16px, laneWidth]
+    // Right lane: BOLT sits inside right lane [w - 56px - cW, w - 56px] (safely away from rail at w-52px)
+    const isRight = currentConfig.side === 'right';
     let targetX: number;
 
     if (isRight) {
-      targetX = w - 64;
+      const hasRail = w >= 1200;
+      targetX = hasRail ? w - 58 - cW : w - 20 - cW;
     } else {
-      targetX = -136;
+      targetX = 16;
     }
 
     return {
       posX: targetX,
       posY: clampedY,
-      facing: (isRight ? -1 : 1) as 1 | -1,
-      isPeeking: true,
-      canvasW: 200,
-      canvasH: 260,
-      robotScale: 1.18,
+      facing: (isRight ? -1 : 1) as (1 | -1),
+      canvasW: cW,
+      canvasH: cH,
+      robotScale: rScale,
     };
-  }, [windowDimensions, isMobile, currentConfig, scrollProgress, shyModeActive, shyStep]);
+  }, [windowDimensions, isMobileOrTablet, currentConfig, scrollProgress, shyModeActive, shyStep]);
 
   // Compute live animation and expression
   const { liveAnim, liveExpr } = useMemo<{ liveAnim: RobotAnimation; liveExpr: RobotExpression }>(() => {
@@ -326,39 +441,71 @@ export const FixedGutterBolt: React.FC = () => {
       }
     }
 
-    // Default section context mapping (zero serious/angry faces)
+    // Hero plinth jump handoff
+    if (isJumpingOffPlinth) {
+      return { liveAnim: 'jump', liveExpr: 'excited' };
+    }
+
+    // Lane crossing active: play walk animation during continuous lane change
+    if (isCrossing) {
+      return { liveAnim: 'walk', liveExpr: 'happy' };
+    }
+
+    // Periodic gentle idle wave
+    if (idleWaveActive && currentConfig.anim === 'idle') {
+      return { liveAnim: 'wave', liveExpr: 'happy' };
+    }
+
     return {
       liveAnim: currentConfig.anim,
       liveExpr: currentConfig.expr,
     };
-  }, [prefersReducedMotion, shyModeActive, shyStep, currentConfig]);
+  }, [prefersReducedMotion, shyModeActive, shyStep, isCrossing, idleWaveActive, currentConfig]);
 
-  if (!robotEnabled || (activeSection === 'home' && !shyModeActive)) return null;
+  // Handle tap on mobile companion
+  const handleMobileCompanionTap = () => {
+    if (isMobileOrTablet) {
+      robotStore.setBolt('cheer', 'happy');
+      setGreetBubble("BEEP BOOP! ✨");
+      if (greetingTimerRef.current) clearTimeout(greetingTimerRef.current);
+      greetingTimerRef.current = setTimeout(() => {
+        setGreetBubble(null);
+        robotStore.setBolt('idle', 'happy');
+      }, 2000);
+    }
+  };
 
-  const displayBubble = shyBubble || speechBubble;
+  if (!robotEnabled) return null;
+
+  const displayBubble = shyBubble || speechBubble || greetBubble;
 
   return (
     <div
-      className="fixed z-35 select-none pointer-events-none"
+      id="robot-bolt-container"
+      data-robot-instance="single-bolt"
+      className={`fixed z-35 select-none ${
+        isMobileOrTablet ? 'pointer-events-auto cursor-pointer' : 'pointer-events-none'
+      } ${isFastScrolling && isMobileOrTablet ? 'opacity-40' : 'opacity-100'} transition-opacity duration-200`}
       style={{
         left: `${posX}px`,
         top: `${posY}px`,
         transform: 'translateY(-50%)',
-        transition: shyStep === 1 
-          ? 'left 1.8s cubic-bezier(0.25, 1, 0.5, 1), top 0.4s ease-out' 
-          : 'left 0.75s cubic-bezier(0.16, 1, 0.3, 1), top 0.25s ease-out',
+        transition: isCrossing
+          ? 'left 0.85s cubic-bezier(0.2, 0.9, 0.3, 1), top 0.3s ease-out, opacity 0.2s ease-out'
+          : 'left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.25s ease-out, opacity 0.2s ease-out',
         width: `${canvasW}px`,
         height: `${canvasH}px`,
       }}
-      aria-hidden="true"
+      onClick={handleMobileCompanionTap}
+      aria-label="BOLT - Interactive Portfolio Robot Mascot"
     >
-      {/* Speech bubble: strictly ABOVE Bolt's head, never over face or body */}
+      {/* Speech bubble: strictly ABOVE Bolt's head/antenna, never over face or body */}
       {displayBubble && (
         <div
-          className="absolute -top-14 left-1/2 -translate-x-1/2 min-w-[140px] max-w-[240px] px-3.5 py-2 bg-white border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] font-mono text-[11px] font-bold text-[#0A0A0A] leading-snug z-40 pointer-events-none text-center"
+          className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 min-w-[130px] max-w-[220px] px-3.5 py-1.5 bg-white border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] font-mono text-[11px] font-bold text-[#0A0A0A] leading-snug z-40 pointer-events-none text-center"
         >
           <span>{displayBubble}</span>
-          {/* Downward triangle pointer */}
+          {/* Downward triangle pointer pointing toward head */}
           <div
             style={{
               position: 'absolute',
@@ -367,9 +514,9 @@ export const FixedGutterBolt: React.FC = () => {
               transform: 'translateX(-50%)',
               width: 0,
               height: 0,
-              borderLeft: '6px solid transparent',
-              borderRight: '6px solid transparent',
-              borderTop: '6px solid #0A0A0A',
+              borderLeft: '5px solid transparent',
+              borderRight: '5px solid transparent',
+              borderTop: '5px solid #0A0A0A',
             }}
           />
           <div
@@ -380,9 +527,9 @@ export const FixedGutterBolt: React.FC = () => {
               transform: 'translateX(-50%)',
               width: 0,
               height: 0,
-              borderLeft: '4px solid transparent',
-              borderRight: '4px solid transparent',
-              borderTop: '4px solid #FFFFFF',
+              borderLeft: '3.5px solid transparent',
+              borderRight: '3.5px solid transparent',
+              borderTop: '3.5px solid #FFFFFF',
             }}
           />
         </div>
@@ -397,7 +544,7 @@ export const FixedGutterBolt: React.FC = () => {
               style={{ pointerEvents: 'none', width: `${canvasW}px`, height: `${canvasH}px` }}
               dpr={[1, 1.5]}
               frameloop={isTabVisible ? 'always' : 'never'}
-              camera={{ position: [0, 0, 3.4], fov: 32 }}
+              camera={{ position: [0, 0, 3.2], fov: 32 }}
               gl={{
                 alpha: true,
                 antialias: true,
@@ -408,19 +555,22 @@ export const FixedGutterBolt: React.FC = () => {
               <directionalLight position={[4, 7, 5]} intensity={1.5} color="#FFFFFF" />
               <directionalLight position={[-3, -2, -2]} intensity={0.4} color="#EEF2FA" />
 
-              <group position={[0, -0.22, 0]}>
+              <group position={[0, -0.16, 0]}>
                 <Robot
                   variant="bolt"
                   animation={liveAnim}
                   expression={liveExpr}
                   scale={robotScale}
                   facing={facing}
-                  headTrackCursor={!isPeeking && !prefersReducedMotion && !shyModeActive}
+                  headTrackCursor={!prefersReducedMotion && !shyModeActive}
                 />
               </group>
             </Canvas>
           </Suspense>
         </CanvasErrorBoundary>
+
+        {/* Soft neo-brutalist floor shadow pill under BOLT's feet */}
+        <div className="w-14 h-2.5 bg-[#0A0A0A]/20 rounded-full mx-auto -mt-2.5 blur-[1px] pointer-events-none" />
       </div>
     </div>
   );

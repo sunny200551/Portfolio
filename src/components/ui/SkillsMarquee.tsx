@@ -31,6 +31,7 @@ export const SkillsMarquee: React.FC = () => {
   const lastScrollY = useRef(0);
   const scrollDirection = useRef(1); // 1 = down, -1 = up
   const speedMultiplier = useRef(1);
+  const isHoveredRef = useRef(false);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -53,32 +54,33 @@ export const SkillsMarquee: React.FC = () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
 
     const animate = () => {
-      // Natural decay back to baseline speed
-      speedMultiplier.current += (1 - speedMultiplier.current) * 0.05;
+      if (!isHoveredRef.current) {
+        // Natural decay back to baseline speed
+        speedMultiplier.current += (1 - speedMultiplier.current) * 0.05;
 
-      const baseSpeed = 0.75 * speedMultiplier.current;
-      const delta1 = baseSpeed * scrollDirection.current;
-      const delta2 = -baseSpeed * scrollDirection.current;
+        const baseSpeed = 0.75 * speedMultiplier.current;
+        const delta1 = baseSpeed * scrollDirection.current;
+        const delta2 = -baseSpeed * scrollDirection.current;
 
-      pos1 += delta1;
-      pos2 += delta2;
+        pos1 += delta1;
+        pos2 += delta2;
 
-      const chunk1Width = chunk1Ref.current ? chunk1Ref.current.offsetWidth : 1200;
-      const chunk2Width = chunk2Ref.current ? chunk2Ref.current.offsetWidth : 1200;
+        const chunk1Width = chunk1Ref.current ? chunk1Ref.current.offsetWidth : 1200;
+        const chunk2Width = chunk2Ref.current ? chunk2Ref.current.offsetWidth : 1200;
 
-      // Mathematical modulo wrap to guarantee 100% gapless continuity in both directions
-      if (chunk1Width > 0) {
-        pos1 = ((pos1 % chunk1Width) + chunk1Width) % chunk1Width;
-      }
-      if (chunk2Width > 0) {
-        pos2 = ((pos2 % chunk2Width) + chunk2Width) % chunk2Width;
-      }
+        if (chunk1Width > 0) {
+          pos1 = ((pos1 % chunk1Width) + chunk1Width) % chunk1Width;
+        }
+        if (chunk2Width > 0) {
+          pos2 = ((pos2 % chunk2Width) + chunk2Width) % chunk2Width;
+        }
 
-      if (row1Ref.current) {
-        row1Ref.current.style.transform = `translate3d(${-pos1}px, 0, 0)`;
-      }
-      if (row2Ref.current) {
-        row2Ref.current.style.transform = `translate3d(${-pos2}px, 0, 0)`;
+        if (row1Ref.current) {
+          row1Ref.current.style.transform = `translate3d(${-pos1}px, 0, 0)`;
+        }
+        if (row2Ref.current) {
+          row2Ref.current.style.transform = `translate3d(${-pos2}px, 0, 0)`;
+        }
       }
 
       animId = requestAnimationFrame(animate);
@@ -93,7 +95,11 @@ export const SkillsMarquee: React.FC = () => {
   }, []);
 
   return (
-    <div className="w-full bg-[#0047AB] text-white border-y-2 border-[#0A0A0A] py-3.5 sm:py-4 overflow-hidden relative select-none z-10 font-mono text-xs font-bold tracking-wider">
+    <div
+      onMouseEnter={() => { isHoveredRef.current = true; }}
+      onMouseLeave={() => { isHoveredRef.current = false; }}
+      className="w-full bg-[#0047AB] text-white border-y-2 border-[#0A0A0A] py-3.5 sm:py-4 overflow-hidden relative select-none z-10 font-mono text-xs font-bold tracking-wider"
+    >
       {/* Row 1 */}
       <div className="flex whitespace-nowrap mb-2.5 overflow-hidden">
         <div ref={row1Ref} className="flex will-change-transform">

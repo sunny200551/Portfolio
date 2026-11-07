@@ -104,7 +104,7 @@ export const Contact: React.FC<ContactProps> = () => {
       ref={containerRef}
       className="w-full bg-[#0047AB] text-white pt-24 pb-16 sm:pt-28 sm:pb-20 md:pt-32 md:pb-24 relative z-10 border-t-2 border-b-2 border-[#0A0A0A] scroll-mt-24 sm:scroll-mt-28"
     >
-      <div className="w-full max-w-[2200px] mx-auto px-4 sm:px-6 lg:px-[clamp(16px,3.5vw,64px)]">
+      <div className="w-full max-w-[2200px] mx-auto lane-padded">
         
         {/* Section Pill */}
         <div
@@ -181,6 +181,12 @@ export const Contact: React.FC<ContactProps> = () => {
               <span>{copied ? 'Copied' : 'Copy address'}</span>
             </button>
           </div>
+          {copied && (
+            <div className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-[#FF5A1F] text-black font-mono text-xs font-black border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] flex items-center gap-2 animate-bounce select-none">
+              <Check size={16} />
+              <span>EMAIL COPIED TO CLIPBOARD! 📋</span>
+            </div>
+          )}
 
           {/* Large Flat Tiles: LinkedIn, GitHub, Instagram, and Location Chip */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">

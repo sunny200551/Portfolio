@@ -158,14 +158,14 @@ export const RobotShowcase: React.FC = () => {
           </div>
         )}
 
-        {/* 3. Three Robot Variants */}
+        {/* 3. Mascot */}
         {activeTab === 'variants' && (
           <div>
             <h2 className="text-sm font-bold uppercase mb-4 text-[#0A0A0A]">
-              THE TRIO: BOLT (ORANGE), NUT (GREY), CHIP (NAVY)
+              OFFICIAL MASCOT: BOLT (ORANGE, BLUE VISOR)
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {(['bolt', 'nut', 'chip'] as const).map((variant) => (
+              {(['bolt'] as const).map((variant) => (
                 <div
                   key={variant}
                   data-testid={`variant-card-${variant}`}
@@ -192,7 +192,7 @@ export const RobotShowcase: React.FC = () => {
                     {variant.toUpperCase()}
                   </span>
                   <span className="text-xs text-gray-600 mt-1">
-                    {variant === 'bolt' ? 'Main Guide Mascot' : variant === 'nut' ? 'Playful Friend' : 'Tech Specialist'}
+                    Main Guide Mascot
                   </span>
                 </div>
               ))}
