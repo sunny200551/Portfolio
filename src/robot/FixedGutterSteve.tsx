@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, Suspense, useCallback } fr
 import { Canvas } from '@react-three/fiber';
 import { Robot } from './Robot';
 import { robotStore } from './robotStore';
+import { steveVoice, type VoiceCategory } from './steveVoice';
 import { CanvasErrorBoundary } from '../components/three/CanvasBoundary';
 import type { RobotAnimation, RobotExpression } from './types';
 
@@ -240,24 +241,26 @@ export const FixedGutterSteve: React.FC = () => {
       shySequenceTimerRef.current = setTimeout(() => {
         setShyStep(3);
         shySequenceTimerRef.current = setTimeout(() => {
+          // Step 4: Deep breath + blush animation (NO "Ahem" text)
           setShyStep(4);
-          setShyBubble("Ahem... ✨");
+          setShyBubble(null);
+          robotStore.setSteve('idle', 'shy');
           shySequenceTimerRef.current = setTimeout(() => {
+            // Step 5: Speak playful pickup line
             setShyStep(5);
-            setShyBubble(SHY_TECH_PICKUP_LINES[shyLineIndex]);
+            steveVoice.speak('shy_pickup');
             shySequenceTimerRef.current = setTimeout(() => {
               setShyStep(6);
               setShyBubble(null);
               shySequenceTimerRef.current = setTimeout(() => {
                 setShyStep(7);
-                setShyBubble("Enjoy the site! 😊");
                 shySequenceTimerRef.current = setTimeout(() => {
                   cancelShyMode();
-                }, 2500);
-              }, 2000);
-            }, 4500);
-          }, 2000);
-        }, 2000);
+                }, 2000);
+              }, 1800);
+            }, 4000);
+          }, 1800);
+        }, 1500);
       }, 1500);
     }, 2000);
   }, [prefersReducedMotion, robotEnabled, shyEnabled, shyLineIndex, cancelShyMode]);
@@ -309,9 +312,11 @@ export const FixedGutterSteve: React.FC = () => {
     };
 
     window.addEventListener('robot:shy-mode-now', handleShyNow);
+    window.addEventListener('steve:shy-mode', handleShyNow);
     window.addEventListener('robot:shy-mode-toggle', handleShyToggle as EventListener);
     return () => {
       window.removeEventListener('robot:shy-mode-now', handleShyNow);
+      window.removeEventListener('steve:shy-mode', handleShyNow);
       window.removeEventListener('robot:shy-mode-toggle', handleShyToggle as EventListener);
     };
   }, [cancelShyMode, triggerShySequence]);
@@ -328,12 +333,14 @@ export const FixedGutterSteve: React.FC = () => {
       const timer = setTimeout(() => setIsCrossing(false), 850);
       prevSideRef.current = targetSide;
 
-      // First time in this lane greeting
-      if (!visitedSectionsRef.current.has(activeSection) && currentConfig.greeting) {
+      // First time in this lane greeting and funny commentary
+      if (!visitedSectionsRef.current.has(activeSection)) {
         visitedSectionsRef.current.add(activeSection);
-        setGreetBubble(currentConfig.greeting);
-        if (greetingTimerRef.current) clearTimeout(greetingTimerRef.current);
-        greetingTimerRef.current = setTimeout(() => setGreetBubble(null), 2500);
+        if (activeSection === 'home') {
+          steveVoice.speak('greeting');
+        } else {
+          steveVoice.speak(('section_' + activeSection) as VoiceCategory);
+        }
       }
 
       return () => clearTimeout(timer);
@@ -396,8 +403,8 @@ export const FixedGutterSteve: React.FC = () => {
       const heroCH = Math.round(cH * heroScaleFactor);
       return {
         posX: Math.max(16, Math.min(w - heroCW - 16, homePlatformPos.x - heroCW / 2)),
-        posY: Math.max(heroCH / 2 + 10, homePlatformPos.y - heroCH / 2),
-        facing: -1 as const,
+        posY: Math.max(heroCH / 2 + 10, homePlatformPos.y - Math.round(heroCH * 0.32)),
+        facing: 1 as const,
         canvasW: heroCW,
         canvasH: heroCH,
         robotScale: rScale,
@@ -520,7 +527,13 @@ export const FixedGutterSteve: React.FC = () => {
       {/* Speech bubble: strictly ABOVE Steve's head/antenna, never over face or body */}
       {displayBubble && (
         <div
-          className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 min-w-[130px] max-w-[220px] px-3.5 py-1.5 bg-white border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] font-mono text-[11px] font-bold text-[#0A0A0A] leading-snug z-40 pointer-events-none text-center"
+          data-testid="steve-speech-bubble"
+          aria-hidden="true"
+          className="absolute left-1/2 -translate-x-1/2 min-w-[130px] max-w-[220px] px-3.5 py-1.5 bg-white border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] font-mono text-[11px] font-bold text-[#0A0A0A] leading-snug z-40 pointer-events-none text-center"
+          style={{
+            top: `${Math.round(canvasH * 0.22)}px`,
+            transform: 'translate(-50%, -100%)',
+          }}
         >
           <span>{displayBubble}</span>
           {/* Downward triangle pointer pointing toward head */}

@@ -4,7 +4,8 @@ import { CONTACT_INFO } from '../data/contact';
 import type { GitHubProfile } from '../hooks/useGitHubData';
 import { robotStore } from '../robot/robotStore';
 import { RobotDebugOverlay } from '../robot/RobotDebugOverlay';
-import { HeroIllustration } from '../components/three/HeroIllustration';
+import { HeroSvgIllustration } from '../components/ui/HeroSvgIllustration';
+import { steveVoice } from '../robot/steveVoice';
 
 interface HeroProps {
   onContactClick: () => void;
@@ -14,21 +15,7 @@ interface HeroProps {
 export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
   const fallbackAvatar = profile?.avatar_url || 'https://github.com/sunny200551.png';
   const [steveScreen, setSteveScreen] = useState(() => robotStore.getState().steveScreenPos);
-  const [isHeroInView, setIsHeroInView] = useState(true);
   const heroRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const el = heroRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsHeroInView(entry.isIntersecting);
-      },
-      { threshold: 0.1 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     const unsubscribe = robotStore.subscribe(() => {
@@ -41,12 +28,12 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
     <section 
       ref={heroRef}
       id="home" 
-      className="relative min-h-[92svh] flex items-center justify-center lane-padded pt-20 pb-12 sm:pt-28 sm:pb-20 z-10 bg-transparent text-[#0A0A0A] w-full"
+      className="relative min-h-[90svh] flex items-center justify-center lane-padded pt-20 pb-12 sm:pt-28 sm:pb-20 z-10 bg-transparent text-[#0A0A0A] w-full overflow-visible"
     >
-      <div className="w-full max-w-[2200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+      <div className="w-full max-w-[2000px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
         
-        {/* Left Column: Clear, Protected Text & Identity Zone (~55-60%) */}
-        <div className="lg:col-span-7 flex flex-col items-start text-left gap-6 z-20">
+        {/* Left Column: Clear, Protected Text & Identity Zone (~55-58%) */}
+        <div className="lg:col-span-7 flex flex-col items-start text-left gap-6 z-20 min-w-0 max-w-full">
           
           {/* Available for Opportunities Chip with ample spacing */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] text-xs font-mono font-bold uppercase tracking-wider mb-1">
@@ -55,9 +42,9 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
           </div>
 
           {/* Photo & Giant Poster Name */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 min-w-0 max-w-full">
             {/* Square Profile Photo with 3px Black Border and Offset Orange Block */}
-            <div className="relative shrink-0 w-28 h-28 sm:w-32 sm:h-32">
+            <div className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32">
               <div 
                 className="absolute inset-0 bg-[#FF5A1F] translate-x-2.5 translate-y-2.5 border-[3px] border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A]" 
                 aria-hidden="true" 
@@ -83,17 +70,17 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
               </div>
             </div>
 
-            {/* Name */}
-            <h1 className="font-display font-black text-4xl sm:text-6xl md:text-7xl uppercase tracking-tighter text-[#0A0A0A] leading-[0.92]">
-              <span>SUNNY</span>{' '}
-              <span className="inline-block px-3 sm:px-4 py-0.5 bg-[#0047AB] text-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] mt-1 sm:mt-0">
+            {/* Name with Responsive Clamp Font Size */}
+            <h1 className="font-display font-black text-3xl sm:text-5xl lg:text-5xl xl:text-6xl 2xl:text-7xl uppercase tracking-tighter text-[#0A0A0A] leading-[0.92] min-w-0">
+              <span className="block sm:inline">SUNNY</span>{' '}
+              <span className="inline-block px-2.5 sm:px-4 py-0.5 bg-[#0047AB] text-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] mt-1 sm:mt-0">
                 PASUMARTHI
               </span>
             </h1>
           </div>
 
           {/* Static Tagline: single line with flex-wrap and neat separator spacing */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm font-mono font-bold text-[#0A0A0A] mt-1">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm font-mono font-bold text-[#0A0A0A] mt-1 max-w-full">
             <span>Computer Science Student</span>
             <span className="w-2 h-2 bg-[#FF5A1F] border border-[#0A0A0A] shrink-0" aria-hidden="true" />
             <span>Frontend Developer</span>
@@ -105,7 +92,10 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 mt-2 font-mono text-xs uppercase font-bold w-full sm:w-auto">
             <button
               data-robot-react="hero:get-in-touch"
-              onClick={onContactClick}
+              onClick={() => {
+                steveVoice.speak('click_contact');
+                onContactClick();
+              }}
               onMouseEnter={() => window.dispatchEvent(new CustomEvent('robot:action', { detail: 'jump' }))}
               onMouseLeave={() => window.dispatchEvent(new CustomEvent('robot:action', { detail: 'idle' }))}
               className="flex items-center justify-center gap-2 px-7 py-3.5 bg-[#FF5A1F] text-black border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] hover:bg-black hover:text-white active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0px_#0A0A0A] transition-all cursor-pointer"
@@ -118,6 +108,7 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
               data-robot-react="hero:download-resume"
               href="/Resume.pdf"
               download="Sunny_Pasumarthi_Resume.pdf"
+              onClick={() => steveVoice.speak('click_resume')}
               onMouseEnter={() => window.dispatchEvent(new CustomEvent('robot:action', { detail: 'salute' }))}
               onMouseLeave={() => window.dispatchEvent(new CustomEvent('robot:action', { detail: 'idle' }))}
               className="flex items-center justify-center gap-2 px-7 py-3.5 bg-white text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] hover:bg-[#EEF2FA] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0px_#0A0A0A] transition-all cursor-pointer"
@@ -185,14 +176,14 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
 
         </div>
 
-        {/* Right Column: Contained 3D Visual Stage with Plinth, Architectural Panels and Robots (~40-45%) */}
+        {/* Right Column: Flat Crisp Neo-Brutalist SVG Workspace Stage with Platform, Panels & Steve Anchor (~42-45%) */}
         <div 
           data-robot-anchor="home:platform" 
           data-robot-offset-x="0" 
           data-robot-offset-y="0" 
-          className="w-full lg:col-span-5 h-[420px] sm:h-[480px] lg:h-[560px] xl:h-[620px] max-w-[720px] mx-auto relative flex items-center justify-center pointer-events-auto"
+          className="w-full lg:col-span-5 h-[380px] sm:h-[460px] lg:h-[520px] xl:h-[600px] max-w-[720px] mx-auto relative flex items-center justify-center pointer-events-auto min-w-0"
         >
-          <HeroIllustration isHeroInView={isHeroInView} />
+          <HeroSvgIllustration />
         </div>
 
       </div>
@@ -201,8 +192,8 @@ export const Hero: React.FC<HeroProps> = ({ onContactClick, profile }) => {
       {steveScreen.visible && steveScreen.x > 0 && (
         <button
           onClick={() => {
-            const current = robotStore.getState().steveAnim;
-            robotStore.setSteve(current === 'jump' ? 'idle' : 'jump', 'excited');
+            steveVoice.speak('click_steve');
+            robotStore.handleSteveClick();
           }}
           aria-label="Interact with Steve Robot"
           style={{

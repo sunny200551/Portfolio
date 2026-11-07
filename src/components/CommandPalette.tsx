@@ -22,6 +22,7 @@ import {
   Heart
 } from 'lucide-react';
 import { robotStore } from '../robot/robotStore';
+import { steveVoice } from '../robot/steveVoice';
 import { getLenis } from '../lib/lenis';
 
 const GithubIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -62,6 +63,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
 
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(CONTACT_INFO.email);
+    steveVoice.speak('copy_email');
     setCopiedEmail(true);
     setTimeout(() => {
       setCopiedEmail(false);
@@ -215,6 +217,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
     // Strict Lenis pause and scroll lock management with guaranteed cleanup
   useEffect(() => {
     if (isOpen) {
+      steveVoice.speak('palette_open');
       getLenis()?.stop();
       document.documentElement.classList.add('lenis-stopped');
       document.body.style.overflow = 'hidden';

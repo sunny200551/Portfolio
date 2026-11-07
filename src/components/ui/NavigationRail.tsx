@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Menu, X, FileText, Terminal } from 'lucide-react';
 import { robotStore } from '../../robot/robotStore';
+import { steveVoice } from '../../robot/steveVoice';
 
 interface NavigationRailProps {
   onOpenCommandPalette: () => void;
@@ -249,6 +250,7 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ onOpenCommandPal
                 className="relative flex items-center justify-end"
                 onMouseEnter={() => {
                   setHoveredSection(sec.id);
+                  steveVoice.speak('rail_hover');
                   if (typeof window !== 'undefined') {
                     window.dispatchEvent(new CustomEvent('rail:hover', { detail: { hovered: true, section: sec.id } }));
                   }

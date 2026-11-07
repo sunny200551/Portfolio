@@ -8,6 +8,7 @@ import {
 } from '../data/skills';
 import { projectsData } from '../data/projects';
 import { robotStore } from '../robot/robotStore';
+import { steveVoice } from '../robot/steveVoice';
 
 const CATEGORY_CODE: Record<SkillCategory, { code: string; color: string; textColor: string }> = {
   Frontend: { code: 'FE', color: '#0047AB', textColor: '#FFFFFF' },
@@ -100,6 +101,7 @@ export const Skills: React.FC = () => {
 
     hoverTimeoutRef.current = setTimeout(() => {
       setHoveredSkill(skill);
+      steveVoice.speak('chip_hover');
 
       // Funny level-based reaction without walking onto the chips
       if (skill.tier === 'Daily') {
@@ -159,6 +161,7 @@ export const Skills: React.FC = () => {
           <button
             onClick={() => {
               setSelectedCategory('ALL');
+              steveVoice.speak('skills_filter');
               robotStore.react('all');
             }}
             className={`px-3 py-1.5 font-mono text-xs font-bold uppercase border-2 border-[#0A0A0A] transition-all cursor-pointer ${
@@ -177,6 +180,7 @@ export const Skills: React.FC = () => {
                 key={cat}
                 onClick={() => {
                   setSelectedCategory(cat);
+                  steveVoice.speak('skills_filter');
                   robotStore.react(cat);
                 }}
                 className={`px-3 py-1.5 font-mono text-xs font-bold uppercase border-2 border-[#0A0A0A] transition-all cursor-pointer ${

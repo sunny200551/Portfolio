@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { projectsData, type ProjectCaseStudy } from '../data/projects';
 import { robotStore } from '../robot/robotStore';
+import { steveVoice } from '../robot/steveVoice';
 import { getLenis } from '../lib/lenis';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -119,6 +120,7 @@ export const Projects: React.FC = () => {
   }, [selectedProject, activeIndex, isPinnedEnabled]);
 
   const handleCardMouseEnter = useCallback(() => {
+    steveVoice.speak('card_hover');
     robotStore.setSteve('idle', 'curious');
   }, []);
 
