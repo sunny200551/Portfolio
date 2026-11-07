@@ -464,14 +464,26 @@ export const RobotModel: React.FC<RobotModelProps> = ({
                 <meshBasicMaterial color="#FF5A1F" />
               </mesh>
               {/* Jet flames */}
-              <mesh position={[-0.09, -0.20, 0]} rotation={[Math.PI, 0, 0]}>
-                <coneGeometry args={[0.036, 0.11, 6]} />
-                <meshBasicMaterial color="#FF5A1F" />
-              </mesh>
-              <mesh position={[0.09, -0.20, 0]} rotation={[Math.PI, 0, 0]}>
-                <coneGeometry args={[0.036, 0.11, 6]} />
-                <meshBasicMaterial color="#FF5A1F" />
-              </mesh>
+              {(accessories?.jetpackFlames || animation === 'flight') && (
+                <group>
+                  <mesh position={[-0.09, -0.20, 0]} rotation={[Math.PI, 0, 0]}>
+                    <coneGeometry args={[0.042, 0.14, 6]} />
+                    <meshBasicMaterial color="#FF5A1F" />
+                  </mesh>
+                  <mesh position={[-0.09, -0.18, 0]} rotation={[Math.PI, 0, 0]}>
+                    <coneGeometry args={[0.025, 0.09, 6]} />
+                    <meshBasicMaterial color="#FFD700" />
+                  </mesh>
+                  <mesh position={[0.09, -0.20, 0]} rotation={[Math.PI, 0, 0]}>
+                    <coneGeometry args={[0.042, 0.14, 6]} />
+                    <meshBasicMaterial color="#FF5A1F" />
+                  </mesh>
+                  <mesh position={[0.09, -0.18, 0]} rotation={[Math.PI, 0, 0]}>
+                    <coneGeometry args={[0.025, 0.09, 6]} />
+                    <meshBasicMaterial color="#FFD700" />
+                  </mesh>
+                </group>
+              )}
             </group>
           )}
 
@@ -758,6 +770,34 @@ export const RobotModel: React.FC<RobotModelProps> = ({
               </group>
             )}
 
+            {/* Coffee Mug Accessory (Seated & Chill) */}
+            {accessories?.coffeeMug && (
+              <group position={[0.02, -0.22, 0.08]} rotation={[0.2, 0, 0]}>
+                {/* Mug Body in Flat Orange */}
+                <mesh position={[0, 0, 0]} castShadow>
+                  <cylinderGeometry args={[0.045, 0.042, 0.09, 12]} />
+                  <meshToonMaterial color="#FF5A1F" />
+                  <Edges threshold={20} color="#0A0A0A" lineWidth={1.5} />
+                </mesh>
+                {/* Dark Navy Coffee Inside */}
+                <mesh position={[0, 0.046, 0]}>
+                  <cylinderGeometry args={[0.041, 0.041, 0.005, 12]} />
+                  <meshBasicMaterial color="#0A1A3F" />
+                </mesh>
+                {/* Handle */}
+                <mesh position={[0.05, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+                  <torusGeometry args={[0.025, 0.008, 8, 16, Math.PI]} />
+                  <meshToonMaterial color="#0A1A3F" />
+                  <Edges threshold={20} color="#0A0A0A" lineWidth={1} />
+                </mesh>
+                {/* Pixel Steam Squiggle */}
+                <mesh position={[0, 0.08, 0]}>
+                  <planeGeometry args={[0.04, 0.06]} />
+                  <meshBasicMaterial color="#FFFFFF" transparent opacity={0.85} />
+                </mesh>
+              </group>
+            )}
+
             {/* Construction Hammer Accessory */}
             {accessories?.hammer && (
               <group position={[0.05, -0.22, 0.06]} rotation={[0, 0, -Math.PI / 6]}>
@@ -844,6 +884,39 @@ export const RobotModel: React.FC<RobotModelProps> = ({
               <meshBasicMaterial map={face.texture} toneMapped={false} />
               <Edges threshold={15} color="#0A0A0A" lineWidth={2} />
             </mesh>
+
+            {/* Pixel Sunglasses Accessory (Seated & Chill) */}
+            {accessories?.sunglasses && (
+              <group position={[0, 0.015, RIG.HEAD.D / 2 + 0.016]}>
+                {/* Left Lens block */}
+                <mesh position={[-0.082, 0, 0]}>
+                  <boxGeometry args={[0.11, 0.065, 0.012]} />
+                  <meshBasicMaterial color="#0A0A0A" />
+                  <Edges color="#FFFFFF" lineWidth={1} />
+                </mesh>
+                {/* White glint on left lens */}
+                <mesh position={[-0.06, 0.018, 0.008]}>
+                  <planeGeometry args={[0.02, 0.02]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+                {/* Right Lens block */}
+                <mesh position={[0.082, 0, 0]}>
+                  <boxGeometry args={[0.11, 0.065, 0.012]} />
+                  <meshBasicMaterial color="#0A0A0A" />
+                  <Edges color="#FFFFFF" lineWidth={1} />
+                </mesh>
+                {/* White glint on right lens */}
+                <mesh position={[0.104, 0.018, 0.008]}>
+                  <planeGeometry args={[0.02, 0.02]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+                {/* Sunglasses Bridge */}
+                <mesh position={[0, 0.012, 0]}>
+                  <boxGeometry args={[0.06, 0.018, 0.01]} />
+                  <meshBasicMaterial color="#0A0A0A" />
+                </mesh>
+              </group>
+            )}
 
             {/* Antenna Pivot */}
             <group ref={antennaRef} position={[0, RIG.HEAD.H / 2, 0]}>

@@ -1,19 +1,31 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { robotStore } from '../../robot/robotStore';
 
 export const HeroSvgIllustration: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const anchorRef = useRef<SVGGElement>(null);
+  const seatAnchorRef = useRef<SVGGElement>(null);
+  const floorAnchorRef = useRef<SVGGElement>(null);
+  const [isSteveAway, setIsSteveAway] = useState(false);
 
-  // Measure and publish #steve-anchor viewport coordinates
+  // Measure and publish #steve-anchor and #steve-seat viewport coordinates
   useEffect(() => {
     const updateAnchor = () => {
       const el = anchorRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      if (rect.width > 0 || rect.x > 0) {
-        robotStore.setHomePlatformPos(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        if (rect.width > 0 || rect.x > 0) {
+          robotStore.setHomePlatformPos(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        }
+      }
+
+      const seatEl = seatAnchorRef.current;
+      if (seatEl) {
+        const sRect = seatEl.getBoundingClientRect();
+        if (sRect.width > 0 || sRect.x > 0) {
+          robotStore.setHomeSeatPos(sRect.left + sRect.width / 2, sRect.top + sRect.height / 2);
+        }
       }
     };
 
@@ -23,8 +35,23 @@ export const HeroSvgIllustration: React.FC = () => {
     window.addEventListener('resize', updateAnchor, { passive: true });
     window.addEventListener('scroll', updateAnchor, { passive: true });
 
+    const unsub = robotStore.subscribe(() => {
+      const state = robotStore.getState();
+      const away = state.steveHeroState === 'flying' || state.steveHeroState === 'lane';
+      setIsSteveAway(away);
+      if (state.chairSpinActive) {
+        gsap.to('#hero-chair-group', {
+          rotation: '+=360',
+          transformOrigin: '400px 510px',
+          duration: 0.85,
+          ease: 'power3.inOut',
+        });
+      }
+    });
+
     return () => {
       ro.disconnect();
+      unsub();
       window.removeEventListener('resize', updateAnchor);
       window.removeEventListener('scroll', updateAnchor);
     };
@@ -41,6 +68,30 @@ export const HeroSvgIllustration: React.FC = () => {
         '#hero-platform-slab',
         { y: 60, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.9, ease: 'power3.out' }
+      );
+
+      // Chair pops in with slight bounce & swivels 20 deg
+      gsap.fromTo(
+        '#hero-chair-group',
+        { scale: 0.75, y: 50, opacity: 0, transformOrigin: '400px 510px' },
+        { 
+          scale: 1, 
+          y: 0, 
+          opacity: 1, 
+          duration: 0.85, 
+          delay: 0.3, 
+          ease: 'back.out(1.8)',
+          onComplete: () => {
+            // Chair swivels 20 deg toward user
+            gsap.to('#hero-chair-group', {
+              rotation: 18,
+              transformOrigin: '400px 510px',
+              duration: 0.8,
+              delay: 0.4,
+              ease: 'power2.out',
+            });
+          }
+        }
       );
 
       gsap.fromTo(
@@ -366,6 +417,101 @@ export const HeroSvgIllustration: React.FC = () => {
             <line x1="330" y1="390" x2="610" y2="510" stroke="#0A0A0A" strokeWidth="1" strokeDasharray="4 4" opacity="0.35" />
             <line x1="540" y1="420" x2="260" y2="540" stroke="#0A0A0A" strokeWidth="1" strokeDasharray="4 4" opacity="0.35" />
             <line x1="470" y1="390" x2="190" y2="510" stroke="#0A0A0A" strokeWidth="1" strokeDasharray="4 4" opacity="0.35" />
+          </g>
+
+          {/* ------------------------------------------------------------- */}
+          {/* 3B. ISOMETRIC CHUNKY BLOCK CHAIR (Hero Opening Stage)          */}
+          {/* ------------------------------------------------------------- */}
+          <g 
+            id="hero-chair-group" 
+            className="cursor-pointer"
+            onClick={() => robotStore.triggerChairSpin()}
+          >
+            {/* Attached floor shadow underneath chair base */}
+            <polygon
+              id="chair-shadow"
+              points="330,512 450,512 475,536 355,536"
+              fill="#0A0A0A"
+              opacity="0.75"
+            />
+
+            {/* Short Block Pedestal / Base resting on platform */}
+            <g id="chair-pedestal">
+              {/* Base Left Face */}
+              <polygon points="370,490 395,505 395,518 370,503" fill="#CBD5E1" stroke="#0A0A0A" strokeWidth="2.5" strokeLinejoin="round" />
+              {/* Base Right Face */}
+              <polygon points="395,505 435,482 435,495 395,518" fill="#94A3B8" stroke="#0A0A0A" strokeWidth="2.5" strokeLinejoin="round" />
+              {/* Base Top Face */}
+              <polygon points="370,490 410,467 435,482 395,505" fill="#EEF2FA" stroke="#0A0A0A" strokeWidth="2.5" strokeLinejoin="round" />
+            </g>
+
+            {/* Tall Back Block behind the seat (navy with vertical orange accent stripe) */}
+            <g id="chair-back-block">
+              {/* Back Block Left Face */}
+              <polygon points="345,310 380,330 380,455 345,435" fill="#0A1A3F" stroke="#0A0A0A" strokeWidth="3" strokeLinejoin="round" />
+              {/* Back Block Right Face */}
+              <polygon points="380,330 425,304 425,430 380,455" fill="#050C1A" stroke="#0A0A0A" strokeWidth="3" strokeLinejoin="round" />
+              {/* Back Block Top Face */}
+              <polygon points="345,310 390,284 425,304 380,330" fill="#1E293B" stroke="#0A0A0A" strokeWidth="3" strokeLinejoin="round" />
+              {/* Vertical Orange Accent Stripe on back block */}
+              <polygon points="375,333 385,327 385,452 375,458" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="1.5" />
+            </g>
+
+            {/* Cube Seat (Orange body, Dark Navy top cushion) */}
+            <g id="chair-seat-cube">
+              {/* Seat Left Face - Orange */}
+              <polygon points="350,440 395,466 395,492 350,466" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="3" strokeLinejoin="round" />
+              {/* Seat Right Face - Darker Orange Tone */}
+              <polygon points="395,466 450,434 450,460 395,492" fill="#E04812" stroke="#0A0A0A" strokeWidth="3" strokeLinejoin="round" />
+              {/* Dark Navy Top Cushion (#0A1A3F) with 3.5px border */}
+              <polygon points="350,440 405,408 450,434 395,466" fill="#0A1A3F" stroke="#0A0A0A" strokeWidth="3.5" strokeLinejoin="round" />
+              {/* Subtle inner cushion bevel / seam */}
+              <polygon points="358,440 405,413 442,434 395,461" fill="#0D204D" stroke="#0047AB" strokeWidth="1" strokeDasharray="3 3" />
+            </g>
+
+            {/* Far-Side Armrest (blocky orange on left/back edge). Near side is open so robot is not occluded! */}
+            <g id="chair-far-armrest">
+              <polygon points="336,412 352,422 352,448 336,438" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="2.5" strokeLinejoin="round" />
+              <polygon points="352,422 368,413 368,439 352,448" fill="#E04812" stroke="#0A0A0A" strokeWidth="2.5" strokeLinejoin="round" />
+              <polygon points="336,412 352,403 368,413 352,422" fill="#FF7A45" stroke="#0A0A0A" strokeWidth="2.5" strokeLinejoin="round" />
+            </g>
+
+            {/* Empty Chair State Elements: Steaming Mug on armrest & BRB Card on cushion */}
+            {isSteveAway && (
+              <g id="chair-empty-state">
+                {/* Steaming Coffee Mug on Armrest */}
+                <g id="chair-steaming-mug" transform="translate(346, 396)">
+                  {/* Mug Body */}
+                  <rect x="0" y="0" width="14" height="12" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="1.5" />
+                  <path d="M14 3 C18 3 18 9 14 9" stroke="#0A0A0A" strokeWidth="1.5" fill="none" />
+                  {/* Steam squiggles */}
+                  <path d="M4 -2 Q6 -6 4 -10 Q2 -14 4 -18" stroke="#EEF2FA" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                  <path d="M9 -2 Q11 -6 9 -10 Q7 -14 9 -18" stroke="#EEF2FA" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                </g>
+
+                {/* "BRB" Sticky Card on Seat Cushion */}
+                <g id="chair-brb-badge" transform="translate(382, 428) rotate(-6)">
+                  <rect x="2" y="2" width="46" height="26" fill="#0A0A0A" />
+                  <rect x="0" y="0" width="46" height="26" fill="#FFD700" stroke="#0A0A0A" strokeWidth="2" />
+                  <text x="6" y="14" fill="#0A0A0A" fontFamily="monospace" fontSize="11" fontWeight="900">
+                    BRB!
+                  </text>
+                  {/* Tiny hand-drawn robot face doodle */}
+                  <rect x="28" y="6" width="12" height="10" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="1" />
+                  <circle cx="31" cy="11" r="1" fill="#FFFFFF" />
+                  <circle cx="37" cy="11" r="1" fill="#FFFFFF" />
+                  <line x1="34" y1="6" x2="34" y2="4" stroke="#0A0A0A" strokeWidth="1" />
+                </g>
+              </g>
+            )}
+
+            {/* Chair Anchors: #steve-seat (centre of seat top surface) and #steve-floor (front of chair base) */}
+            <g id="steve-seat" ref={seatAnchorRef} transform="translate(400, 442)">
+              <circle cx="0" cy="0" r="2" fill="none" opacity="0" pointerEvents="none" />
+            </g>
+            <g id="steve-floor" ref={floorAnchorRef} transform="translate(400, 515)">
+              <circle cx="0" cy="0" r="2" fill="none" opacity="0" pointerEvents="none" />
+            </g>
           </g>
 
           {/* 4. FLOATING ORANGE CUBE (Top-Left) */}

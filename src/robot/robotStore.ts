@@ -38,6 +38,9 @@ export interface RobotState {
   scrollVelocity: number;
   isFastScrolling: boolean;
   homePlatformPos: { x: number; y: number };
+  homeSeatPos: { x: number; y: number };
+  steveHeroState: 'seated' | 'standing_up' | 'flying' | 'lane';
+  chairSpinActive: boolean;
 
   // Task 3 routine states
   aboutGradYearStage: AboutGradYearStage;
@@ -126,6 +129,9 @@ class RobotStore {
     scrollVelocity: 0,
     isFastScrolling: false,
     homePlatformPos: { x: 0, y: 0 },
+    homeSeatPos: { x: 0, y: 0 },
+    steveHeroState: 'seated',
+    chairSpinActive: false,
 
     // Task 3 initial states
     aboutGradYearStage: 'idle',
@@ -538,6 +544,30 @@ class RobotStore {
       this.state.homePlatformPos = { x, y };
       this.notify();
     }
+  }
+
+  public setHomeSeatPos(x: number, y: number) {
+    const prev = this.state.homeSeatPos;
+    if (Math.hypot(prev.x - x, prev.y - y) > 3) {
+      this.state.homeSeatPos = { x, y };
+      this.notify();
+    }
+  }
+
+  public setSteveHeroState(state: 'seated' | 'standing_up' | 'flying' | 'lane') {
+    if (this.state.steveHeroState !== state) {
+      this.state.steveHeroState = state;
+      this.notify();
+    }
+  }
+
+  public triggerChairSpin() {
+    this.state.chairSpinActive = true;
+    this.notify();
+    setTimeout(() => {
+      this.state.chairSpinActive = false;
+      this.notify();
+    }, 900);
   }
 
   public setActiveSection(sectionId: string) {

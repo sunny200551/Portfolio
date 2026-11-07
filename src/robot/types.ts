@@ -34,9 +34,14 @@ export type RobotAnimation =
   | 'sleep' 
   | 'dizzy' 
   | 'dance'
-  | 'flex';
+  | 'flex'
+  | 'seated'
+  | 'flight';
 
 export interface RobotAccessories {
+  sunglasses?: boolean;
+  coffeeMug?: boolean;
+  jetpackFlames?: boolean;
   skateboard?: boolean;
   figmaCursor?: boolean;
   ruler?: boolean;

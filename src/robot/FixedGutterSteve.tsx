@@ -159,55 +159,209 @@ export const FixedGutterSteve: React.FC = () => {
     return () => unsubscribe();
   }, [speechBubble]);
 
-  const [heroPlinthMode, setHeroPlinthMode] = useState(true);
-  const [isJumpingOffPlinth, setIsJumpingOffPlinth] = useState(false);
   const [homePlatformPos, setHomePlatformPos] = useState(() => robotStore.getState().homePlatformPos);
+  const [homeSeatPos, setHomeSeatPos] = useState(() => robotStore.getState().homeSeatPos);
+  const [steveHeroState, setSteveHeroState] = useState<'seated' | 'standing_up' | 'flying' | 'lane'>(() => robotStore.getState().steveHeroState);
+  const [isDropLanding, setIsDropLanding] = useState(true);
+  const [dropY, setDropY] = useState(-80);
+  const [isSquashing, setIsSquashing] = useState(false);
+  const [isCoffeeInHand, setIsCoffeeInHand] = useState(true);
+  const [hasSunglasses, setHasSunglasses] = useState(true);
+  const [hasJetpack, setHasJetpack] = useState(false);
+  const [hasFlames, setHasFlames] = useState(false);
+  const [flightProgress, setFlightProgress] = useState(0); // 0 to 1
+  const [flightParticles, setFlightParticles] = useState<Array<{ id: number; x: number; y: number; color: string; size: number }>>([]);
+  const [notificationDotActive, setNotificationDotActive] = useState(false);
+  const [chairClickSpinning, setChairClickSpinning] = useState(false);
 
-  // Home hero plinth mode scroll & idle watcher
+  // Sync positions & states from store
   useEffect(() => {
-    let heroIdleTimer: ReturnType<typeof setTimeout> | null = null;
+    const unsub = robotStore.subscribe(() => {
+      const state = robotStore.getState();
+      const p = state.homePlatformPos;
+      if (p.x > 0 && (p.x !== homePlatformPos.x || p.y !== homePlatformPos.y)) {
+        setHomePlatformPos(p);
+      }
+      const sp = state.homeSeatPos;
+      if (sp.x > 0 && (sp.x !== homeSeatPos.x || sp.y !== homeSeatPos.y)) {
+        setHomeSeatPos(sp);
+      }
+      if (state.steveHeroState !== steveHeroState) {
+        setSteveHeroState(state.steveHeroState);
+      }
+      if (state.chairSpinActive && !chairClickSpinning) {
+        setChairClickSpinning(true);
+        setTimeout(() => setChairClickSpinning(false), 900);
+      }
+    });
+    return () => unsub();
+  }, [homePlatformPos, homeSeatPos, steveHeroState, chairClickSpinning]);
 
+  // Part 3: Opening sequence (first 2.5s)
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setDropY(0);
+      setIsDropLanding(false);
+      return;
+    }
+
+    // 1. Drop-in animation: drops from above into chair with bounce
+    const dropTimer = setTimeout(() => {
+      setDropY(0);
+      setIsSquashing(true);
+      setTimeout(() => {
+        setIsSquashing(false);
+        setIsDropLanding(false);
+      }, 350);
+    }, 450);
+
+    // 2. Greeting bubble: "Sup. I'm Steve. Sunny built me to guard this portfolio."
+    const greetTimer = setTimeout(() => {
+      setGreetBubble("Sup. I'm Steve. Sunny built me to guard this portfolio.");
+      steveVoice.speak('greeting');
+
+      // 3. Stays 3s then shrinks into notification dot
+      const bubbleTimer = setTimeout(() => {
+        setGreetBubble(null);
+        setNotificationDotActive(true);
+      }, 3200);
+
+      return () => clearTimeout(bubbleTimer);
+    }, 1300);
+
+    return () => {
+      clearTimeout(dropTimer);
+      clearTimeout(greetTimer);
+    };
+  }, [prefersReducedMotion]);
+
+  // Part 4: Stand-up, jetpack and flight trigger
+  // Triggered on scroll > 40px OR after 8s inactivity on the hero
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+
+    let heroTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    const executeLiftoffSequence = () => {
+      if (steveHeroState !== 'seated') return;
+      robotStore.setSteveHeroState('standing_up');
+      setSteveHeroState('standing_up');
+
+      // Step 1: Puts mug down, flips sunglasses up
+      setIsCoffeeInHand(false);
+      setHasSunglasses(false);
+      setNotificationDotActive(false);
+
+      // Step 2: Anticipation squat (300ms)
+      setTimeout(() => {
+        setIsSquashing(true);
+
+        // Step 3: Jetpack pops out + flame sparks (600ms)
+        setTimeout(() => {
+          setHasJetpack(true);
+          setHasFlames(true);
+          setIsSquashing(false);
+
+          // Step 4: Liftoff & Bezier flight (900ms)
+          setTimeout(() => {
+            robotStore.setSteveHeroState('flying');
+            setSteveHeroState('flying');
+
+            // Flight animation duration ~1000ms
+            const startTime = performance.now();
+            const flightDuration = 1000;
+
+            const animateFlight = (now: number) => {
+              const elapsed = now - startTime;
+              const p = Math.min(1, elapsed / flightDuration);
+              setFlightProgress(p);
+
+              // Spawn flight particle trail (capped at 25)
+              if (Math.random() > 0.4) {
+                setFlightParticles((prev) => {
+                  const newParticle = {
+                    id: Math.random(),
+                    x: (Math.random() - 0.5) * 24,
+                    y: 40 + Math.random() * 15,
+                    color: Math.random() > 0.5 ? '#FF5A1F' : '#FFD700',
+                    size: 6 + Math.random() * 6,
+                  };
+                  return [...prev.slice(-24), newParticle];
+                });
+              }
+
+              if (p < 1) {
+                requestAnimationFrame(animateFlight);
+              } else {
+                // Step 5: Touchdown in lane
+                robotStore.setSteveHeroState('lane');
+                setSteveHeroState('lane');
+                setHasFlames(false);
+                setHasJetpack(false);
+                setFlightParticles([]);
+                setIsSquashing(true);
+                setTimeout(() => setIsSquashing(false), 300);
+
+                // Steve speaks arrival line
+                setGreetBubble("Landed in style! What's next? 🚀");
+                setTimeout(() => setGreetBubble(null), 3000);
+              }
+            };
+
+            requestAnimationFrame(animateFlight);
+          }, 350);
+        }, 300);
+      }, 300);
+    };
+
+    // 8s timeout trigger
+    heroTimeout = setTimeout(() => {
+      if (window.scrollY <= 40 && steveHeroState === 'seated') {
+        executeLiftoffSequence();
+      }
+    }, 8000);
+
+    // Scroll listener trigger (> 40px) and return-to-top watcher (< 40px)
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      if (scrollY < 60) {
-        setHeroPlinthMode(true);
-        if (heroIdleTimer) clearTimeout(heroIdleTimer);
-        heroIdleTimer = setTimeout(() => {
-          if (window.scrollY < 60) {
-            // After 6s idle on top, jump off platform into lane
-            setIsJumpingOffPlinth(true);
-            setHeroPlinthMode(false);
-            setTimeout(() => setIsJumpingOffPlinth(false), 900);
-          }
-        }, 6000);
-      } else {
-        if (heroPlinthMode) {
-          setIsJumpingOffPlinth(true);
-          setTimeout(() => setIsJumpingOffPlinth(false), 900);
+
+      if (scrollY > 40) {
+        if (steveHeroState === 'seated') {
+          executeLiftoffSequence();
         }
-        setHeroPlinthMode(false);
+      } else if (scrollY <= 20) {
+        // Return to top: flies back with jetpack and lands seated on chair!
+        if (steveHeroState === 'lane') {
+          robotStore.setSteveHeroState('flying');
+          setSteveHeroState('flying');
+          setHasJetpack(true);
+          setHasFlames(true);
+
+          setTimeout(() => {
+            robotStore.setSteveHeroState('seated');
+            setSteveHeroState('seated');
+            setHasJetpack(false);
+            setHasFlames(false);
+            setIsCoffeeInHand(true);
+            setHasSunglasses(true);
+            setIsSquashing(true);
+            setTimeout(() => setIsSquashing(false), 300);
+
+            // Return greeting
+            setGreetBubble("Missed me? ☕");
+            setTimeout(() => setGreetBubble(null), 2500);
+          }, 900);
+        }
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (heroIdleTimer) clearTimeout(heroIdleTimer);
+      if (heroTimeout) clearTimeout(heroTimeout);
     };
-  }, [heroPlinthMode]);
-
-  // Sync homePlatformPos from store
-  useEffect(() => {
-    const unsub = robotStore.subscribe(() => {
-      const p = robotStore.getState().homePlatformPos;
-      if (p.x > 0 && (p.x !== homePlatformPos.x || p.y !== homePlatformPos.y)) {
-        setHomePlatformPos(p);
-      }
-    });
-    return () => unsub();
-  }, [homePlatformPos]);
+  }, [prefersReducedMotion, steveHeroState]);
   const [shyModeActive, setShyModeActive] = useState(false);
   const [shyStep, setShyStep] = useState(0);
   const [shyLineIndex, setShyLineIndex] = useState(0);
@@ -360,6 +514,17 @@ export const FixedGutterSteve: React.FC = () => {
       const isLeft = currentConfig.side === 'left';
       const mX = isLeft ? 10 : w - cW - 10;
 
+      if (steveHeroState === 'seated' && homeSeatPos.x > 0) {
+        return {
+          posX: Math.max(10, Math.min(w - cW - 10, homeSeatPos.x - cW / 2)),
+          posY: Math.max(cH / 2 + 10, homeSeatPos.y - Math.round(cH * 0.35) + dropY),
+          facing: 1 as const,
+          canvasW: cW,
+          canvasH: cH,
+          robotScale: 0.95,
+        };
+      }
+
       return {
         posX: mX,
         posY: mY,
@@ -395,18 +560,48 @@ export const FixedGutterSteve: React.FC = () => {
       }
     }
 
-    // Hero plinth handoff: STEVE starts on the hero platform floor anchor!
-    if (activeSection === 'home' && heroPlinthMode && homePlatformPos.x > 0) {
-      // Scale responsively in hero: ~220-260px tall at 1920px wide
-      const heroScaleFactor = Math.min(1.85, Math.max(1.3, (w / 1920) * 1.85));
-      const heroCW = Math.round(cW * heroScaleFactor);
-      const heroCH = Math.round(cH * heroScaleFactor);
+    // Hero seated block chair handoff: Steve's pelvis docks to #steve-seat
+    const isHeroActive = activeSection === 'home' || scrollProgress < 0.05;
+    if (isHeroActive && (steveHeroState === 'seated' || steveHeroState === 'standing_up')) {
+      const targetAnchor = homeSeatPos.x > 0 ? homeSeatPos : homePlatformPos;
+      if (targetAnchor.x > 0) {
+        // Seated height matches chair: ~300px seated height at 1920px wide
+        const heroScaleFactor = Math.min(1.7, Math.max(1.25, (w / 1920) * 1.7));
+        const heroCW = Math.round(cW * heroScaleFactor);
+        const heroCH = Math.round(cH * heroScaleFactor);
+        return {
+          posX: Math.max(16, Math.min(w - heroCW - 16, targetAnchor.x - heroCW / 2)),
+          posY: Math.max(heroCH / 2 + 10, targetAnchor.y - Math.round(heroCH * 0.28) + dropY),
+          facing: 1 as const,
+          canvasW: heroCW,
+          canvasH: heroCH,
+          robotScale: isSquashing ? 0.86 : rScale,
+        };
+      }
+    }
+
+    // Part 4 Bezier flight trajectory
+    if (steveHeroState === 'flying') {
+      const targetAnchor = homeSeatPos.x > 0 ? homeSeatPos : homePlatformPos;
+      const startX = targetAnchor.x > 0 ? targetAnchor.x - cW / 2 : w * 0.65;
+      const startY = targetAnchor.y > 0 ? targetAnchor.y - Math.round(cH * 0.28) : h * 0.5;
+      const destX = currentConfig.side === 'right' ? (w >= 1200 ? w - 210 : w - 160) : -40;
+      const destY = clampedY;
+
+      const p = flightProgress;
+      const midX = (startX + destX) / 2;
+      const midY = Math.min(startY, destY) - 160;
+
+      // Quadratic bezier curve
+      const currX = (1 - p) * (1 - p) * startX + 2 * (1 - p) * p * midX + p * p * destX;
+      const currY = (1 - p) * (1 - p) * startY + 2 * (1 - p) * p * midY + p * p * destY;
+
       return {
-        posX: Math.max(16, Math.min(w - heroCW - 16, homePlatformPos.x - heroCW / 2)),
-        posY: Math.max(heroCH / 2 + 10, homePlatformPos.y - Math.round(heroCH * 0.32)),
-        facing: 1 as const,
-        canvasW: heroCW,
-        canvasH: heroCH,
+        posX: currX,
+        posY: currY,
+        facing: (destX > startX ? 1 : -1) as (1 | -1),
+        canvasW: cW,
+        canvasH: cH,
         robotScale: rScale,
       };
     }
@@ -448,57 +643,81 @@ export const FixedGutterSteve: React.FC = () => {
       facing: (isRight ? -1 : 1) as (1 | -1),
       canvasW: cW,
       canvasH: cH,
-      robotScale: rScale,
+      robotScale: isSquashing ? 0.88 : rScale,
     };
-  }, [windowDimensions, isMobileOrTablet, currentConfig, scrollProgress, shyModeActive, shyStep, isRailHovered, activeSection, heroPlinthMode, homePlatformPos]);
+  }, [windowDimensions, isMobileOrTablet, currentConfig, scrollProgress, shyModeActive, shyStep, isRailHovered, activeSection, steveHeroState, homeSeatPos, homePlatformPos, dropY, isSquashing, flightProgress]);
 
   // Compute live animation and expression
-  const { liveAnim, liveExpr } = useMemo<{ liveAnim: RobotAnimation; liveExpr: RobotExpression }>(() => {
+  const { liveAnim, liveExpr, liveAccessories } = useMemo(() => {
     if (prefersReducedMotion) {
-      return { liveAnim: 'idle', liveExpr: 'happy' };
+      return { liveAnim: 'idle' as RobotAnimation, liveExpr: 'happy' as RobotExpression, liveAccessories: {} };
+    }
+
+    if (steveHeroState === 'seated') {
+      return {
+        liveAnim: 'seated' as RobotAnimation,
+        liveExpr: (chairClickSpinning ? 'laughing' : (isDropLanding ? 'curious' : 'happy')) as RobotExpression,
+        liveAccessories: {
+          sunglasses: hasSunglasses,
+          coffeeMug: isCoffeeInHand,
+        },
+      };
+    }
+
+    if (steveHeroState === 'standing_up') {
+      return {
+        liveAnim: 'idle' as RobotAnimation,
+        liveExpr: 'focused' as RobotExpression,
+        liveAccessories: {
+          jetpack: hasJetpack,
+          jetpackFlames: hasFlames,
+        },
+      };
+    }
+
+    if (steveHeroState === 'flying' || isCrossing) {
+      return {
+        liveAnim: 'flight' as RobotAnimation,
+        liveExpr: 'excited' as RobotExpression,
+        liveAccessories: {
+          jetpack: true,
+          jetpackFlames: true,
+        },
+      };
     }
 
     if (shyModeActive) {
       switch (shyStep) {
         case 1:
-          return { liveAnim: 'walk', liveExpr: 'curious' };
+          return { liveAnim: 'walk' as RobotAnimation, liveExpr: 'curious' as RobotExpression, liveAccessories: {} };
         case 2:
-          return { liveAnim: 'idle', liveExpr: 'shy' };
+          return { liveAnim: 'idle' as RobotAnimation, liveExpr: 'shy' as RobotExpression, liveAccessories: {} };
         case 3:
-          return { liveAnim: 'idle', liveExpr: 'shy' };
+          return { liveAnim: 'idle' as RobotAnimation, liveExpr: 'shy' as RobotExpression, liveAccessories: {} };
         case 4:
-          return { liveAnim: 'wave', liveExpr: 'enjoying' };
+          return { liveAnim: 'wave' as RobotAnimation, liveExpr: 'enjoying' as RobotExpression, liveAccessories: {} };
         case 5:
-          return { liveAnim: 'salute', liveExpr: 'flirty' };
+          return { liveAnim: 'salute' as RobotAnimation, liveExpr: 'flirty' as RobotExpression, liveAccessories: {} };
         case 6:
-          return { liveAnim: 'facepalm', liveExpr: 'shy' };
+          return { liveAnim: 'facepalm' as RobotAnimation, liveExpr: 'shy' as RobotExpression, liveAccessories: {} };
         case 7:
-          return { liveAnim: 'wave', liveExpr: 'happy' };
+          return { liveAnim: 'wave' as RobotAnimation, liveExpr: 'happy' as RobotExpression, liveAccessories: {} };
         default:
-          return { liveAnim: 'idle', liveExpr: 'happy' };
+          return { liveAnim: 'idle' as RobotAnimation, liveExpr: 'happy' as RobotExpression, liveAccessories: {} };
       }
-    }
-
-    // Hero plinth jump handoff
-    if (isJumpingOffPlinth) {
-      return { liveAnim: 'jump', liveExpr: 'excited' };
-    }
-
-    // Lane crossing active: play walk animation during continuous lane change
-    if (isCrossing) {
-      return { liveAnim: 'walk', liveExpr: 'happy' };
     }
 
     // Periodic gentle idle wave
     if (idleWaveActive && currentConfig.anim === 'idle') {
-      return { liveAnim: 'wave', liveExpr: 'happy' };
+      return { liveAnim: 'wave' as RobotAnimation, liveExpr: 'happy' as RobotExpression, liveAccessories: {} };
     }
 
     return {
       liveAnim: currentConfig.anim,
       liveExpr: currentConfig.expr,
+      liveAccessories: {},
     };
-  }, [prefersReducedMotion, shyModeActive, shyStep, isCrossing, idleWaveActive, currentConfig]);
+  }, [prefersReducedMotion, steveHeroState, chairClickSpinning, isDropLanding, hasSunglasses, isCoffeeInHand, hasJetpack, hasFlames, isCrossing, shyModeActive, shyStep, idleWaveActive, currentConfig]);
 
   // Handle tap on mobile companion
   const handleMobileCompanionTap = () => {
@@ -542,12 +761,17 @@ export const FixedGutterSteve: React.FC = () => {
         <div
           data-testid="steve-speech-bubble"
           aria-hidden="true"
-          className="absolute left-1/2 -translate-x-1/2 min-w-[130px] max-w-[220px] px-3.5 py-1.5 bg-white border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] font-mono text-[11px] font-bold text-[#0A0A0A] leading-snug z-40 pointer-events-none text-center"
+          className="absolute left-1/2 -translate-x-1/2 min-w-[140px] max-w-[240px] px-3.5 py-2 bg-white border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] font-mono text-[11px] font-bold text-[#0A0A0A] leading-snug z-40 pointer-events-none text-center"
           style={{
-            top: `${Math.round(canvasH * 0.22)}px`,
+            top: `${Math.round(canvasH * 0.16)}px`,
             transform: 'translate(-50%, -100%)',
           }}
         >
+          {/* Speaker Name with Orange Crown Icon */}
+          <div className="flex items-center justify-center gap-1.5 text-[9px] font-black uppercase text-[#FF5A1F] border-b border-[#0A0A0A]/20 pb-0.5 mb-1 tracking-wider">
+            <span>STEVE</span>
+            <span role="img" aria-label="crown">👑</span>
+          </div>
           <span>{displayBubble}</span>
           {/* Downward triangle pointer pointing toward head */}
           <div
@@ -576,6 +800,35 @@ export const FixedGutterSteve: React.FC = () => {
               borderTop: '3.5px solid #FFFFFF',
             }}
           />
+        </div>
+      )}
+
+      {/* Notification Dot: Small orange pulsing badge on chair arm when bubble shrinks */}
+      {notificationDotActive && steveHeroState === 'seated' && (
+        <div
+          className="absolute top-[32%] right-[14%] w-3 h-3 rounded-full bg-[#FF5A1F] border border-[#0A0A0A] shadow-[1px_1px_0px_#0A0A0A] animate-ping pointer-events-none"
+          title="Steve's note"
+        />
+      )}
+
+      {/* Part 4 Flight Flame & Smoke Particles Trail Overlay */}
+      {flightParticles.length > 0 && (
+        <div className="absolute inset-0 pointer-events-none overflow-visible">
+          {flightParticles.map((p) => (
+            <div
+              key={p.id}
+              className="absolute pointer-events-none border border-[#0A0A0A]"
+              style={{
+                left: `calc(50% + ${p.x}px)`,
+                top: `calc(60% + ${p.y}px)`,
+                width: `${p.size}px`,
+                height: `${p.size}px`,
+                backgroundColor: p.color,
+                transform: 'rotate(45deg)',
+                opacity: 0.9,
+              }}
+            />
+          ))}
         </div>
       )}
 
@@ -613,6 +866,7 @@ export const FixedGutterSteve: React.FC = () => {
                   expression={liveExpr}
                   scale={robotScale}
                   facing={facing}
+                  accessories={liveAccessories}
                   headTrackCursor={!prefersReducedMotion && !shyModeActive}
                 />
               </group>

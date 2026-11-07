@@ -412,6 +412,69 @@ export function useRobotAnimation(
         currentPose.headRotX = -0.1;
         break;
       }
+
+      case 'seated': {
+        // Hips on the seat, thighs forward, one leg crossed at ankle/knee
+        currentPose.bodyY = -0.14;
+        currentPose.bodyRotX = -0.21; // ~12 deg lean back against chair back
+        
+        // Thighs forward
+        currentPose.leftLegRotX = -1.48;
+        currentPose.rightLegRotX = -1.35;
+
+        // One leg crossed over the other at ankle or knee
+        const subPhase = (t * 0.8) % 6;
+        if (subPhase < 2) {
+          // Foot tap: crossed foot bounces rhythmically
+          const tap = Math.sin(t * 9) * 0.09;
+          currentPose.rightLegRotX = -1.35 + tap;
+        } else if (subPhase < 4) {
+          // Sip coffee: mug tilts up, head tilts back slightly
+          const sip = Math.sin((subPhase - 2) * Math.PI);
+          currentPose.rightArmRotX = 0.72 + sip * 0.45;
+          currentPose.headRotX = -0.05 - sip * 0.14;
+        }
+
+        // Left arm resting relaxed behind his head
+        currentPose.leftArmRotZ = -2.15;
+        currentPose.leftArmRotX = -0.55;
+        currentPose.leftArmRotY = 0.45;
+
+        // Right arm holding coffee mug
+        if (subPhase >= 4) {
+          currentPose.rightArmRotZ = 0.55;
+          currentPose.rightArmRotX = 0.72;
+          currentPose.rightArmRotY = -0.25;
+          currentPose.headRotY = Math.sin(t * 2) * 0.15;
+        } else if (subPhase < 2) {
+          currentPose.rightArmRotZ = 0.55;
+          currentPose.rightArmRotX = 0.72;
+          currentPose.rightArmRotY = -0.25;
+        }
+        break;
+      }
+
+      case 'flight': {
+        // Superhero flight posture: 20-30 deg forward tilt, legs trailing, looking forward
+        currentPose.bodyY = 0.14 + Math.sin(t * 8) * 0.02;
+        currentPose.bodyRotX = 0.48; // ~27 deg forward tilt
+        currentPose.headRotX = -0.38; // head tilted up looking where he flies
+        currentPose.headRotY = Math.sin(t * 3) * 0.08;
+
+        // Arms trailing back smoothly
+        currentPose.leftArmRotX = 2.45;
+        currentPose.rightArmRotX = 2.45;
+        currentPose.leftArmRotZ = -0.22;
+        currentPose.rightArmRotZ = 0.22;
+
+        // Legs trailing back
+        currentPose.leftLegRotX = 0.38;
+        currentPose.rightLegRotX = 0.38;
+
+        // Antenna flutter in high-speed wind
+        currentPose.antennaRotZ = Math.sin(t * 18) * 0.28;
+        break;
+      }
     }
 
     // Blend between previous pose and current pose (crossfade)
