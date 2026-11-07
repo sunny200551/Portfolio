@@ -9,7 +9,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // If running in production with live sync available, can return synced data or snapshot
     return res.status(200).json(snapshot);
-  } catch (error) {
+  } catch {
     return res.status(200).json(snapshot);
   }
 }

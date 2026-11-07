@@ -168,8 +168,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       name: 'steve: woman visitor persona (She / Her)',
       category: 'Actions',
       icon: Heart,
-      statusBadge: robotState.visitorGender === 'woman' ? 'SELECTED' : 'NOT SELECTED',
-      isActive: robotState.visitorGender === 'woman',
+      statusBadge: (robotState.visitorGender === 'female' || robotState.visitorGender === 'woman') ? 'SELECTED' : 'NOT SELECTED',
+      isActive: (robotState.visitorGender === 'female' || robotState.visitorGender === 'woman'),
       action: () => {
         robotStore.setVisitorIdentity(robotState.visitorName, 'woman');
         onClose();
@@ -180,8 +180,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       name: 'steve: man visitor persona (He / Him)',
       category: 'Actions',
       icon: Sparkles,
-      statusBadge: robotState.visitorGender === 'man' ? 'SELECTED' : 'NOT SELECTED',
-      isActive: robotState.visitorGender === 'man',
+      statusBadge: (robotState.visitorGender === 'male' || robotState.visitorGender === 'man') ? 'SELECTED' : 'NOT SELECTED',
+      isActive: (robotState.visitorGender === 'male' || robotState.visitorGender === 'man'),
       action: () => {
         robotStore.setVisitorIdentity(robotState.visitorName, 'man');
         onClose();

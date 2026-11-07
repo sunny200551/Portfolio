@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { splitIntoPages, calculateReadingDwellTime } from './speechPaging';
 
-export { splitIntoPages, calculateReadingDwellTime };
 
 export interface SteveSpeechBubbleProps {
   text: string;
@@ -9,7 +8,7 @@ export interface SteveSpeechBubbleProps {
   isCenterStage?: boolean;
   windowWidth: number;
   prefersReducedMotion?: boolean;
-  visitorGender?: 'woman' | 'man' | 'guest';
+  visitorGender?: string;
   steveX?: number; // Position X of Steve in viewport (defaults to 32px or center)
 }
 
@@ -35,11 +34,14 @@ export const SteveSpeechBubble: React.FC<SteveSpeechBubbleProps> = ({
 
   // Reset when input text changes
   useEffect(() => {
-    const newPages = splitIntoPages(text, 140);
-    setPages(newPages);
-    setPageIndex(0);
-    setCharIndex(prefersReducedMotion ? newPages[0].length : 0);
-    setIsRevealed(prefersReducedMotion);
+    const timer = setTimeout(() => {
+      const newPages = splitIntoPages(text, 140);
+      setPages(newPages);
+      setPageIndex(0);
+      setCharIndex(prefersReducedMotion ? newPages[0].length : 0);
+      setIsRevealed(prefersReducedMotion);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [text, prefersReducedMotion]);
 
   const currentPageText = pages[pageIndex] || text;
@@ -61,8 +63,10 @@ export const SteveSpeechBubble: React.FC<SteveSpeechBubbleProps> = ({
     }
 
     if (prefersReducedMotion) {
-      setCharIndex(currentPageText.length);
-      setIsRevealed(true);
+      setTimeout(() => {
+        setCharIndex(currentPageText.length);
+        setIsRevealed(true);
+      }, 0);
       window.dispatchEvent(new CustomEvent('steve:talking', { detail: { talking: false } }));
       return;
     }
@@ -71,8 +75,10 @@ export const SteveSpeechBubble: React.FC<SteveSpeechBubbleProps> = ({
     window.dispatchEvent(new CustomEvent('steve:talking', { detail: { talking: true } }));
 
     if (charIndex >= currentPageText.length) {
-      setIsRevealed(true);
-      window.dispatchEvent(new CustomEvent('steve:talking', { detail: { talking: false } }));
+      setTimeout(() => {
+        setIsRevealed(true);
+        window.dispatchEvent(new CustomEvent('steve:talking', { detail: { talking: false } }));
+      }, 0);
       return;
     }
 
@@ -98,8 +104,10 @@ export const SteveSpeechBubble: React.FC<SteveSpeechBubbleProps> = ({
     if (!isRevealed) return;
 
     const dwell = calculateReadingDwellTime(currentPageText);
-    setTotalDwellMs(dwell);
-    setRemainingMs(dwell);
+    setTimeout(() => {
+      setTotalDwellMs(dwell);
+      setRemainingMs(dwell);
+    }, 0);
   }, [isRevealed, currentPageText]);
 
   // Countdown timer with pause on hover, focus, or hidden tab
@@ -182,7 +190,7 @@ export const SteveSpeechBubble: React.FC<SteveSpeechBubbleProps> = ({
       <div className="flex items-center justify-between gap-1.5 px-3 pt-2 pb-1 border-b border-[#0A0A0A]/15 text-[9px] font-mono font-black uppercase text-[#FF5C00] tracking-wider">
         <div className="flex items-center gap-1.5">
           <span>STEVE</span>
-          <span>{visitorGender === 'woman' ? '❤️' : '⚡'}</span>
+          <span>{(visitorGender === 'woman' || visitorGender === 'female') ? '❤️' : '⚡'}</span>
         </div>
         {pages.length > 1 && (
           <span className="text-[8px] px-1.5 py-0.2 bg-[#EEF2FA] text-[#0A0A0A] border border-[#0A0A0A]">

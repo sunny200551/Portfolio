@@ -1,3 +1,4 @@
+import { SteveVisitorCard } from './SteveVisitorCard';
 import React, { useState, useEffect, useRef, useMemo, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Robot } from './Robot';
@@ -48,7 +49,12 @@ export const FixedGutterSteve: React.FC = () => {
   const [isInFooter, setIsInFooter] = useState(false);
 
   // Visitor identity state
+  const [visitorName, setVisitorName] = useState(() => robotStore.getState().visitorName);
   const [visitorGender, setVisitorGender] = useState<VisitorGender>(() => robotStore.getState().visitorGender);
+  const [visitorAsked, setVisitorAsked] = useState(() => robotStore.getState().visitorAsked);
+  const [isPromptCardOpen, setIsPromptCardOpen] = useState(false);
+  const [hasPromptBeenShown, setHasPromptBeenShown] = useState(false);
+  const hasGreetedReturningRef = useRef(false);
 
   // Dynamic scrolling states for stylish stunts
   const [scrollDirection, setScrollDirection] = useState<'idle' | 'down' | 'up'>('idle');
@@ -81,6 +87,8 @@ export const FixedGutterSteve: React.FC = () => {
     return unsub;
   }, []);
 
+  
+
   // 2. Hide dock Steve when reaching the Footer (Image 3 fix)
   useEffect(() => {
     const footerEl = document.querySelector('footer');
@@ -105,6 +113,8 @@ export const FixedGutterSteve: React.FC = () => {
       setStoreExpr(state.steveExpr);
       setStoreBubble(state.speechBubble);
             setVisitorGender(state.visitorGender);
+      setVisitorName(state.visitorName);
+      setVisitorAsked(state.visitorAsked);
 
       if (state.activeSection !== activeSection) {
         setActiveSection(state.activeSection);
@@ -148,6 +158,45 @@ export const FixedGutterSteve: React.FC = () => {
       if (centerStageTimerRef.current) clearTimeout(centerStageTimerRef.current);
     };
   }, [triggerCenterMovement]);
+
+  // Show visitor card on first docking at left edge, or greet returning visitor
+  useEffect(() => {
+    if (currentSteveState === 'DOCKED') {
+      const state = robotStore.getState();
+      if (state.visitorAsked && state.visitorName) {
+        if (!hasGreetedReturningRef.current) {
+          hasGreetedReturningRef.current = true;
+          const shortName = state.visitorName.length > 10 ? state.visitorName.slice(0, 10).trim() : state.visitorName;
+          robotStore.setSteve('wave', 'happy');
+          robotStore.showSpeechBubble(`Hey ${shortName}! 👋`, 3000);
+        }
+      } else if (!state.visitorAsked && !hasPromptBeenShown) {
+        setTimeout(() => {
+          setHasPromptBeenShown(true);
+          setIsPromptCardOpen(true);
+        }, 0);
+      }
+    }
+  }, [currentSteveState, hasPromptBeenShown]);
+
+  // Update Steve head center in screen coordinates for accurate gaze math
+  useEffect(() => {
+    if (currentSteveState !== 'DOCKED') return;
+    const updateHeadPos = () => {
+      const dockEl = document.getElementById('robot-steve-dock');
+      if (dockEl) {
+        const r = dockEl.getBoundingClientRect();
+        robotStore.setDockSteveHeadPos(r.left + r.width / 2, r.top + 60);
+      }
+    };
+    updateHeadPos();
+    window.addEventListener('resize', updateHeadPos, { passive: true });
+    window.addEventListener('scroll', updateHeadPos, { passive: true });
+    return () => {
+      window.removeEventListener('resize', updateHeadPos);
+      window.removeEventListener('scroll', updateHeadPos);
+    };
+  }, [currentSteveState]);
 
   // 5. Ambient Lively Pose & Expression Cycle for First-Time Users
   useEffect(() => {
@@ -408,7 +457,8 @@ export const FixedGutterSteve: React.FC = () => {
         top: '50%',
         transform: stuntTransform,
         width: `${canvasW}px`,
-        height: `${canvasH + 45}px`,
+        minHeight: `${canvasH + 45}px`,
+        height: 'auto',
         opacity: currentSteveState === 'RETURNING' ? 0.3 : 1,
         transition: isCenterStage
           ? 'left 0.75s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s ease-out'
@@ -502,6 +552,44 @@ export const FixedGutterSteve: React.FC = () => {
             </Canvas>
           </Suspense>
         </CanvasErrorBoundary>
+      </div>
+
+      {/* Visitor Identity Prompt Card or Compact Edit Trigger directly below Steve's feet */}
+      <div className="w-full flex flex-col items-center mt-1 pointer-events-auto">
+        {isPromptCardOpen ? (
+          <SteveVisitorCard
+            key={`${visitorName}-${visitorGender}`}
+            initialName={visitorName}
+            initialGender={(['male', 'female', 'non-binary', 'prefer-not-to-say'].includes(visitorGender as string) ? (visitorGender as 'male' | 'female' | 'non-binary' | 'prefer-not-to-say') : 'prefer-not-to-say')}
+            isEditMode={!!visitorName || visitorAsked}
+            onSave={(name, gender) => {
+              robotStore.setVisitorIdentity(name, gender);
+              setIsPromptCardOpen(false);
+            }}
+            onSkip={() => {
+              robotStore.skipVisitorIdentity();
+              setIsPromptCardOpen(false);
+            }}
+            onForget={() => {
+              robotStore.forgetVisitor();
+              setIsPromptCardOpen(false);
+            }}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsPromptCardOpen(true);
+            }}
+            aria-label="Edit your name and preferences"
+            className="group flex items-center justify-center gap-1 px-2 py-0.5 bg-white hover:bg-[#EEF2FA] text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] font-mono text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer pointer-events-auto"
+            title="Edit your visitor info or forget"
+          >
+            <span>👤 {visitorName ? (visitorName.length > 8 ? visitorName.slice(0, 8) + '…' : visitorName) : 'Visitor'}</span>
+            <span className="opacity-60 text-[8px] group-hover:opacity-100">✎</span>
+          </button>
+        )}
       </div>
     </div>
   );

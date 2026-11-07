@@ -41,3 +41,4 @@ export function calculateReadingDwellTime(text: string): number {
   const words = text.trim().split(/\s+/).filter(Boolean).length;
   return Math.max(3000, 1500 + words * 300);
 }
+

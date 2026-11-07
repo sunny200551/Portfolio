@@ -1,3 +1,4 @@
+import { computeSteveTracking, TRACKING_CONFIG } from './steveTracking';
 import { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -75,6 +76,9 @@ export function useRobotAnimation(
   // Antenna secondary motion velocity
   const antennaVelocityRef = useRef(0);
   const prevHeadRotZRef = useRef(0);
+  const smoothTrackingRotX = useRef(0);
+  const smoothTrackingRotY = useRef(0);
+  const smoothPupilOffset = useRef({ x: 0, y: 0 });
 
   // Natural blink loop
   useEffect(() => {
@@ -505,19 +509,33 @@ export function useRobotAnimation(
       prevPoseRef.current = { ...currentPose };
     }
 
-    // Additive cursor look-at for head
-    // Steve is docked on the left gutter: he must only look straight (0) or rightward into website content (> 0), never left into the wall!
+    // Additive cursor look-at for head and eyes (screen-space physics)
     if (headTrackCursor && animation !== 'sleep' && animation !== 'dizzy' && animation !== 'spin') {
-      const { x: cursorX, y: cursorY } = robotStore.getState().cursor;
-      // Map cursor to forward-or-right yaw only: 0 to +HEAD_YAW_MAX
-      const rightwardLook = Math.max(0, (cursorX + 0.35) * 0.4);
-      const clampedX = THREE.MathUtils.clamp(rightwardLook, 0, RIG.LIMITS.HEAD_YAW_MAX);
-      const clampedY = THREE.MathUtils.clamp(cursorY * 0.25, -RIG.LIMITS.HEAD_PITCH_MAX, RIG.LIMITS.HEAD_PITCH_MAX);
-      targetPose.headRotY = Math.max(0, THREE.MathUtils.clamp(targetPose.headRotY + clampedX, 0, RIG.LIMITS.HEAD_YAW_MAX));
-      targetPose.headRotX -= clampedY;
+      const { pointerScreen, dockSteveHeadPos } = robotStore.getState();
+      const headX = dockSteveHeadPos.headX || 112;
+      const headY = dockSteveHeadPos.headY || (typeof window !== 'undefined' ? window.innerHeight * 0.45 : 350);
+
+      const tracking = computeSteveTracking(
+        pointerScreen.clientX,
+        pointerScreen.clientY,
+        headX,
+        headY,
+        pointerScreen.active
+      );
+
+      // Smooth with lerp (0.12), eyes lead and head follows at 60%
+      smoothTrackingRotX.current = THREE.MathUtils.lerp(smoothTrackingRotX.current, tracking.threeRotX, TRACKING_CONFIG.LERP_SPEED);
+      smoothTrackingRotY.current = THREE.MathUtils.lerp(smoothTrackingRotY.current, tracking.threeRotY, TRACKING_CONFIG.LERP_SPEED);
+      smoothPupilOffset.current.x = THREE.MathUtils.lerp(smoothPupilOffset.current.x, tracking.pupilOffsetX, TRACKING_CONFIG.LERP_SPEED);
+      smoothPupilOffset.current.y = THREE.MathUtils.lerp(smoothPupilOffset.current.y, tracking.pupilOffsetY, TRACKING_CONFIG.LERP_SPEED);
+
+      targetPose.headRotX += smoothTrackingRotX.current;
+      targetPose.headRotY += smoothTrackingRotY.current;
     } else {
-      // Even without cursor tracking, clamp headRotY so it never turns left off-screen
-      targetPose.headRotY = Math.max(0, targetPose.headRotY);
+      smoothTrackingRotX.current = THREE.MathUtils.lerp(smoothTrackingRotX.current, 0, 0.12);
+      smoothTrackingRotY.current = THREE.MathUtils.lerp(smoothTrackingRotY.current, 0, 0.12);
+      smoothPupilOffset.current.x = THREE.MathUtils.lerp(smoothPupilOffset.current.x, 0, 0.12);
+      smoothPupilOffset.current.y = THREE.MathUtils.lerp(smoothPupilOffset.current.y, 0, 0.12);
     }
 
     // Additive antenna secondary motion (damped spring based on head angular acceleration)
@@ -586,5 +604,6 @@ export function useRobotAnimation(
     rightLegRef,
     antennaRef,
     isBlinking,
+    pupilOffsetRef: smoothPupilOffset,
   };
 }

@@ -1,3 +1,4 @@
+import { computeSteveTracking } from '../../robot/steveTracking';
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { steveState, type SteveState } from '../../lib/steveState';
@@ -145,8 +146,48 @@ export const HeroSvgIllustration: React.FC = () => {
         });
       };
 
+      const handleHeroTracking = (e: MouseEvent) => {
+        const headEl = document.getElementById('hero-steve-head');
+        if (headEl) {
+          const rect = headEl.getBoundingClientRect();
+          const headCenterX = rect.left + rect.width / 2;
+          const headCenterY = rect.top + rect.height / 2;
+
+          const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0));
+          const tracking = computeSteveTracking(e.clientX, e.clientY, headCenterX, headCenterY, !isTouch);
+
+          gsap.to('#hero-steve-head', {
+            rotation: tracking.headYawDeg * 0.7,
+            y: tracking.headPitchDeg * 0.35,
+            duration: 0.18,
+            ease: 'power1.out',
+            overwrite: 'auto',
+          });
+
+          gsap.to('#hero-steve-eyes', {
+            x: tracking.pupilOffsetX * 0.8,
+            y: tracking.pupilOffsetY * 0.8,
+            duration: 0.15,
+            ease: 'power1.out',
+            overwrite: 'auto',
+          });
+        }
+      };
+
+      const handleHeroMouseLeave = () => {
+        gsap.to('#hero-steve-head', { rotation: 0, y: 0, duration: 0.4, ease: 'power2.out', overwrite: 'auto' });
+        gsap.to('#hero-steve-eyes', { x: 0, y: 0, duration: 0.3, ease: 'power2.out', overwrite: 'auto' });
+      };
+
       window.addEventListener('mousemove', handleMouseMove, { passive: true });
-      return () => window.removeEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mousemove', handleHeroTracking, { passive: true });
+      window.addEventListener('mouseleave', handleHeroMouseLeave);
+
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mousemove', handleHeroTracking);
+        window.removeEventListener('mouseleave', handleHeroMouseLeave);
+      };
     }, containerRef);
 
     return () => ctx.revert();
@@ -421,24 +462,26 @@ export const HeroSvgIllustration: React.FC = () => {
                   {/* Neck Joint */}
                   <rect x="394" y="386" width="12" height="12" fill="#0A1A3F" stroke="#0A0A0A" strokeWidth="2" />
 
-                  {/* Monitor Head Box (Orange) */}
-                  <rect x="365" y="336" width="70" height="52" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="3.5" rx="5" />
+                  {/* Monitor Head Box (Orange) with dynamic Head & Eye Tracking */}
+                  <g id="hero-steve-head" style={{ transformOrigin: '400px 386px' }}>
+                    <rect x="365" y="336" width="70" height="52" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="3.5" rx="5" />
 
-                  {/* Blue Screen Face */}
-                  <rect x="373" y="344" width="54" height="36" fill="#0047AB" stroke="#0A0A0A" strokeWidth="2" rx="3" />
+                    {/* Blue Screen Face */}
+                    <rect x="373" y="344" width="54" height="36" fill="#0047AB" stroke="#0A0A0A" strokeWidth="2" rx="3" />
 
-                  {/* Pixel Smiling Eyes (^^) & Cheeks */}
-                  <path d="M382 360 L386 354 L390 360" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                  <path d="M410 360 L414 354 L418 360" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                  {/* Smile */}
-                  <path d="M396 368 Q400 372 404 368" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" fill="none" />
-                  {/* Blushing Orange Cheeks */}
-                  <circle cx="380" cy="366" r="3" fill="#FF5A1F" />
-                  <circle cx="420" cy="366" r="3" fill="#FF5A1F" />
+                    {/* Eyes and Smile group for Pupil Tracking */}
+                    <g id="hero-steve-eyes">
+                      <path d="M382 360 L386 354 L390 360" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                      <path d="M410 360 L414 354 L418 360" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                      <path d="M396 368 Q400 372 404 368" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" fill="none" />
+                      <circle cx="380" cy="366" r="3" fill="#FF5A1F" />
+                      <circle cx="420" cy="366" r="3" fill="#FF5A1F" />
+                    </g>
 
-                  {/* Antenna */}
-                  <line x1="400" y1="336" x2="400" y2="318" stroke="#0A1A3F" strokeWidth="3" strokeLinecap="round" />
-                  <circle cx="400" cy="316" r="5" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="2" />
+                    {/* Antenna */}
+                    <line x1="400" y1="336" x2="400" y2="318" stroke="#0A1A3F" strokeWidth="3" strokeLinecap="round" />
+                    <circle cx="400" cy="316" r="5" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="2" />
+                  </g>
                 </g>
               </g>
             )}

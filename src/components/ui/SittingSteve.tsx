@@ -18,8 +18,8 @@ export const SittingSteve: React.FC<SittingSteveProps> = ({ className = '', styl
     setTimeout(() => setIsWinking(false), 800);
 
     const { visitorName, visitorGender } = robotStore.getState();
-    const isWoman = visitorGender === 'woman';
-    const isMan = visitorGender === 'man';
+    const isWoman = visitorGender === 'female' || visitorGender === 'woman';
+    const isMan = visitorGender === 'male' || visitorGender === 'man';
     const name = visitorName || (isWoman ? 'gorgeous' : isMan ? 'king' : 'friend');
 
     if (isWoman) {

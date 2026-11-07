@@ -8,10 +8,12 @@ export class RobotFaceTexture {
   private currentExpression: RobotExpression = 'happy';
   private isBlinking = false;
   private isTalking = false;
-  private talkTimer: any = null;
+  private talkTimer: ReturnType<typeof setInterval> | null = null;
   private talkFrame = 0;
   private bgColor = '#0047AB';
   private pixelColor = '#FFFFFF';
+  private pupilOffsetX = 0;
+  private pupilOffsetY = 0;
 
   constructor(bgColor = '#0047AB', pixelColor = '#FFFFFF') {
     this.bgColor = bgColor;
@@ -69,6 +71,16 @@ export class RobotFaceTexture {
     }
   }
 
+    public setPupilOffset(x: number, y: number) {
+    const clampedX = Math.max(-5, Math.min(5, Math.round(x)));
+    const clampedY = Math.max(-4, Math.min(4, Math.round(y)));
+    if (this.pupilOffsetX !== clampedX || this.pupilOffsetY !== clampedY) {
+      this.pupilOffsetX = clampedX;
+      this.pupilOffsetY = clampedY;
+      this.render();
+    }
+  }
+
   public setBlink(blinking: boolean) {
     if (this.isBlinking !== blinking) {
       this.isBlinking = blinking;
@@ -102,9 +114,9 @@ export class RobotFaceTexture {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    const leftEyeX = 74;
-    const rightEyeX = 182;
-    const eyeY = 74;
+    const leftEyeX = 74 + this.pupilOffsetX * 0.7;
+    const rightEyeX = 182 + this.pupilOffsetX * 0.7;
+    const eyeY = 74 + this.pupilOffsetY * 0.7;
 
     // Blinking override
     if (this.isBlinking) {

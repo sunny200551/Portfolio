@@ -24,7 +24,7 @@ export type StatsStage = 'dumbbell' | 'badges' | 'lockedFlex' | 'shrug';
 export type EventsTicketStage = 'inspecting' | 'stamping' | 'trophy';
 export type JourneyYear = '2023' | '2024' | '2025' | '2026';
 export type ContactAction = 'building' | 'watching' | 'rocket' | 'cheer';
-export type VisitorGender = 'woman' | 'man' | 'guest';
+export type VisitorGender = 'male' | 'female' | 'non-binary' | 'prefer-not-to-say' | 'woman' | 'man' | 'guest';
 
 export interface RobotState {
   steveAnim: RobotAnimation;
@@ -44,6 +44,9 @@ export interface RobotState {
   chairSpinActive: boolean;
   visitorName: string;
   visitorGender: VisitorGender;
+  visitorAsked: boolean;
+  pointerScreen: { clientX: number; clientY: number; active: boolean };
+  dockSteveHeadPos: { headX: number; headY: number };
 
   // Task 3 routine states
   aboutGradYearStage: AboutGradYearStage;
@@ -72,23 +75,46 @@ export interface RobotState {
 
 const STORAGE_KEY = 'sunny_portfolio_robot_enabled';
 const QUIET_STORAGE_KEY = 'sunny_portfolio_steve_quiet';
+const STEVE_VISITOR_STORAGE_KEY = 'steve.visitor';
 const VISITOR_NAME_KEY = 'sunny_portfolio_visitor_name';
 const VISITOR_GENDER_KEY = 'sunny_portfolio_visitor_gender';
 
-function getStoredVisitorName(): string {
+function getStoredVisitorIdentity(): { name: string; gender: VisitorGender; asked: boolean } {
   try {
-    if (typeof window === 'undefined') return '';
-    return localStorage.getItem(VISITOR_NAME_KEY) || '';
-  } catch { return ''; }
-}
-
-function getStoredVisitorGender(): VisitorGender {
-  try {
-    if (typeof window === 'undefined') return 'guest';
-    const val = localStorage.getItem(VISITOR_GENDER_KEY);
-    if (val === 'woman' || val === 'man') return val;
-    return 'guest';
-  } catch { return 'guest'; }
+    if (typeof window === 'undefined') {
+      return { name: '', gender: 'prefer-not-to-say', asked: false };
+    }
+    const raw = localStorage.getItem(STEVE_VISITOR_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      let g: VisitorGender = parsed.gender;
+      if (g === 'woman') g = 'female';
+      if (g === 'man') g = 'male';
+      if (!['male', 'female', 'non-binary', 'prefer-not-to-say'].includes(g)) {
+        g = 'prefer-not-to-say';
+      }
+      return {
+        name: typeof parsed.name === 'string' ? parsed.name.slice(0, 20).trim() : '',
+        gender: g,
+        asked: true,
+      };
+    }
+    const legacyName = localStorage.getItem(VISITOR_NAME_KEY);
+    const legacyGender = localStorage.getItem(VISITOR_GENDER_KEY);
+    if (legacyName !== null || legacyGender !== null) {
+      let g: VisitorGender = 'prefer-not-to-say';
+      if (legacyGender === 'woman' || legacyGender === 'female') g = 'female';
+      if (legacyGender === 'man' || legacyGender === 'male') g = 'male';
+      return {
+        name: (legacyName || '').slice(0, 20).trim(),
+        gender: g,
+        asked: true,
+      };
+    }
+  } catch (e) {
+    console.warn('Error reading steve.visitor from localStorage:', e);
+  }
+  return { name: '', gender: 'prefer-not-to-say', asked: false };
 }
 
 
@@ -208,8 +234,11 @@ class RobotStore {
     homeSeatPos: { x: 0, y: 0 },
     steveHeroState: 'seated',
     chairSpinActive: false,
-    visitorName: getStoredVisitorName(),
-    visitorGender: getStoredVisitorGender(),
+    visitorName: getStoredVisitorIdentity().name,
+    visitorGender: getStoredVisitorIdentity().gender,
+    visitorAsked: getStoredVisitorIdentity().asked,
+    pointerScreen: { clientX: -1000, clientY: -1000, active: false },
+    dockSteveHeadPos: { headX: 112, headY: 400 },
 
     // Task 3 initial states
     aboutGradYearStage: 'idle',
@@ -274,12 +303,32 @@ class RobotStore {
     this.cursorInitialized = true;
 
     // Track global window cursor position for head tracking
+    const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0));
+
     window.addEventListener('pointermove', (e: PointerEvent) => {
+      const isTouch = isTouchDevice || e.pointerType === 'touch';
+      this.state.pointerScreen = {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        active: !isTouch,
+      };
       const normX = (e.clientX / window.innerWidth) * 2 - 1;
       const normY = -(e.clientY / window.innerHeight) * 2 + 1;
       this.state.cursor = { x: normX, y: normY };
       this.resetIdleTimer();
     }, { passive: true });
+
+    window.addEventListener('pointerleave', () => {
+      this.state.pointerScreen.active = false;
+    });
+
+    document.addEventListener('mouseleave', () => {
+      this.state.pointerScreen.active = false;
+    });
+
+    window.addEventListener('blur', () => {
+      this.state.pointerScreen.active = false;
+    });
 
     // Handle custom robot actions
     window.addEventListener('robot:action', (e: Event) => {
@@ -670,63 +719,96 @@ class RobotStore {
   }
 
   
+  public setDockSteveHeadPos(headX: number, headY: number) {
+    this.state.dockSteveHeadPos = { headX, headY };
+  }
+
   public setVisitorIdentity(name: string, gender: VisitorGender) {
-    const cleanName = name.trim();
+    const cleanName = name.trim().slice(0, 20);
+    let validGender: VisitorGender = gender;
+    if (gender === 'woman') validGender = 'female';
+    if (gender === 'man') validGender = 'male';
+    if (!['male', 'female', 'non-binary', 'prefer-not-to-say'].includes(validGender)) {
+      validGender = 'prefer-not-to-say';
+    }
+
     this.state.visitorName = cleanName;
-    this.state.visitorGender = gender;
+    this.state.visitorGender = validGender;
+    this.state.visitorAsked = true;
+
     try {
       if (typeof window !== 'undefined') {
+        localStorage.setItem(STEVE_VISITOR_STORAGE_KEY, JSON.stringify({ name: cleanName, gender: validGender }));
         localStorage.setItem(VISITOR_NAME_KEY, cleanName);
-        localStorage.setItem(VISITOR_GENDER_KEY, gender);
+        localStorage.setItem(VISITOR_GENDER_KEY, validGender);
       }
     } catch (e) {
-      console.warn('Could not save visitor identity:', e);
+      console.warn('Could not save steve.visitor identity:', e);
     }
     this.notify();
 
-    // Trigger immediate personalized greeting!
-    if (gender === 'woman') {
-      const displayName = cleanName || 'Gorgeous';
-      this.setSteve('wave', 'flirty');
-      this.showSpeechBubble(`${displayName}! Wow... you just lit up the whole screen. ✨😉`, 4200);
-    } else if (gender === 'man') {
-      const displayName = cleanName || 'King';
-      this.setSteve('salute', 'focused');
-      this.showSpeechBubble(`Welcome to the lab, ${displayName}! Great to have you here, king! 👑⚡`, 4200);
-    } else {
-      this.setSteve('wave', 'happy');
-      this.showSpeechBubble('VIP Pass updated! Welcome aboard! 🚀✨', 3200);
+    // After Save: Steve reacts (wave and a short bubble "Hey <name>!", with long names cut to 10 characters so it fits)
+    const shortName = cleanName ? (cleanName.length > 10 ? cleanName.slice(0, 10).trim() : cleanName) : '';
+    const greeting = shortName ? `Hey ${shortName}! 👋` : 'Nice to meet you! 👋';
+    this.setSteve('wave', 'happy');
+    this.showSpeechBubble(greeting, 3000);
+  }
+
+  public skipVisitorIdentity() {
+    this.state.visitorAsked = true;
+    this.setSteve('wave', 'happy');
+    this.showSpeechBubble('Explore with me! ⚡', 2500);
+    this.notify();
+  }
+
+  public forgetVisitor() {
+    this.state.visitorName = '';
+    this.state.visitorGender = 'prefer-not-to-say';
+    this.state.visitorAsked = false;
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(STEVE_VISITOR_STORAGE_KEY);
+        localStorage.removeItem(VISITOR_NAME_KEY);
+        localStorage.removeItem(VISITOR_GENDER_KEY);
+      }
+    } catch (e) {
+      console.warn('Could not clear visitor identity:', e);
     }
+    this.setSteve('wave', 'happy');
+    this.showSpeechBubble('Memory cleared! 👋', 2500);
+    this.notify();
   }
 
   public getPersonalizedLine(): { text: string; anim: RobotAnimation; expr: RobotExpression } {
     const { visitorName, visitorGender } = this.state;
-    if (visitorGender === 'woman') {
-      const name = visitorName || 'gorgeous';
-      const template = WOMEN_FLIRTY_LINES[Math.floor(Math.random() * WOMEN_FLIRTY_LINES.length)];
-      const text = template.replace(/{NAME}/g, name);
-      const flirtyExprs: RobotExpression[] = ['flirty', 'shy', 'wink', 'happy'];
-      const flirtyAnims: RobotAnimation[] = ['wave', 'dance', 'jump', 'idle'];
-      return {
-        text,
-        expr: flirtyExprs[Math.floor(Math.random() * flirtyExprs.length)],
-        anim: flirtyAnims[Math.floor(Math.random() * flirtyAnims.length)],
-      };
-    } else if (visitorGender === 'man') {
-      const name = visitorName || 'king';
-      const template = MEN_WINGMAN_LINES[Math.floor(Math.random() * MEN_WINGMAN_LINES.length)];
-      const text = template.replace(/{NAME}/g, name);
-      const broExprs: RobotExpression[] = ['focused', 'proud', 'grin', 'happy'];
-      const broAnims: RobotAnimation[] = ['salute', 'flex', 'jump', 'cheer'];
-      return {
-        text,
-        expr: broExprs[Math.floor(Math.random() * broExprs.length)],
-        anim: broAnims[Math.floor(Math.random() * broAnims.length)],
-      };
-    } else {
-      const text = GUEST_WELCOME_LINES[Math.floor(Math.random() * GUEST_WELCOME_LINES.length)];
-      return { text, expr: 'happy', anim: 'wave' };
+    const shortName = visitorName ? (visitorName.length > 10 ? visitorName.slice(0, 10).trim() : visitorName) : '';
+
+    if (shortName) {
+      const namedLines = [
+        `Hey ${shortName}! 👋`,
+        `Ready, ${shortName}? 🚀`,
+        `Check this, ${shortName}! ⚡`,
+        `Nice to see you! ✨`,
+        `Great day to code! 💻`,
+      ];
+      const text = namedLines[Math.floor(Math.random() * namedLines.length)];
+      return { text, anim: 'wave', expr: 'happy' };
     }
+
+    // Friendly gender variations (warm, clean, non-stereotypical, max 20 chars)
+    if (visitorGender === 'female') {
+      const lines = ['Welcome in! ✨', 'So glad you are here! 🌸', 'Explore Sunny\'s work! 🚀', 'Ready to build! ⚡'];
+      return { text: lines[Math.floor(Math.random() * lines.length)], anim: 'wave', expr: 'happy' };
+    } else if (visitorGender === 'male') {
+      const lines = ['Welcome aboard! ⚡', 'Great to have you! 🤝', 'Solid tech ahead! 💻', 'Check out the lab! 🛠️'];
+      return { text: lines[Math.floor(Math.random() * lines.length)], anim: 'salute', expr: 'focused' };
+    } else if (visitorGender === 'non-binary') {
+      const lines = ['Welcome, friend! ✨', 'Glad you\'re here! 🚀', 'Let\'s explore! ⚡', 'Have fun looking! 💫'];
+      return { text: lines[Math.floor(Math.random() * lines.length)], anim: 'jump', expr: 'excited' };
+    }
+
+    const neutralLines = ['Welcome to the site! 👋', 'Explore the work! 🚀', 'Check out projects! 💻', 'Say hello anytime! ✉️'];
+    return { text: neutralLines[Math.floor(Math.random() * neutralLines.length)], anim: 'idle', expr: 'happy' };
   }
 
   public setCursor(x: number, y: number) {
