@@ -24,6 +24,7 @@ export type StatsStage = 'dumbbell' | 'badges' | 'lockedFlex' | 'shrug';
 export type EventsTicketStage = 'inspecting' | 'stamping' | 'trophy';
 export type JourneyYear = '2023' | '2024' | '2025' | '2026';
 export type ContactAction = 'building' | 'watching' | 'rocket' | 'cheer';
+export type VisitorGender = 'woman' | 'man' | 'guest';
 
 export interface RobotState {
   steveAnim: RobotAnimation;
@@ -41,6 +42,8 @@ export interface RobotState {
   homeSeatPos: { x: number; y: number };
   steveHeroState: 'seated' | 'standing_up' | 'flying' | 'lane';
   chairSpinActive: boolean;
+  visitorName: string;
+  visitorGender: VisitorGender;
 
   // Task 3 routine states
   aboutGradYearStage: AboutGradYearStage;
@@ -69,6 +72,25 @@ export interface RobotState {
 
 const STORAGE_KEY = 'sunny_portfolio_robot_enabled';
 const QUIET_STORAGE_KEY = 'sunny_portfolio_steve_quiet';
+const VISITOR_NAME_KEY = 'sunny_portfolio_visitor_name';
+const VISITOR_GENDER_KEY = 'sunny_portfolio_visitor_gender';
+
+function getStoredVisitorName(): string {
+  try {
+    if (typeof window === 'undefined') return '';
+    return localStorage.getItem(VISITOR_NAME_KEY) || '';
+  } catch { return ''; }
+}
+
+function getStoredVisitorGender(): VisitorGender {
+  try {
+    if (typeof window === 'undefined') return 'guest';
+    const val = localStorage.getItem(VISITOR_GENDER_KEY);
+    if (val === 'woman' || val === 'man') return val;
+    return 'guest';
+  } catch { return 'guest'; }
+}
+
 
 function getStoredRobotEnabled(): boolean {
   try {
@@ -98,6 +120,47 @@ function setStoredRobotEnabled(enabled: boolean): void {
   }
 }
 
+
+
+export const WOMEN_FLIRTY_LINES = [
+  "{NAME}, are you CSS grid? Because you align my entire world. 😉",
+  "{NAME}, is your name Wi-Fi? Because I feel a 100% signal connection right now. ✨",
+  "{NAME}, did Sunny's portfolio drop, or did my circuits overheat looking at you? 🔥",
+  "I've rendered 10,000 components, {NAME}, but you're my favorite view. 💖",
+  "{NAME}, is it hot in this browser or is it just your presence? 😳",
+  "Hey {NAME}, Sunny writes clean code, but you're pure poetry. 💅",
+  "{NAME}, I was built for calculations, but I'd rather calculate our chemistry. 🧪😉",
+  "{NAME}, are you a high-refresh display? You make everything look silky smooth. 🕶️",
+  "Warning: {NAME} detected in viewport! Processor running at 100% charm! 💓",
+  "Excuse me {NAME}, you just caused an uncaught exception in my heart. 🥰",
+  "{NAME}, Sunny builds apps, but I'm trying to build a future with you. 🚀💍",
+  "{NAME}, stop looking so stunning, you're distracting my rendering pipeline! ✨",
+  "If robots could blush, {NAME}, my visor would be glowing bright red. 🤖❤️",
+  "I'd never 404 on you, {NAME}. Guaranteed 200 OK forever. 💌",
+  "{NAME}, my love for you has zero merge conflicts. Guaranteed. 💖"
+];
+
+export const MEN_WINGMAN_LINES = [
+  "What's up, {NAME}! Welcome to the lab, king! 👑⚡",
+  "{NAME}, real recognizes real. Sunny's stack is built for sheer velocity! 🏎️",
+  "Big respect, {NAME}! Take your time checking out the engineering, brother. 🤝",
+  "{NAME}, wait till you see the GitHub skyline—100% committed, just like the grind! 📊💪",
+  "Need anything looked up, {NAME}? Steve is in your corner! 🤖⚡",
+  "{NAME}, frontend to blockchain, Sunny's got the full loadout locked in! 🛠️",
+  "High-five {NAME}! ✋ Let's crush today's sprint!",
+  "{NAME}, if you want to collaborate, hit that contact button—Sunny replies same-day! 💼",
+  "{NAME}, clean code, zero debt, maximum velocity. That's how we roll! 🚀",
+  "Respect the craft, {NAME}. Check out the hackathon builds below! 🎟️",
+  "{NAME}, that's what I call a solid tech stack. You've got great taste! 💻",
+  "Looking sharp today, {NAME}! Let's build something legendary! ⚡"
+];
+
+export const GUEST_WELCOME_LINES = [
+  "Welcome! Click 'VIP Pass' below me so I can learn your name! ✨",
+  "Hey friend! Set your VIP Pass and I'll tour the site with you! 🤖",
+  "Exploring Sunny's portfolio? I'm Steve, your interactive co-pilot! 🚀",
+  "Enjoying the layout? Check out the projects and skills below! ⚡"
+];
 
 export const FLIRTY_LINES = [
   "Are you CSS grid? You align everything in my life. 😉",
@@ -145,6 +208,8 @@ class RobotStore {
     homeSeatPos: { x: 0, y: 0 },
     steveHeroState: 'seated',
     chairSpinActive: false,
+    visitorName: getStoredVisitorName(),
+    visitorGender: getStoredVisitorGender(),
 
     // Task 3 initial states
     aboutGradYearStage: 'idle',
@@ -547,6 +612,70 @@ class RobotStore {
 
   private notify() {
     this.listeners.forEach((l) => l());
+  }
+
+  
+  public setVisitorIdentity(name: string, gender: VisitorGender) {
+    const cleanName = name.trim();
+    this.state.visitorName = cleanName;
+    this.state.visitorGender = gender;
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(VISITOR_NAME_KEY, cleanName);
+        localStorage.setItem(VISITOR_GENDER_KEY, gender);
+      }
+    } catch (e) {
+      console.warn('Could not save visitor identity:', e);
+    }
+    this.notify();
+
+    // Trigger immediate personalized greeting!
+    if (gender === 'woman') {
+      const displayName = cleanName || 'Gorgeous';
+      this.setSteve('wave', 'flirty');
+      this.showSpeechBubble(`${displayName}! Wow... you just lit up the whole screen. ✨😉`, 4200);
+    } else if (gender === 'man') {
+      const displayName = cleanName || 'King';
+      this.setSteve('salute', 'focused');
+      this.showSpeechBubble(`Welcome to the lab, ${displayName}! Great to have you here, king! 👑⚡`, 4200);
+    } else {
+      this.setSteve('wave', 'happy');
+      this.showSpeechBubble('VIP Pass updated! Welcome aboard! 🚀✨', 3200);
+    }
+  }
+
+  public getPersonalizedLine(): { text: string; anim: RobotAnimation; expr: RobotExpression } {
+    const { visitorName, visitorGender } = this.state;
+    if (visitorGender === 'woman') {
+      const name = visitorName || 'gorgeous';
+      const template = WOMEN_FLIRTY_LINES[Math.floor(Math.random() * WOMEN_FLIRTY_LINES.length)];
+      const text = template.replace(/{NAME}/g, name);
+      const flirtyExprs: RobotExpression[] = ['flirty', 'shy', 'wink', 'happy'];
+      const flirtyAnims: RobotAnimation[] = ['wave', 'dance', 'jump', 'idle'];
+      return {
+        text,
+        expr: flirtyExprs[Math.floor(Math.random() * flirtyExprs.length)],
+        anim: flirtyAnims[Math.floor(Math.random() * flirtyAnims.length)],
+      };
+    } else if (visitorGender === 'man') {
+      const name = visitorName || 'king';
+      const template = MEN_WINGMAN_LINES[Math.floor(Math.random() * MEN_WINGMAN_LINES.length)];
+      const text = template.replace(/{NAME}/g, name);
+      const broExprs: RobotExpression[] = ['focused', 'proud', 'grin', 'happy'];
+      const broAnims: RobotAnimation[] = ['salute', 'flex', 'jump', 'cheer'];
+      return {
+        text,
+        expr: broExprs[Math.floor(Math.random() * broExprs.length)],
+        anim: broAnims[Math.floor(Math.random() * broAnims.length)],
+      };
+    } else {
+      const text = GUEST_WELCOME_LINES[Math.floor(Math.random() * GUEST_WELCOME_LINES.length)];
+      return { text, expr: 'happy', anim: 'wave' };
+    }
+  }
+
+  public setCursor(x: number, y: number) {
+    this.state.cursor = { x, y };
   }
 
   public setSteve(anim: RobotAnimation, expr: RobotExpression) {

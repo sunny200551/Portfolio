@@ -4,6 +4,7 @@ import { ArrowUpRight, Copy, Check, ExternalLink, MapPin } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { CONTACT_INFO } from '../data/contact';
+import { SittingSteve } from '../components/ui/SittingSteve';
 import { robotStore } from '../robot/robotStore';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -129,7 +130,11 @@ export const Contact: React.FC<ContactProps> = () => {
           </p>
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 relative">
+          {/* Seated Steve perched on top of Email Card (matches user request) */}
+          <div className="absolute -top-14 right-16 sm:right-24 md:right-32 z-20 pointer-events-auto">
+            <SittingSteve />
+          </div>
           {/* Big Primary Tile Spanning Full Width */}
           <a
             href={mailtoUrl}

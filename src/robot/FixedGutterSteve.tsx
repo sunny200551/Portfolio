@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Robot } from './Robot';
-import { robotStore } from './robotStore';
+import { robotStore, type VisitorGender } from './robotStore';
 import { steveVoice, type VoiceCategory } from './steveVoice';
 import { CanvasErrorBoundary } from '../components/three/CanvasBoundary';
 import { steveState, type SteveState } from '../lib/steveState';
-import type { RobotAnimation, RobotExpression } from './types';
+import type { RobotAnimation, RobotExpression, RobotAccessories } from './types';
+import { Sparkles, User, Heart, Shield, Check, X, Edit3 } from 'lucide-react';
 
 // Section default greetings (under 20 characters for fast intro)
 const SECTION_GREETINGS: Record<string, { anim: RobotAnimation; expr: RobotExpression; text: string }> = {
@@ -18,6 +19,16 @@ const SECTION_GREETINGS: Record<string, { anim: RobotAnimation; expr: RobotExpre
   journey: { anim: 'idle', expr: 'curious', text: 'My journey! 🗺️' },
   contact: { anim: 'wave', expr: 'happy', text: 'Say hello! ✉️' },
 };
+
+// Funny scroll quotes when scrolling fast (never repeating the same one)
+const SCROLL_QUOTES = [
+  'Warp speed! Hold onto your pixels! 🏎️💨',
+  'Surfing through the codebase! 🏄‍♂️✨',
+  'Rocket boost engaged! 🚀🔥',
+  'Whoosh! Nice scroll velocity! ⚡',
+  'Smooth navigation! Keep rolling! 🛹',
+  'Aerodynamic Steve in action! 🕶️💨',
+];
 
 export const FixedGutterSteve: React.FC = () => {
   const [currentSteveState, setCurrentSteveState] = useState<SteveState>(() => steveState.getState());
@@ -33,10 +44,23 @@ export const FixedGutterSteve: React.FC = () => {
   const [isLandingPuff, setIsLandingPuff] = useState(false);
   const [windowWidth, setWindowWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1440));
 
+  // Visitor identity state
+  const [visitorName, setVisitorName] = useState(() => robotStore.getState().visitorName);
+  const [visitorGender, setVisitorGender] = useState<VisitorGender>(() => robotStore.getState().visitorGender);
+  const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
+  const [inputName, setInputName] = useState(() => robotStore.getState().visitorName);
+  const [inputGender, setInputGender] = useState<VisitorGender>(() => robotStore.getState().visitorGender === 'guest' ? 'woman' : robotStore.getState().visitorGender);
+
+  // Dynamic scrolling states for stylish stunts
+  const [scrollDirection, setScrollDirection] = useState<'idle' | 'down' | 'up'>('idle');
+  const [scrollSpeedFast, setScrollSpeedFast] = useState(false);
+
   const centerStageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastHoverTimeRef = useRef(0);
-  const lastScrollVelocityRef = useRef(0);
+  const lastScrollQuoteTimeRef = useRef(0);
   const visitedSectionsRef = useRef<Set<string>>(new Set());
+  const usedSpeechLinesRef = useRef<Set<string>>(new Set());
 
   const prefersReducedMotion = useMemo(() => {
     return typeof window !== 'undefined'
@@ -58,7 +82,7 @@ export const FixedGutterSteve: React.FC = () => {
     return unsub;
   }, []);
 
-  // 2. Subscribe to robotStore updates (commands, expressions, speech bubbles, animations)
+  // 2. Subscribe to robotStore updates
   useEffect(() => {
     const unsub = robotStore.subscribe(() => {
       const state = robotStore.getState();
@@ -67,11 +91,13 @@ export const FixedGutterSteve: React.FC = () => {
       setStoreAnim(state.steveAnim);
       setStoreExpr(state.steveExpr);
       setStoreBubble(state.speechBubble);
+      setVisitorName(state.visitorName);
+      setVisitorGender(state.visitorGender);
 
       if (state.activeSection !== activeSection) {
         setActiveSection(state.activeSection);
 
-        // First-time visit greeting per section
+        // Section greeting
         if (state.activeSection !== 'home' && !visitedSectionsRef.current.has(state.activeSection)) {
           visitedSectionsRef.current.add(state.activeSection);
           const cfg = SECTION_GREETINGS[state.activeSection];
@@ -111,48 +137,73 @@ export const FixedGutterSteve: React.FC = () => {
     };
   }, [triggerCenterMovement]);
 
-  // 4. Cursor-Aware Interactive Commentary (Throttled flirty element awareness)
+  // 4. Cursor-Aware Interactive Commentary with Personalized Gender Intelligence
   useEffect(() => {
     if (prefersReducedMotion || !robotEnabled || isQuiet) return;
 
     const handleMouseOver = (e: MouseEvent) => {
       const now = Date.now();
-      // At least 7 seconds between automatic cursor commentary
-      if (now - lastHoverTimeRef.current < 7000) return;
+      // Minimum 4 seconds between contextual comments
+      if (now - lastHoverTimeRef.current < 4000) return;
 
       const target = e.target as HTMLElement | null;
       if (!target) return;
 
       // Identify element by closest semantic markers
-      const el = target.closest('a, button, [data-robot-react], img, input, textarea, .shadow-\\[6px_6px_0px_\\#0A0A0A\\]');
+      const el = target.closest('a, button, [data-robot-react], img, input, textarea, .shadow-\\[6px_6px_0px_\\#0A0A0A\\], [data-robot-anchor]');
       if (!el) return;
 
       const text = (el.textContent || '').toLowerCase();
       const href = (el.getAttribute('href') || '').toLowerCase();
       const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
 
+      const { visitorName: name, visitorGender: gender } = robotStore.getState();
+      const isWoman = gender === 'woman';
+      const isMan = gender === 'man';
+      const effectiveName = name || (isWoman ? 'gorgeous' : isMan ? 'king' : 'friend');
+
       let reaction: { anim: RobotAnimation; expr: RobotExpression; text: string } | null = null;
 
       if (href.includes('instagram') || ariaLabel.includes('instagram')) {
-        reaction = { anim: 'wave', expr: 'flirty', text: 'Insta DMs are Sunny’s fastest reply channel! 💬😉' };
+        reaction = isWoman
+          ? { anim: 'wave', expr: 'flirty', text: `${effectiveName}, Sunny's Insta DMs are open... but my DMs are open too! 😉💬` }
+          : { anim: 'salute', expr: 'happy', text: `Insta is Sunny's fastest channel, ${effectiveName}! Best place to connect! ⚡📱` };
       } else if (href.includes('linkedin') || ariaLabel.includes('linkedin')) {
-        reaction = { anim: 'salute', expr: 'happy', text: 'Active on LinkedIn daily! Drop him a message! 💼✨' };
+        reaction = isWoman
+          ? { anim: 'salute', expr: 'flirty', text: `Connecting on LinkedIn, ${effectiveName}? Professional and charming! 💼✨` }
+          : { anim: 'flex', expr: 'proud', text: `LinkedIn checked daily, ${effectiveName}! Great spot to network! 🤝💼` };
       } else if (text.includes('resume') || href.includes('resume')) {
-        reaction = { anim: 'salute', expr: 'flirty', text: 'Checking his specs? Wait till you see mine! 📄😏' };
+        reaction = isWoman
+          ? { anim: 'salute', expr: 'flirty', text: `Checking Sunny's specs, ${effectiveName}? Wait till you see mine! 📄😏` }
+          : { anim: 'salute', expr: 'focused', text: `Solid resume in hand, ${effectiveName}! Full-stack verified! 📄⚡` };
       } else if (text.includes('get in touch') || text.includes('contact') || href.includes('mailto:')) {
-        reaction = { anim: 'cheer', expr: 'excited', text: 'Slide into his inbox! He replies super fast! 💌🔥' };
+        reaction = isWoman
+          ? { anim: 'cheer', expr: 'flirty', text: `Slide into the inbox, ${effectiveName}! Or we can just keep talking right here. 💖` }
+          : { anim: 'cheer', expr: 'excited', text: `Hit that contact line, ${effectiveName}! Sunny replies fast! ✉️🚀` };
       } else if (el.closest('#skills') || text.includes('react') || text.includes('typescript')) {
-        reaction = { anim: 'flex', expr: 'grin', text: 'React & TypeScript... high performance! My type. ⚡💅' };
+        reaction = isWoman
+          ? { anim: 'dance', expr: 'flirty', text: `React & TypeScript... high performance! Just like you, ${effectiveName}. ⚡💅` }
+          : { anim: 'flex', expr: 'proud', text: `Battle-tested stack, ${effectiveName}! Clean types and high speed! ⚡🛠️` };
       } else if (el.closest('#github') || href.includes('github')) {
-        reaction = { anim: 'flex', expr: 'proud', text: 'Look at that green skyline! That’s commitment. 📊💚' };
+        reaction = isWoman
+          ? { anim: 'jump', expr: 'flirty', text: `All those green commits, ${effectiveName}... commitment is so attractive! 📊💚` }
+          : { anim: 'flex', expr: 'proud', text: `Look at that daily commit streak, ${effectiveName}! Pure discipline! 📊💪` };
       } else if (el.closest('#work')) {
-        reaction = { anim: 'dance', expr: 'excited', text: 'These projects are hot, but your taste is hotter! 🚀🔥' };
+        reaction = isWoman
+          ? { anim: 'dance', expr: 'excited', text: `These projects are hot, ${effectiveName}, but your taste is hotter! 🔥✨` }
+          : { anim: 'salute', expr: 'focused', text: `Handcrafted architecture, ${effectiveName}! Check out the live links! 🚀💻` };
+      } else if (el.closest('#events')) {
+        reaction = isWoman
+          ? { anim: 'jump', expr: 'flirty', text: `Hackathon trophies! I love a winner, don't you, ${effectiveName}? 🏆😉` }
+          : { anim: 'cheer', expr: 'excited', text: `Hackathons and competitive sprints, ${effectiveName}! Built under pressure! 🏆⚡` };
       }
 
-      if (reaction) {
+      if (reaction && !usedSpeechLinesRef.current.has(reaction.text)) {
         lastHoverTimeRef.current = now;
+        usedSpeechLinesRef.current.add(reaction.text);
+        if (usedSpeechLinesRef.current.size > 20) usedSpeechLinesRef.current.clear();
         robotStore.setSteve(reaction.anim, reaction.expr);
-        robotStore.showSpeechBubble(reaction.text, 3400);
+        robotStore.showSpeechBubble(reaction.text, 3600);
       }
     };
 
@@ -160,32 +211,74 @@ export const FixedGutterSteve: React.FC = () => {
     return () => window.removeEventListener('mouseover', handleMouseOver);
   }, [prefersReducedMotion, robotEnabled, isQuiet]);
 
-  // 5. Scroll velocity monitoring for funny speed reaction
+  // 5. Intelligent Idle Reading Commentary (Cycles varied lines while user is reading)
+  useEffect(() => {
+    if (prefersReducedMotion || !robotEnabled || isQuiet) return;
+
+    const interval = setInterval(() => {
+      // If a bubble is already visible, don't interrupt
+      if (robotStore.getState().speechBubble) return;
+
+      const lineData = robotStore.getPersonalizedLine();
+      if (!usedSpeechLinesRef.current.has(lineData.text)) {
+        usedSpeechLinesRef.current.add(lineData.text);
+        if (usedSpeechLinesRef.current.size > 25) usedSpeechLinesRef.current.clear();
+        robotStore.setSteve(lineData.anim, lineData.expr);
+        robotStore.showSpeechBubble(lineData.text, 3800);
+      }
+    }, 14000);
+
+    return () => clearInterval(interval);
+  }, [prefersReducedMotion, robotEnabled, isQuiet]);
+
+  // 6. Dynamic Scroll Stunts: Surfing down, rocket flight up, tilt & sunglasses
   useEffect(() => {
     let lastY = window.scrollY;
     let lastTime = performance.now();
 
-    const checkVelocity = () => {
+    const handleScroll = () => {
+      const currentY = window.scrollY;
       const now = performance.now();
       const dt = Math.max(1, now - lastTime);
-      const dy = Math.abs(window.scrollY - lastY);
-      const velocity = dy / dt;
+      const dy = currentY - lastY;
+      const velocity = Math.abs(dy) / dt;
 
-      if (velocity > 2.2 && now - lastScrollVelocityRef.current > 12000 && !isQuiet) {
-        lastScrollVelocityRef.current = now;
-        robotStore.setSteve('spin', 'dizzy');
-        robotStore.showSpeechBubble('Whoa, speed demon! Hold on tight! 🏎️💨', 2800);
+      if (dy > 2) {
+        setScrollDirection('down');
+      } else if (dy < -2) {
+        setScrollDirection('up');
       }
 
-      lastY = window.scrollY;
+      const isFast = velocity > 1.8;
+      setScrollSpeedFast(isFast);
+
+      // Trigger occasional funny scroll quote if moving super fast
+      if (isFast && now - lastScrollQuoteTimeRef.current > 10000 && !isQuiet) {
+        lastScrollQuoteTimeRef.current = now;
+        const quote = SCROLL_QUOTES[Math.floor(Math.random() * SCROLL_QUOTES.length)];
+        robotStore.setSteve(dy > 0 ? 'flex' : 'jump', 'grin');
+        robotStore.showSpeechBubble(quote, 2200);
+      }
+
+      lastY = currentY;
       lastTime = now;
+
+      // Debounce scroll stop
+      if (scrollStopTimerRef.current) clearTimeout(scrollStopTimerRef.current);
+      scrollStopTimerRef.current = setTimeout(() => {
+        setScrollDirection('idle');
+        setScrollSpeedFast(false);
+      }, 350);
     };
 
-    window.addEventListener('scroll', checkVelocity, { passive: true });
-    return () => window.removeEventListener('scroll', checkVelocity);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollStopTimerRef.current) clearTimeout(scrollStopTimerRef.current);
+    };
   }, [isQuiet]);
 
-  // 6. Window resize and tab visibility
+  // 7. Window resize and tab visibility
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     const handleVisibility = () => setIsTabVisible(!document.hidden);
@@ -198,6 +291,14 @@ export const FixedGutterSteve: React.FC = () => {
       document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
+
+  // Save Identity Modal
+  const handleSaveIdentity = (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    robotStore.setVisitorIdentity(inputName, inputGender);
+    setIsIdentityModalOpen(false);
+  };
 
   // Steve click handler
   const handleMascotClick = (e: React.MouseEvent) => {
@@ -213,18 +314,27 @@ export const FixedGutterSteve: React.FC = () => {
 
   if (!robotEnabled) return null;
 
+  // Dynamic Accessories during scroll stunts
+  const activeAccessories: RobotAccessories = {
+    sunglasses: scrollDirection !== 'idle' || isCenterStage,
+    skateboard: scrollDirection === 'down' && scrollSpeedFast,
+    jetpackFlames: scrollDirection === 'up' && scrollSpeedFast,
+  };
+
   // Compute live animation and expression
   const sectionConfig = SECTION_GREETINGS[activeSection] || SECTION_GREETINGS.about;
-  const anim: RobotAnimation = storeAnim || (currentSteveState === 'LAUNCHING' ? 'wave' : sectionConfig.anim);
-  const expr: RobotExpression = storeExpr || (currentSteveState === 'LAUNCHING' ? 'excited' : sectionConfig.expr);
+  let anim: RobotAnimation = storeAnim || (currentSteveState === 'LAUNCHING' ? 'wave' : sectionConfig.anim);
+  let expr: RobotExpression = storeExpr || (currentSteveState === 'LAUNCHING' ? 'excited' : sectionConfig.expr);
+
+  if (scrollDirection === 'down') {
+    anim = scrollSpeedFast ? 'flex' : 'idle';
+    expr = 'grin';
+  } else if (scrollDirection === 'up') {
+    anim = 'jump';
+    expr = 'excited';
+  }
 
   // Compute X Position:
-  // - Default left edge dock: 16px (inside 168px lane)
-  // - Skills: steps out to 44px
-  // - Stats: 56px
-  // - Journey: stylish center-left strut (clamp(24px, 20vw, 300px))
-  // - Contact: 50px
-  // - Center Stage moment: middle of viewport (windowWidth / 2 - 80px)
   let posX = 16;
   if (isCenterStage) {
     posX = Math.round(windowWidth / 2 - 80);
@@ -238,6 +348,14 @@ export const FixedGutterSteve: React.FC = () => {
     posX = 50;
   }
 
+  // Dynamic stunt tilt
+  let stuntTransform = 'translateY(-50%)';
+  if (scrollDirection === 'down') {
+    stuntTransform = 'translateY(-50%) rotate(-12deg) scale(1.05)';
+  } else if (scrollDirection === 'up') {
+    stuntTransform = 'translateY(-50%) rotate(10deg) scale(1.05)';
+  }
+
   // Canvas dimensions
   const canvasW = 160;
   const canvasH = 220;
@@ -246,20 +364,18 @@ export const FixedGutterSteve: React.FC = () => {
     <div
       id="robot-steve-dock"
       data-testid="dock-steve"
-      onClick={handleMascotClick}
-      className="fixed z-40 select-none pointer-events-auto cursor-pointer"
+      className="fixed z-40 select-none pointer-events-auto"
       style={{
         left: `${posX}px`,
         top: '50%',
-        transform: 'translateY(-50%)',
+        transform: stuntTransform,
         width: `${canvasW}px`,
-        height: `${canvasH}px`,
+        height: `${canvasH + 45}px`,
         opacity: currentSteveState === 'RETURNING' ? 0.3 : 1,
         transition: isCenterStage
-          ? 'left 0.75s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s ease-out, transform 0.4s ease-out'
-          : 'left 0.6s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s ease-out, transform 0.4s ease-out',
+          ? 'left 0.75s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s ease-out, transform 0.25s ease-out'
+          : 'left 0.6s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s ease-out, transform 0.25s ease-out',
       }}
-      title="Click me to chat with Steve! ✨"
       aria-label="Steve mascot dock"
     >
       {/* Speech bubble: positioned strictly ABOVE Steve's head with downward tail */}
@@ -270,16 +386,16 @@ export const FixedGutterSteve: React.FC = () => {
           style={{
             left: isCenterStage ? '50%' : '0px',
             transform: isCenterStage ? 'translateX(-50%)' : 'none',
-            bottom: 'calc(100% - 10px)',
-            width: '170px',
-            maxWidth: '170px',
+            bottom: 'calc(100% - 15px)',
+            width: '185px',
+            maxWidth: '185px',
             wordBreak: 'break-word',
           }}
         >
           {/* Header */}
           <div className="flex items-center justify-center gap-1.5 text-[9px] font-black uppercase text-[#FF5A1F] border-b border-[#0A0A0A]/20 pb-0.5 mb-1 tracking-wider">
             <span>STEVE</span>
-            <span>⚡😉</span>
+            <span>{visitorGender === 'woman' ? '💖😉' : '⚡👑'}</span>
           </div>
 
           <span>{storeBubble}</span>
@@ -314,6 +430,24 @@ export const FixedGutterSteve: React.FC = () => {
         </div>
       )}
 
+      {/* Wind Lines / Speed Streak when surfing */}
+      {scrollDirection === 'down' && (
+        <div className="absolute top-1/2 -left-6 flex flex-col gap-1.5 pointer-events-none">
+          <div className="w-8 h-1 bg-[#FF5A1F] border border-[#0A0A0A] -rotate-12 animate-pulse" />
+          <div className="w-6 h-1 bg-[#0A0A0A] -rotate-12" />
+          <div className="w-10 h-1 bg-[#0047AB] border border-[#0A0A0A] -rotate-12 animate-pulse" />
+        </div>
+      )}
+
+      {/* Upward Rocket Flames when ascending */}
+      {scrollDirection === 'up' && (
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1 pointer-events-none">
+          <div className="w-3 h-5 bg-[#FF5A1F] border border-[#0A0A0A] animate-ping" />
+          <div className="w-4 h-6 bg-[#FFD700] border border-[#0A0A0A] animate-bounce" />
+          <div className="w-3 h-5 bg-[#0047AB] border border-[#0A0A0A]" />
+        </div>
+      )}
+
       {/* Landing Smoke/Flame Puff Effect */}
       {isLandingPuff && (
         <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 pointer-events-none">
@@ -324,7 +458,12 @@ export const FixedGutterSteve: React.FC = () => {
       )}
 
       {/* R3F Canvas Container */}
-      <div className="w-full h-full relative border-none outline-none bg-transparent pointer-events-none">
+      <div 
+        onClick={handleMascotClick}
+        className="w-full relative border-none outline-none bg-transparent cursor-pointer"
+        style={{ height: `${canvasH}px` }}
+        title="Click Steve to chat or trigger stunts! ✨"
+      >
         <CanvasErrorBoundary fallback={null}>
           <Suspense fallback={null}>
             <Canvas
@@ -357,13 +496,122 @@ export const FixedGutterSteve: React.FC = () => {
                   expression={expr}
                   scale={isSquashing ? 0.92 : 1.0}
                   facing={1}
-                  accessories={{}}
+                  accessories={activeAccessories}
                   headTrackCursor={!prefersReducedMotion}
                 />
               </group>
             </Canvas>
           </Suspense>
         </CanvasErrorBoundary>
+      </div>
+
+      {/* ================================================================= */}
+      {/* VISITOR IDENTITY VIP PASS BADGE (Under Steve's feet)              */}
+      {/* ================================================================= */}
+      <div className="mt-1 flex flex-col items-center">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsIdentityModalOpen(prev => !prev);
+          }}
+          className="group flex items-center gap-1.5 px-2.5 py-1 bg-white border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] hover:bg-[#FF5A1F] hover:shadow-[1px_1px_0px_#0A0A0A] transition-all cursor-pointer font-mono text-[10px] font-bold text-[#0A0A0A]"
+          title="Tell Steve your name and preference!"
+        >
+          {visitorGender === 'woman' ? (
+            <Heart size={11} className="text-[#FF5A1F] group-hover:text-black fill-current" />
+          ) : visitorGender === 'man' ? (
+            <Shield size={11} className="text-[#0047AB] group-hover:text-black fill-current" />
+          ) : (
+            <User size={11} className="text-[#0A0A0A]" />
+          )}
+          <span>
+            {visitorName
+              ? `${visitorName} (${visitorGender === 'woman' ? 'Flirt' : 'Bro'})`
+              : 'VIP PASS: Who are you?'}
+          </span>
+          <Edit3 size={10} className="opacity-60" />
+        </button>
+
+        {/* Expandable Neo-Brutalist Identity Form Modal / Popover */}
+        {isIdentityModalOpen && (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="absolute top-[230px] left-0 w-[240px] bg-white border-2 border-[#0A0A0A] shadow-[5px_5px_0px_#0A0A0A] p-3.5 z-50 font-mono text-xs text-[#0A0A0A] animate-in fade-in zoom-in-95 duration-150"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b-2 border-[#0A0A0A] pb-1.5 mb-2.5">
+              <div className="flex items-center gap-1.5 font-black uppercase text-[10px] tracking-wider text-[#FF5A1F]">
+                <Sparkles size={12} />
+                <span>STEVE&apos;S VIP REGISTRY</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsIdentityModalOpen(false)}
+                className="p-0.5 hover:bg-black hover:text-white transition-colors"
+              >
+                <X size={13} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveIdentity} className="flex flex-col gap-2.5">
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-wider mb-1">
+                  Your Name:
+                </label>
+                <input
+                  type="text"
+                  value={inputName}
+                  onChange={(e) => setInputName(e.target.value)}
+                  placeholder="e.g. Sarah / Alex"
+                  className="w-full px-2 py-1.5 border-2 border-[#0A0A0A] bg-[#EEF2FA] text-xs font-bold text-[#0A0A0A] outline-none focus:bg-white focus:border-[#FF5A1F]"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-wider mb-1">
+                  Steve&apos;s Mode:
+                </label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setInputGender('woman')}
+                    className={`p-1.5 border-2 border-[#0A0A0A] font-bold text-[10px] uppercase flex flex-col items-center gap-0.5 transition-all ${
+                      inputGender === 'woman'
+                        ? 'bg-[#FF5A1F] text-black shadow-[2px_2px_0px_#0A0A0A]'
+                        : 'bg-white hover:bg-[#EEF2FA]'
+                    }`}
+                  >
+                    <span>👑 WOMAN</span>
+                    <span className="text-[8px] font-normal opacity-85">(Flirt Mode 😉)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setInputGender('man')}
+                    className={`p-1.5 border-2 border-[#0A0A0A] font-bold text-[10px] uppercase flex flex-col items-center gap-0.5 transition-all ${
+                      inputGender === 'man'
+                        ? 'bg-[#0047AB] text-white shadow-[2px_2px_0px_#0A0A0A]'
+                        : 'bg-white hover:bg-[#EEF2FA]'
+                    }`}
+                  >
+                    <span>⚡ MAN</span>
+                    <span className="text-[8px] font-normal opacity-85">(Wingman 🤝)</span>
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="mt-1 w-full py-1.5 bg-[#0A0A0A] text-white hover:bg-[#FF5A1F] hover:text-black font-black uppercase text-[10px] tracking-wider transition-colors border-2 border-[#0A0A0A] flex items-center justify-center gap-1.5 cursor-pointer shadow-[2px_2px_0px_#FF5A1F]"
+              >
+                <Check size={12} />
+                <span>SAVE &amp; MEET STEVE</span>
+              </button>
+            </form>
+          </div>
+        )}
       </div>
     </div>
   );

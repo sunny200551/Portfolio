@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { robotStore } from '../../robot/robotStore';
 
 export const CustomCursor: React.FC = () => {
   const [pos, setPos] = useState({ x: -100, y: -100 });
@@ -41,6 +42,9 @@ export const CustomCursor: React.FC = () => {
 
     const onMouseMove = (e: MouseEvent) => {
       setPos({ x: e.clientX, y: e.clientY });
+      const normX = (e.clientX / window.innerWidth - 0.5) * 2;
+      const normY = (e.clientY / window.innerHeight - 0.5) * 2;
+      robotStore.setCursor(normX, normY);
 
       const target = e.target as HTMLElement | null;
       if (!target) {

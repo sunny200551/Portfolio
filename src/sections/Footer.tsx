@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, ArrowUp, FileText, Check, Copy, ExternalLink, Sparkles } from 'lucide-react';
 import { CONTACT_INFO } from '../data/contact';
+import { SittingSteve } from '../components/ui/SittingSteve';
 import type { GitHubProfile } from '../hooks/useGitHubData';
 import { robotStore } from '../robot/robotStore';
 
@@ -106,18 +107,8 @@ export const Footer: React.FC<FooterProps> = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-5 mb-6">
             <div className="flex items-center gap-3">
               {/* Mini Seated Steve SVG Avatar */}
-              <div className="w-12 h-12 bg-[#FF5A1F] border-2 border-white shrink-0 flex items-center justify-center shadow-[2px_2px_0px_#0047AB]">
-                <svg viewBox="0 0 40 40" className="w-9 h-9">
-                  {/* Steve Head */}
-                  <rect x="6" y="8" width="28" height="22" rx="3" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="2" />
-                  <rect x="10" y="12" width="20" height="14" rx="2" fill="#0047AB" stroke="#0A0A0A" strokeWidth="1.5" />
-                  {/* Smiling Eyes */}
-                  <path d="M14 19 L16 16 L18 19" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                  <path d="M22 19 L24 16 L26 19" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                  {/* Antenna */}
-                  <line x1="20" y1="8" x2="20" y2="3" stroke="#0A1A3F" strokeWidth="2" strokeLinecap="round" />
-                  <circle cx="20" cy="2" r="2" fill="#FFD700" stroke="#0A0A0A" strokeWidth="1" />
-                </svg>
+              <div className="shrink-0 flex items-center justify-center pointer-events-auto">
+                <SittingSteve className="scale-90" />
               </div>
 
               <div>
