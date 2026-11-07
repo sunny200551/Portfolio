@@ -156,7 +156,7 @@ export const ContentSection: React.FC = () => {
               CONTENT CREATOR & EDITOR
             </h2>
             <p className="font-mono text-xs sm:text-sm text-white/80 max-w-2xl leading-relaxed mt-3">
-              Creating, directing, and editing tech-focused video content, campus vlogs, and engineering breakdowns since 2025 across YouTube and Instagram.
+              Creating and editing videos and reels across YouTube and Instagram since 2025.
             </p>
           </div>
 
@@ -201,7 +201,7 @@ export const ContentSection: React.FC = () => {
               {stats.totalViews ? formatViews(stats.totalViews) : `${items.reduce((acc, i) => acc + (i.views || 0), 0)}+`}
             </span>
             <span className="font-mono text-[11px] font-bold text-white/80 uppercase mt-1">
-              Verified Views
+              Total Views
             </span>
           </div>
 
@@ -219,7 +219,7 @@ export const ContentSection: React.FC = () => {
               2025
             </span>
             <span className="font-mono text-[11px] font-bold text-white/80 uppercase mt-1">
-              Active Creator Since
+              Creator Since
             </span>
           </div>
         </div>
@@ -322,7 +322,7 @@ export const ContentSection: React.FC = () => {
           {/* Timeline Panel */}
           <div className="lg:col-span-5 flex flex-col space-y-4">
             <div className="flex items-center justify-between font-mono text-xs font-bold text-[#FF5C00] uppercase">
-              <span>● MULTI-TRACK TIMELINE</span>
+              <span>● VIDEO TIMELINE</span>
               <span>SCRUB OR CLICK CLIP</span>
             </div>
 
@@ -452,7 +452,7 @@ export const ContentSection: React.FC = () => {
                 MEDIA ARCHIVE & REELS
               </h3>
               <span className="font-mono text-xs text-white/70">
-                Explore all verified productions and creator edits
+                Explore published videos and creator edits
               </span>
             </div>
 

@@ -49,6 +49,15 @@ export const RobotModel: React.FC<RobotModelProps> = ({
   }, [face, config.visorBgColor, config.pixelColor, expression]);
 
   useEffect(() => {
+    const handleTalking = (e: Event) => {
+      const custom = e as CustomEvent<{ talking: boolean }>;
+      face.setTalking(!!custom.detail?.talking);
+    };
+    window.addEventListener('steve:talking', handleTalking);
+    return () => window.removeEventListener('steve:talking', handleTalking);
+  }, [face]);
+
+  useEffect(() => {
     return () => face.dispose();
   }, [face]);
 

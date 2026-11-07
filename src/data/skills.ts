@@ -290,7 +290,7 @@ export const skillsData: PeriodicSkill[] = [
     symbol: 'Ed',
     category: 'Content',
     tier: 'Comfortable',
-    note: 'Timeline pacing, video cuts, color grading & multi-track storytelling.',
+    note: 'Timeline pacing, video cuts, sequencing & storytelling.',
   },
   {
     id: 'content-production',

@@ -7,6 +7,9 @@ export class RobotFaceTexture {
   public texture: THREE.CanvasTexture;
   private currentExpression: RobotExpression = 'happy';
   private isBlinking = false;
+  private isTalking = false;
+  private talkTimer: any = null;
+  private talkFrame = 0;
   private bgColor = '#0047AB';
   private pixelColor = '#FFFFFF';
 
@@ -43,6 +46,26 @@ export class RobotFaceTexture {
     if (this.currentExpression !== expression) {
       this.currentExpression = expression;
       this.render();
+    }
+  }
+
+    public setTalking(talking: boolean) {
+    if (this.isTalking !== talking) {
+      this.isTalking = talking;
+      if (talking) {
+        if (this.talkTimer) clearInterval(this.talkTimer);
+        this.talkTimer = setInterval(() => {
+          this.talkFrame = (this.talkFrame + 1) % 4;
+          this.render();
+        }, 120);
+      } else {
+        if (this.talkTimer) {
+          clearInterval(this.talkTimer);
+          this.talkTimer = null;
+        }
+        this.talkFrame = 0;
+        this.render();
+      }
     }
   }
 
@@ -108,7 +131,24 @@ export class RobotFaceTexture {
       ctx.arc(128, 110, 18, 0.15 * Math.PI, 0.85 * Math.PI);
       ctx.stroke();
 
-      this.texture.needsUpdate = true;
+      
+    if (this.isTalking) {
+      ctx.fillStyle = this.bgColor;
+      ctx.fillRect(104, 95, 48, 32);
+      ctx.strokeStyle = this.pixelColor;
+      ctx.fillStyle = this.pixelColor;
+      ctx.lineWidth = 6;
+      if (this.talkFrame % 2 === 0) {
+        ctx.beginPath();
+        ctx.ellipse(128, 112, 14, 10, 0, 0, 2 * Math.PI);
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.arc(128, 110, 16, 0.1 * Math.PI, 0.9 * Math.PI);
+        ctx.stroke();
+      }
+    }
+    this.texture.needsUpdate = true;
       return;
     }
 
@@ -842,6 +882,7 @@ export class RobotFaceTexture {
   }
 
   public dispose() {
+    if (this.talkTimer) { clearInterval(this.talkTimer); this.talkTimer = null; }
     this.texture.dispose();
   }
 }

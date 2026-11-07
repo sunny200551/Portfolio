@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { Robot } from './Robot';
 import { robotStore, type VisitorGender } from './robotStore';
 import { steveVoice, type VoiceCategory } from './steveVoice';
+import { SteveSpeechBubble } from './SteveSpeechBubble';
 import { CanvasErrorBoundary } from '../components/three/CanvasBoundary';
 import { steveState, type SteveState } from '../lib/steveState';
 import type { RobotAnimation, RobotExpression, RobotAccessories } from './types';
@@ -415,56 +416,17 @@ export const FixedGutterSteve: React.FC = () => {
       }}
       aria-label="Steve mascot dock"
     >
-      {/* Speech bubble: positioned strictly ABOVE Steve's head with downward tail */}
+      {/* Speech bubble: full sentences, word reveal, reading dwell timer & pause controls */}
       {storeBubble && !isQuiet && (
-        <div
-          data-testid="steve-speech-bubble"
-          className="absolute z-50 pointer-events-none bg-white border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] px-3.5 py-2 text-center font-mono text-[11px] font-bold text-[#0A0A0A] leading-tight"
-          style={{
-            left: isCenterStage ? '50%' : '14px',
-            transform: isCenterStage ? 'translateX(-50%)' : 'none',
-            bottom: 'calc(100% - 15px)',
-            width: '185px',
-            maxWidth: '185px',
-            wordBreak: 'break-word',
-          }}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-center gap-1.5 text-[9px] font-black uppercase text-[#FF5A1F] border-b border-[#0A0A0A]/20 pb-0.5 mb-1 tracking-wider">
-            <span>STEVE</span>
-            <span>{visitorGender === 'woman' ? '❤️' : '⚡'}</span>
-          </div>
-
-          <span>{storeBubble}</span>
-
-          {/* Downward tail pointing down toward Steve's head */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '100%',
-              left: isCenterStage ? '50%' : '66px',
-              transform: 'translateX(-50%)',
-              width: 0,
-              height: 0,
-              borderLeft: '5px solid transparent',
-              borderRight: '5px solid transparent',
-              borderTop: '5px solid #0A0A0A',
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              top: 'calc(100% - 2px)',
-              left: isCenterStage ? '50%' : '66px',
-              transform: 'translateX(-50%)',
-              width: 0,
-              height: 0,
-              borderLeft: '3.5px solid transparent',
-              borderRight: '3.5px solid transparent',
-              borderTop: '3.5px solid #FFFFFF',
-            }}
-          />
-        </div>
+        <SteveSpeechBubble
+          text={storeBubble}
+          onDismiss={() => robotStore.clearSpeechBubble()}
+          isCenterStage={isCenterStage}
+          windowWidth={windowWidth}
+          prefersReducedMotion={prefersReducedMotion}
+          visitorGender={visitorGender}
+          steveX={posX}
+        />
       )}
 
       {/* Wind Lines / Speed Streak when surfing */}

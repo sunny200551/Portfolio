@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useRef } from 'react';
-import { Terminal, Globe, Code, Shield, Film, Camera } from 'lucide-react';
+import { Terminal, Globe, Code, Shield, Film, GraduationCap } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { robotStore } from '../robot/robotStore';
@@ -56,14 +56,26 @@ const milestonesData: MilestoneItem[] = [
   {
     id: 'm-2025-content',
     year: '2025',
-    title: 'Started Creating & Editing Content',
+    title: 'STARTED CREATING AND EDITING CONTENT',
     type: 'content',
     icon: Film,
-    description: 'Launched YouTube channel (@sunny-pasumarthi-21) and Instagram video editing journey. Directing, filming, and editing tech vlogs and shorts.',
-    skills: ['Video Editing', 'Content Creation', 'YouTube Shorts', 'Cinematography'],
+    description: '2025: STARTED CREATING AND EDITING CONTENT. Began producing video content and video editing across YouTube and Instagram.',
+    skills: ['Video Editing', 'Content Creation', 'YouTube', 'Instagram'],
     status: 'CREATOR LAUNCH',
     actionUrl: SOCIAL_LINKS.youtube.url,
     actionLabel: 'WATCH ON YOUTUBE ↗',
+  },
+  {
+    id: 'm-2025-present-content',
+    year: '2025 – PRESENT',
+    title: 'CONTENT CREATOR & EDITOR',
+    type: 'content',
+    icon: Film,
+    description: '2025 – PRESENT: CONTENT CREATOR & EDITOR. Creating and editing videos and reels for YouTube and Instagram. 7 videos on YouTube (as of April 2026).',
+    skills: ['YouTube', 'Instagram', 'Video Editing'],
+    status: 'CREATOR',
+    actionUrl: SOCIAL_LINKS.instagram.url,
+    actionLabel: 'SEE REELS ↗',
   },
   {
     id: 'm-2026-tech',
@@ -100,16 +112,16 @@ const milestonesData: MilestoneItem[] = [
     actionLabel: 'SEE INTERNSHIP ↗',
   },
   {
-    id: 'm-present-content',
+    id: 'm-present-academics',
     year: 'PRESENT',
-    title: 'Active Multi-Track Production',
-    type: 'content',
-    icon: Camera,
-    description: 'Continuous creator releases across YouTube and Instagram: publishing project breakdowns, campus engineering vlogs, and technical reels.',
-    skills: ['Active Creator', '7 Verified Videos', 'Reels Production'],
-    status: 'ONGOING CREATOR',
-    actionUrl: SOCIAL_LINKS.instagram.url,
-    actionLabel: 'SEE REELS ↗',
+    title: 'ACTIVELY CONTINUING',
+    type: 'tech',
+    icon: GraduationCap,
+    description: 'Actively continuing my academics, learning new skills in Web3 and blockchain, and continuing Python + DSA.',
+    skills: ['B.Tech CSE (2023 – 2027)', 'Web3 & Blockchain', 'Python + DSA'],
+    status: 'ACTIVE',
+    actionUrl: '#skills',
+    actionLabel: 'SEE SKILLS ↓',
   },
 ];
 
@@ -303,7 +315,11 @@ export const Journey: React.FC = () => {
                       isContent ? 'bg-[#FF5C00]' : 'bg-[#0047AB]'
                     }`}
                   >
-                    <div className="w-2 h-2 bg-white" />
+                    {item.year === 'PRESENT' ? (
+                      <span className="w-3 h-3 rounded-full bg-[#FF5C00] animate-ping" />
+                    ) : (
+                      <div className="w-2 h-2 bg-white" />
+                    )}
                   </div>
 
                   {/* Alternating Card Wrapper */}

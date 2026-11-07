@@ -238,6 +238,9 @@ class RobotStore {
 
   private listeners: Set<Listener> = new Set();
   private cursorInitialized = false;
+  private bubbleHistory: number[] = [];
+  private lastBubbleDismissTime: number = 0;
+  private urgentQueue: Array<{ text: string; durationMs: number }> = [];
   private scrollResetTimer: ReturnType<typeof setTimeout> | null = null;
   private lastScrollY = 0;
   private lastScrollTime = 0;
@@ -351,7 +354,7 @@ class RobotStore {
     this.setSteve('jump', 'excited');
     const line = FUNNY_LINES[this.speechLineIndex % FUNNY_LINES.length];
     this.speechLineIndex++;
-    this.showSpeechBubble(line, 3200);
+    this.showSpeechBubble(line, 3500, true);
   }
 
   public handleBoltClick() {
@@ -421,21 +424,73 @@ class RobotStore {
     }
   }
 
-  public showSpeechBubble(text: string, durationMs = 3000) {
+  public showSpeechBubble(text: string, durationMs = 3000, isUrgent = false) {
     if (this.state.isQuiet) return;
-    this.state.speechBubble = text.slice(0, 60);
+
+    // Do not show non-urgent bubbles while user is typing in form fields
+    if (!isUrgent && typeof document !== 'undefined') {
+      const active = document.activeElement;
+      if (active) {
+        const tag = active.tagName.toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || (active as HTMLElement).isContentEditable) {
+          return;
+        }
+      }
+    }
+
+    // If another bubble is currently active:
+    if (this.state.speechBubble !== null) {
+      if (isUrgent) {
+        // Queue urgent line so it displays as soon as current bubble finishes
+        this.urgentQueue.push({ text, durationMs });
+      }
+      return;
+    }
+
+    const now = Date.now();
+    this.bubbleHistory = this.bubbleHistory.filter(t => now - t <= 60000);
+
+    // Rate limits for non-urgent bubbles:
+    // - At least 2 seconds gap after previous bubble ends
+    // - Maximum 5 bubbles per minute
+    if (!isUrgent) {
+      if (now - this.lastBubbleDismissTime < 2000) return;
+      if (this.bubbleHistory.length >= 5) return;
+    }
+
+    this.bubbleHistory.push(now);
+    // Full sentence: NO 60-character truncation!
+    this.state.speechBubble = text;
     this.notify();
 
+    // Long safety-net fallback timer in case UI is not actively controlling dismiss
     if (this.speechTimer) clearTimeout(this.speechTimer);
+    const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+    const safetyNetMs = Math.max(12000, 4000 + wordCount * 600);
     this.speechTimer = setTimeout(() => {
       this.clearSpeechBubble();
-    }, Math.min(4500, Math.max(2000, durationMs)));
+    }, safetyNetMs);
   }
 
   public clearSpeechBubble() {
+    if (this.speechTimer) {
+      clearTimeout(this.speechTimer);
+      this.speechTimer = null;
+    }
     if (this.state.speechBubble !== null) {
       this.state.speechBubble = null;
+      this.lastBubbleDismissTime = Date.now();
       this.notify();
+
+      // Check urgent queue
+      if (this.urgentQueue.length > 0) {
+        const next = this.urgentQueue.shift();
+        if (next) {
+          setTimeout(() => {
+            this.showSpeechBubble(next.text, next.durationMs, true);
+          }, 300);
+        }
+      }
     }
   }
 

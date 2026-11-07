@@ -116,7 +116,7 @@ const VOICE_POOLS: Record<VoiceCategory, VoiceLine[]> = {
     { text: "Behind every great video is a very tired editor.", anim: 'idle', expr: 'thinking' },
     { text: "Welcome to the Edit Bay. Popcorn not included.", anim: 'wave', expr: 'happy' },
     { text: "Rendering frames and turning caffeine into cuts.", anim: 'salute', expr: 'focused' },
-    { text: "Multi-track magic in progress! Action!", anim: 'dance', expr: 'enjoying' },
+    { text: "Timeline cuts in progress! Action!", anim: 'dance', expr: 'enjoying' },
   ],
   internship_ongoing_hover: [
     { text: "Leading frontend AND Web3? Overachiever. I like it.", anim: 'idle', expr: 'thinking' },
@@ -374,7 +374,7 @@ class SteveVoiceEngine {
 
     // Rate limits: >= 3000ms between lines, max ~6/minute
     const timeSinceLast = now - this.lastSpeakTime;
-    const withinRate = timeSinceLast >= 3000 && this.minuteCount < 7;
+    const withinRate = timeSinceLast >= 2000 && this.minuteCount < 5;
 
     if (withinRate) {
       this.dispatchLine(line, duration);
@@ -400,9 +400,8 @@ class SteveVoiceEngine {
     if (line.anim && line.expr) {
       robotStore.setSteve(line.anim, line.expr);
     }
-    // Truncate cleanly to at most 60 characters
-    const text = line.text.slice(0, 60);
-    robotStore.showSpeechBubble(text, duration);
+    // Full text - NO character truncation!
+    robotStore.showSpeechBubble(line.text, duration);
   }
 }
 
