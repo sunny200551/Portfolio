@@ -1,4 +1,3 @@
-import { computeSteveTracking } from '../../robot/steveTracking';
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { steveState, type SteveState } from '../../lib/steveState';
@@ -85,104 +84,52 @@ export const HeroSvgIllustration: React.FC = () => {
         ease: 'steps(1)',
       });
 
-      // 4. Seated Steve Typing / Idle Loop
-      // Natural typing hands on keyboard and gentle chair swivel (Steve & chair stay 100% unified)
-      const steveTl = gsap.timeline({ repeat: -1, repeatDelay: 0.8 });
+            // 4. Seated Steve Stylish Chill Idle Loop (100% rock-solid, zero head separation)
+      const steveTl = gsap.timeline({ repeat: -1, repeatDelay: 1.2 });
       
-      // Typing phase (hands alternating slightly up and down on keys)
-      steveTl.to('#steve-hand-left', { y: -2, duration: 0.16, repeat: 7, yoyo: true, ease: 'power1.inOut' }, 0);
-      steveTl.to('#steve-hand-right', { y: 2, duration: 0.16, repeat: 7, yoyo: true, ease: 'power1.inOut' }, 0.08);
-      
-      // Subtle chair swivel around pedestal base (400, 488) in SVG canvas coordinates
-      steveTl.to('#seated-chair-group', { rotation: 1.5, svgOrigin: '400 488', duration: 1.6, ease: 'sine.inOut' }, 0);
-      steveTl.to('#seated-chair-group', { rotation: -1.5, svgOrigin: '400 488', duration: 1.6, ease: 'sine.inOut' }, 1.6);
-      steveTl.to('#seated-chair-group', { rotation: 0, svgOrigin: '400 488', duration: 0.8, ease: 'power2.out' }, 3.2);
+      // Gentle breathing idle pulse for Steve & Chair together as a single unified unit
+      steveTl.to('#seated-chair-group', { y: -2, duration: 1.8, ease: 'sine.inOut' });
+      steveTl.to('#seated-chair-group', { y: 0, duration: 1.8, ease: 'sine.inOut' });
 
-      // Relax hold
-      steveTl.to({}, { duration: 1.8 });
+      // Occasional cool sunglasses sparkle gleam
+      steveTl.fromTo(
+        '#glasses-gleam',
+        { scale: 0, opacity: 0, transformOrigin: '50% 50%' },
+        { scale: 1.2, opacity: 1, duration: 0.35, yoyo: true, repeat: 1, ease: 'power2.out' },
+        '+=0.6'
+      );
 
-      // 5. Rocket Pilot Flame Cel 12fps Flicker
-      gsap.to('#rocket-pilot-flame', {
-        scaleY: 0.82,
-        scaleX: 1.15,
-        transformOrigin: '50% 0%',
-        duration: 0.12,
-        repeat: -1,
-        yoyo: true,
-        ease: 'steps(2)',
-      });
+      // Foot tap rhythm
+      steveTl.to('#steve-foot-right', { rotation: -6, transformOrigin: '0% 100%', duration: 0.15, repeat: 5, yoyo: true, ease: 'power1.inOut' }, 0.5);
 
-      // 6. Floating geometric stickers
+      // 5. Floating geometric stickers
       gsap.to('#hero-sticker-code', { y: -8, duration: 2.5, repeat: -1, yoyo: true, ease: 'sine.inOut' });
       gsap.to('#hero-sticker-brackets', { y: -10, duration: 2.8, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 0.4 });
 
-      // 7. Cursor parallax (up to 3 degrees max)
+      // 6. Subtle cursor parallax for background stage
       const handleMouseMove = (e: MouseEvent) => {
         const { innerWidth, innerHeight } = window;
         const normX = (e.clientX / innerWidth - 0.5) * 2;
         const normY = (e.clientY / innerHeight - 0.5) * 2;
 
         gsap.to('#hero-parallax-bg', {
-          x: normX * 6,
-          y: normY * 4,
+          x: normX * 4,
+          y: normY * 3,
           duration: 0.8,
           ease: 'power2.out',
         });
         gsap.to('#hero-parallax-fg', {
-          x: normX * -8,
-          y: normY * -6,
+          x: normX * -4,
+          y: normY * -3,
           duration: 0.8,
           ease: 'power2.out',
         });
       };
 
-      const handleHeroTracking = (e: MouseEvent) => {
-        const svgEl = containerRef.current?.querySelector('svg');
-        if (!svgEl) return;
-        
-        // Calculate static head neck pivot in screen coordinates using SVG bounding rect:
-        // In viewBox 0 0 800 680, Steve's neck pivot is at (400, 386) -> (50% X, 56.76% Y)
-        const svgRect = svgEl.getBoundingClientRect();
-        const headPivotX = svgRect.left + svgRect.width * 0.5;
-        const headPivotY = svgRect.top + svgRect.height * (386 / 680);
-
-        const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0));
-        const tracking = computeSteveTracking(e.clientX, e.clientY, headPivotX, headPivotY, !isTouch);
-
-        // Head rotates strictly around its neck pivot (400, 386). Zero translational X/Y offset so it NEVER detaches!
-        gsap.to('#hero-steve-head', {
-          rotation: tracking.headYawDeg * 0.35,
-          x: 0,
-          y: 0,
-          svgOrigin: '400 386',
-          duration: 0.18,
-          ease: 'power1.out',
-          overwrite: 'auto',
-        });
-
-        // Eyes / Pupils move smoothly inside the screen, clamped so they never exit the blue face
-        gsap.to('#hero-steve-eyes', {
-          x: Math.max(-5, Math.min(5, tracking.pupilOffsetX * 0.5)),
-          y: Math.max(-3, Math.min(3, tracking.pupilOffsetY * 0.5)),
-          duration: 0.15,
-          ease: 'power1.out',
-          overwrite: 'auto',
-        });
-      };
-
-      const handleHeroMouseLeave = () => {
-        gsap.to('#hero-steve-head', { rotation: 0, x: 0, y: 0, svgOrigin: '400 386', duration: 0.4, ease: 'power2.out', overwrite: 'auto' });
-        gsap.to('#hero-steve-eyes', { x: 0, y: 0, duration: 0.3, ease: 'power2.out', overwrite: 'auto' });
-      };
-
       window.addEventListener('mousemove', handleMouseMove, { passive: true });
-      window.addEventListener('mousemove', handleHeroTracking, { passive: true });
-      window.addEventListener('mouseleave', handleHeroMouseLeave);
 
       return () => {
         window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mousemove', handleHeroTracking);
-        window.removeEventListener('mouseleave', handleHeroMouseLeave);
       };
     }, containerRef);
 
@@ -431,52 +378,97 @@ export const HeroSvgIllustration: React.FC = () => {
             {/* SEATED STEVE (Visible when isSteveSeated) */}
             {isSteveSeated && (
               <g id="seated-steve-mascot">
-                {/* Robot Legs dangling squarely to floor */}
-                <rect x="382" y="460" width="12" height="24" fill="#0A1A3F" stroke="#0A0A0A" strokeWidth="2" rx="3" />
-                <rect x="406" y="460" width="12" height="24" fill="#0A1A3F" stroke="#0A0A0A" strokeWidth="2" rx="3" />
-                {/* Robot Feet (Orange boots) */}
-                <rect x="378" y="480" width="18" height="10" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="2" rx="2" />
-                <rect x="404" y="480" width="18" height="10" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="2" rx="2" />
+                {/* 1. PELVIS & THIGHS (Firmly connects torso directly to chair seat cushion - NO GAP) */}
+                <g id="steve-pelvis-and-legs">
+                  {/* Pelvis connecting block under torso */}
+                  <rect x="376" y="432" width="48" height="14" fill="#0A1A3F" stroke="#0A0A0A" strokeWidth="2.5" rx="3" />
+                  
+                  {/* Left Thigh (resting comfortably on seat cushion) */}
+                  <polygon points="378,440 396,440 394,468 376,468" fill="#0A1A3F" stroke="#0A0A0A" strokeWidth="2.5" />
+                  {/* Left Shin / Leg */}
+                  <rect x="376" y="466" width="16" height="24" fill="#0A1A3F" stroke="#0A0A0A" strokeWidth="2.5" rx="3" />
+                  {/* Left Chunky Sneaker Boot (Orange with white sole & black edge) */}
+                  <polygon points="370,488 398,488 402,498 368,498" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="2.5" />
+                  <rect x="368" y="496" width="34" height="4" fill="#FFFFFF" stroke="#0A0A0A" strokeWidth="1.5" />
 
-                {/* Upper Body Group (tilts during relaxed phase) */}
+                  {/* Right Thigh (casual relaxed developer posture) */}
+                  <polygon points="404,440 422,440 424,468 406,468" fill="#0A1A3F" stroke="#0A0A0A" strokeWidth="2.5" />
+                  {/* Right Shin / Leg */}
+                  <rect x="406" y="466" width="16" height="24" fill="#0A1A3F" stroke="#0A0A0A" strokeWidth="2.5" rx="3" />
+                  {/* Right Chunky Sneaker Boot with animated foot tap */}
+                  <g id="steve-foot-right">
+                    <polygon points="402,488 430,488 434,498 398,498" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="2.5" />
+                    <rect x="398" y="496" width="36" height="4" fill="#FFFFFF" stroke="#0A0A0A" strokeWidth="1.5" />
+                  </g>
+                </g>
+
+                {/* 2. TORSO BOX (Firmly seated on pelvis) */}
                 <g id="steve-upper-body">
                   {/* Torso Box (Orange) */}
-                  <rect x="375" y="396" width="50" height="42" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="3" rx="4" />
-                  {/* Torso Navy Panel / Dial */}
-                  <rect x="385" y="408" width="30" height="18" fill="#0A1A3F" stroke="#0A0A0A" strokeWidth="2" rx="2" />
-                  <rect x="390" y="413" width="8" height="8" fill="#FF5A1F" />
-                  <rect x="402" y="413" width="8" height="8" fill="#FFFFFF" />
+                  <rect x="375" y="394" width="50" height="42" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="3.5" rx="5" />
+                  {/* Torso Navy Tech Panel */}
+                  <rect x="385" y="406" width="30" height="18" fill="#0A1A3F" stroke="#0A0A0A" strokeWidth="2" rx="2" />
+                  <rect x="390" y="411" width="8" height="8" fill="#FF5A1F" />
+                  <rect x="402" y="411" width="8" height="8" fill="#FFFFFF" />
 
-                  {/* Robot Arms */}
-                  <line x1="375" y1="410" x2="355" y2="430" stroke="#0A1A3F" strokeWidth="6" strokeLinecap="round" />
-                  <line x1="425" y1="410" x2="445" y2="430" stroke="#0A1A3F" strokeWidth="6" strokeLinecap="round" />
+                  {/* Robot Arms (Relaxed stylish chill pose) */}
+                  {/* Left Arm: casual pose resting on chair arm */}
+                  <path d="M 375 406 L 350 416 L 356 438" fill="none" stroke="#0A1A3F" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="350" cy="416" r="4.5" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="1.5" />
+                  <circle id="steve-hand-left" cx="356" cy="438" r="7" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="2" />
 
-                  {/* Robot Hands on desk / keyboard */}
-                  <circle id="steve-hand-left" cx="355" cy="432" r="7" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="2" />
-                  <circle id="steve-hand-right" cx="445" cy="432" r="7" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="2" />
+                  {/* Right Arm: stylish lean resting naturally */}
+                  <path d="M 425 406 L 446 418 L 440 438" fill="none" stroke="#0A1A3F" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="446" cy="418" r="4.5" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="1.5" />
+                  <circle id="steve-hand-right" cx="440" cy="438" r="7" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="2" />
 
-                  {/* Neck Joint */}
-                  <rect x="394" y="386" width="12" height="12" fill="#0A1A3F" stroke="#0A0A0A" strokeWidth="2" />
+                  {/* Neck Joint (Permanently connects head to torso) */}
+                  <rect x="394" y="384" width="12" height="12" fill="#0A1A3F" stroke="#0A0A0A" strokeWidth="2" />
 
-                  {/* Monitor Head Box (Orange) with dynamic Head & Eye Tracking */}
+                  {/* 3. MONITOR HEAD WITH COOL GLASSES (Rock solid on neck, stylish cool sunglasses) */}
                   <g id="hero-steve-head">
-                    <rect x="365" y="336" width="70" height="52" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="3.5" rx="5" />
+                    {/* Orange Monitor Case */}
+                    <rect x="365" y="334" width="70" height="52" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="3.5" rx="6" />
 
                     {/* Blue Screen Face */}
-                    <rect x="373" y="344" width="54" height="36" fill="#0047AB" stroke="#0A0A0A" strokeWidth="2" rx="3" />
+                    <rect x="373" y="342" width="54" height="36" fill="#0047AB" stroke="#0A0A0A" strokeWidth="2" rx="4" />
 
-                    {/* Eyes and Smile group for Pupil Tracking */}
-                    <g id="hero-steve-eyes">
-                      <path d="M382 360 L386 354 L390 360" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                      <path d="M410 360 L414 354 L418 360" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                      <path d="M396 368 Q400 372 404 368" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" fill="none" />
-                      <circle cx="380" cy="366" r="3" fill="#FF5A1F" />
-                      <circle cx="420" cy="366" r="3" fill="#FF5A1F" />
+                    {/* COOL SUNGLASSES ("Deal with it" Neo-Brutalist Pixel Shades) */}
+                    <g id="hero-steve-sunglasses">
+                      {/* Black Sunglasses Frame */}
+                      <polygon
+                        points="377,351 423,351 423,365 405,365 403,358 397,358 395,365 377,365"
+                        fill="#0A0A0A"
+                        stroke="#0A0A0A"
+                        strokeWidth="1.5"
+                      />
+                      
+                      {/* Left Dark Lens with Glint */}
+                      <rect x="380" y="353" width="16" height="10" fill="#050C1A" />
+                      <polygon points="383,353 386,353 381,363 378,363" fill="#FFFFFF" opacity="0.9" />
+                      <circle cx="393" cy="355" r="1" fill="#FFFFFF" />
+
+                      {/* Right Dark Lens with Glint */}
+                      <rect x="404" y="353" width="16" height="10" fill="#050C1A" />
+                      <polygon points="407,353 410,353 405,363 402,363" fill="#FFFFFF" opacity="0.9" />
+                      <circle cx="417" cy="355" r="1" fill="#FFFFFF" />
+
+                      {/* Sparkle Glint Star on Corner of Sunglasses */}
+                      <g id="glasses-gleam" transform="translate(422, 351)" style={{ opacity: 0 }}>
+                        <polygon points="0,-4 1,-1 4,0 1,1 0,4 -1,1 -4,0 -1,-1" fill="#FFD700" stroke="#0A0A0A" strokeWidth="0.8" />
+                      </g>
                     </g>
 
-                    {/* Antenna */}
-                    <line x1="400" y1="336" x2="400" y2="318" stroke="#0A1A3F" strokeWidth="3" strokeLinecap="round" />
-                    <circle cx="400" cy="316" r="5" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="2" />
+                    {/* Confident Developer Smirk Smile under the shades */}
+                    <path d="M 394 369 Q 400 373 406 369" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                    
+                    {/* Cool Orange Blush Dots */}
+                    <circle cx="380" cy="368" r="3" fill="#FF5A1F" />
+                    <circle cx="420" cy="368" r="3" fill="#FF5A1F" />
+
+                    {/* Antenna with Orange Sphere */}
+                    <line x1="400" y1="334" x2="400" y2="316" stroke="#0A1A3F" strokeWidth="3" strokeLinecap="round" />
+                    <circle cx="400" cy="314" r="5" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="2" />
                   </g>
                 </g>
               </g>
