@@ -2,7 +2,7 @@
   "stats": {
     "videoCount": 7,
     "reelCount": 0,
-    "fetchedAt": "2026-11-08T07:41:25.076Z"
+    "fetchedAt": "2026-11-08T13:12:18.960Z"
   },
   "items": [
     {
@@ -104,6 +104,6 @@
       "views": 101
     }
   ],
-  "source": "snapshot",
-  "updatedAt": "2026-11-08T07:41:25.078Z"
+  "source": "rss",
+  "updatedAt": "2026-11-08T13:12:18.960Z"
 }
