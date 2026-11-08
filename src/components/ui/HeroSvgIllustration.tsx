@@ -85,31 +85,21 @@ export const HeroSvgIllustration: React.FC = () => {
         ease: 'steps(1)',
       });
 
-      // 4. Seated Steve Typing / Lean-back Idle Loop
-      // Alternate typing hands (2s) -> lean back relaxing (3.5s) -> glance & blink -> small chair swivel (+-4 deg)
-      const steveTl = gsap.timeline({ repeat: -1, repeatDelay: 0.5 });
+      // 4. Seated Steve Typing / Idle Loop
+      // Natural typing hands on keyboard and gentle chair swivel (Steve & chair stay 100% unified)
+      const steveTl = gsap.timeline({ repeat: -1, repeatDelay: 0.8 });
       
-      // Typing phase (hands alternating up and down)
-      steveTl.to('#steve-hand-left', { y: -3, duration: 0.18, repeat: 7, yoyo: true, ease: 'power1.inOut' }, 0);
-      steveTl.to('#steve-hand-right', { y: 3, duration: 0.18, repeat: 7, yoyo: true, ease: 'power1.inOut' }, 0.09);
+      // Typing phase (hands alternating slightly up and down on keys)
+      steveTl.to('#steve-hand-left', { y: -2, duration: 0.16, repeat: 7, yoyo: true, ease: 'power1.inOut' }, 0);
+      steveTl.to('#steve-hand-right', { y: 2, duration: 0.16, repeat: 7, yoyo: true, ease: 'power1.inOut' }, 0.08);
       
-      // Slight chair swivel while typing
-      steveTl.to('#seated-chair-group', { rotation: 3, transformOrigin: '400px 480px', duration: 1.4, ease: 'sine.inOut' }, 0);
-      steveTl.to('#seated-chair-group', { rotation: -2, transformOrigin: '400px 480px', duration: 1.2, ease: 'sine.inOut' }, 1.4);
-
-      // Lean-back relaxed phase (hands move to back of head / armrests)
-      steveTl.to('#steve-upper-body', { y: -2, rotation: -4, transformOrigin: '400px 440px', duration: 0.6, ease: 'power2.out' }, 2.8);
-      steveTl.to('#steve-hand-left', { y: -12, x: -4, duration: 0.5, ease: 'power2.out' }, 2.8);
-      steveTl.to('#steve-hand-right', { y: -12, x: 4, duration: 0.5, ease: 'power2.out' }, 2.8);
-      steveTl.to('#seated-chair-group', { rotation: 0, transformOrigin: '400px 480px', duration: 0.6, ease: 'power2.out' }, 2.8);
+      // Subtle chair swivel around pedestal base (400, 488) in SVG canvas coordinates
+      steveTl.to('#seated-chair-group', { rotation: 1.5, svgOrigin: '400 488', duration: 1.6, ease: 'sine.inOut' }, 0);
+      steveTl.to('#seated-chair-group', { rotation: -1.5, svgOrigin: '400 488', duration: 1.6, ease: 'sine.inOut' }, 1.6);
+      steveTl.to('#seated-chair-group', { rotation: 0, svgOrigin: '400 488', duration: 0.8, ease: 'power2.out' }, 3.2);
 
       // Relax hold
-      steveTl.to({}, { duration: 2.2 });
-
-      // Return to typing posture
-      steveTl.to('#steve-upper-body', { y: 0, rotation: 0, transformOrigin: '400px 440px', duration: 0.5, ease: 'power2.inOut' });
-      steveTl.to('#steve-hand-left', { y: 0, x: 0, duration: 0.4, ease: 'power2.inOut' }, '-=0.4');
-      steveTl.to('#steve-hand-right', { y: 0, x: 0, duration: 0.4, ease: 'power2.inOut' }, '-=0.4');
+      steveTl.to({}, { duration: 1.8 });
 
       // 5. Rocket Pilot Flame Cel 12fps Flicker
       gsap.to('#rocket-pilot-flame', {
@@ -147,35 +137,41 @@ export const HeroSvgIllustration: React.FC = () => {
       };
 
       const handleHeroTracking = (e: MouseEvent) => {
-        const headEl = document.getElementById('hero-steve-head');
-        if (headEl) {
-          const rect = headEl.getBoundingClientRect();
-          const headCenterX = rect.left + rect.width / 2;
-          const headCenterY = rect.top + rect.height / 2;
+        const svgEl = containerRef.current?.querySelector('svg');
+        if (!svgEl) return;
+        
+        // Calculate static head neck pivot in screen coordinates using SVG bounding rect:
+        // In viewBox 0 0 800 680, Steve's neck pivot is at (400, 386) -> (50% X, 56.76% Y)
+        const svgRect = svgEl.getBoundingClientRect();
+        const headPivotX = svgRect.left + svgRect.width * 0.5;
+        const headPivotY = svgRect.top + svgRect.height * (386 / 680);
 
-          const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0));
-          const tracking = computeSteveTracking(e.clientX, e.clientY, headCenterX, headCenterY, !isTouch);
+        const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0));
+        const tracking = computeSteveTracking(e.clientX, e.clientY, headPivotX, headPivotY, !isTouch);
 
-          gsap.to('#hero-steve-head', {
-            rotation: tracking.headYawDeg * 0.7,
-            y: tracking.headPitchDeg * 0.35,
-            duration: 0.18,
-            ease: 'power1.out',
-            overwrite: 'auto',
-          });
+        // Head rotates strictly around its neck pivot (400, 386). Zero translational X/Y offset so it NEVER detaches!
+        gsap.to('#hero-steve-head', {
+          rotation: tracking.headYawDeg * 0.35,
+          x: 0,
+          y: 0,
+          svgOrigin: '400 386',
+          duration: 0.18,
+          ease: 'power1.out',
+          overwrite: 'auto',
+        });
 
-          gsap.to('#hero-steve-eyes', {
-            x: tracking.pupilOffsetX * 0.8,
-            y: tracking.pupilOffsetY * 0.8,
-            duration: 0.15,
-            ease: 'power1.out',
-            overwrite: 'auto',
-          });
-        }
+        // Eyes / Pupils move smoothly inside the screen, clamped so they never exit the blue face
+        gsap.to('#hero-steve-eyes', {
+          x: Math.max(-5, Math.min(5, tracking.pupilOffsetX * 0.5)),
+          y: Math.max(-3, Math.min(3, tracking.pupilOffsetY * 0.5)),
+          duration: 0.15,
+          ease: 'power1.out',
+          overwrite: 'auto',
+        });
       };
 
       const handleHeroMouseLeave = () => {
-        gsap.to('#hero-steve-head', { rotation: 0, y: 0, duration: 0.4, ease: 'power2.out', overwrite: 'auto' });
+        gsap.to('#hero-steve-head', { rotation: 0, x: 0, y: 0, svgOrigin: '400 386', duration: 0.4, ease: 'power2.out', overwrite: 'auto' });
         gsap.to('#hero-steve-eyes', { x: 0, y: 0, duration: 0.3, ease: 'power2.out', overwrite: 'auto' });
       };
 
@@ -392,7 +388,7 @@ export const HeroSvgIllustration: React.FC = () => {
           </g>
 
           {/* 4. The Chair & Seated Steve Group */}
-          <g id="seated-chair-group" style={{ transformOrigin: '400px 480px' }}>
+          <g id="seated-chair-group">
             {/* Contact Shadow directly under chair base on floor */}
             <polygon
               id="chair-contact-shadow"
@@ -463,7 +459,7 @@ export const HeroSvgIllustration: React.FC = () => {
                   <rect x="394" y="386" width="12" height="12" fill="#0A1A3F" stroke="#0A0A0A" strokeWidth="2" />
 
                   {/* Monitor Head Box (Orange) with dynamic Head & Eye Tracking */}
-                  <g id="hero-steve-head" style={{ transformOrigin: '400px 386px' }}>
+                  <g id="hero-steve-head">
                     <rect x="365" y="336" width="70" height="52" fill="#FF5A1F" stroke="#0A0A0A" strokeWidth="3.5" rx="5" />
 
                     {/* Blue Screen Face */}
