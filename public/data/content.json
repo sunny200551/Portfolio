@@ -2,7 +2,7 @@
   "stats": {
     "videoCount": 7,
     "reelCount": 0,
-    "fetchedAt": "2026-11-15T13:50:58.765Z"
+    "fetchedAt": "2026-11-16T15:33:09.972Z"
   },
   "items": [
     {
@@ -17,7 +17,7 @@
         "height": 720
       },
       "publishedAt": "2026-09-14T13:40:21+00:00",
-      "views": 47
+      "views": 48
     },
     {
       "id": "NhmlhwOkA64",
@@ -31,7 +31,7 @@
         "height": 720
       },
       "publishedAt": "2026-07-29T02:54:09+00:00",
-      "views": 174
+      "views": 177
     },
     {
       "id": "HxUSNBwjwpA",
@@ -45,7 +45,7 @@
         "height": 720
       },
       "publishedAt": "2026-07-24T04:15:43+00:00",
-      "views": 68
+      "views": 71
     },
     {
       "id": "N8M7LSd_Acs",
@@ -59,7 +59,7 @@
         "height": 720
       },
       "publishedAt": "2026-07-20T03:30:06+00:00",
-      "views": 20
+      "views": 23
     },
     {
       "id": "IvXNGanQRLQ",
@@ -73,7 +73,7 @@
         "height": 720
       },
       "publishedAt": "2026-07-19T14:09:53+00:00",
-      "views": 29
+      "views": 31
     },
     {
       "id": "QXmKHqH0Llo",
@@ -87,7 +87,7 @@
         "height": 720
       },
       "publishedAt": "2026-05-30T05:10:54+00:00",
-      "views": 41
+      "views": 48
     },
     {
       "id": "vZWOlpEmduQ",
@@ -101,9 +101,9 @@
         "height": 720
       },
       "publishedAt": "2026-04-30T03:30:06+00:00",
-      "views": 102
+      "views": 104
     }
   ],
   "source": "rss",
-  "updatedAt": "2026-11-15T13:50:58.765Z"
+  "updatedAt": "2026-11-16T15:33:09.972Z"
 }
