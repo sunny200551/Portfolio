@@ -2,7 +2,7 @@
   "stats": {
     "videoCount": 7,
     "reelCount": 0,
-    "fetchedAt": "2026-11-22T14:27:33.790Z"
+    "fetchedAt": "2026-11-23T17:55:39.275Z"
   },
   "items": [
     {
@@ -101,9 +101,9 @@
         "height": 720
       },
       "publishedAt": "2026-04-30T03:30:06+00:00",
-      "views": 106
+      "views": 108
     }
   ],
   "source": "rss",
-  "updatedAt": "2026-11-22T14:27:33.790Z"
+  "updatedAt": "2026-11-23T17:55:39.275Z"
 }
